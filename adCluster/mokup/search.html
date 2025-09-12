@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>검색</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            padding: 20px;
+            color: #333;
+        }
+
+        /* 검색 섹션 */
+        .search-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .search-header {
+            margin-bottom: 20px;
+        }
+
+        .search-header h1 {
+            color: #2c3e50;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .search-header p {
+            color: #7f8c8d;
+        }
+
+        .search-box-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px 20px;
+            padding-right: 80px; /* 검색 버튼을 위한 공간 확보 */
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 8px 15px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .search-btn:hover {
+            background: #2980b9;
+        }
+
+        /* 범위 선택 */
+        .scope-selection {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .scope-option {
+            padding: 10px 20px;
+            border: 2px solid #e1e8ed;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .scope-option:hover {
+            border-color: #3498db;
+        }
+
+        .scope-option.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        /* 필터 및 정렬 */
+        .filter-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .filter-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 15px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .filter-btn.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .sort-options {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sort-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .sort-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: white;
+        }
+
+        /* 결과 영역 */
+        .results-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 25px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .results-header h2 {
+            color: #2c3e50;
+            font-size: 1.3rem;
+        }
+
+        .results-count {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        /* 검색 결과 리스트 */
+        .results-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .result-item {
+            padding: 20px;
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .result-item:hover {
+            border-color: #3498db;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.1);
+        }
+
+        .result-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .result-icon {
+            color: #3498db;
+        }
+
+        .result-preview {
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .result-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #95a5a6;
+        }
+
+        .result-author {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .author-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #3498db;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .result-date {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* 페이지네이션 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 30px;
+            gap: 10px;
+        }
+
+        .page-btn {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .page-btn.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .page-btn:hover:not(.active) {
+            background: #f8f9fa;
+        }
+
+        /* 로딩 상태 */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .search-box-container {
+                flex-direction: column;
+            }
+            
+            .filter-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .sort-options {
+                align-self: flex-end;
+            }
+            
+            .result-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- 검색 섹션 -->
+    <div class="search-section">
+        <div class="search-header">
+            <h1>🔍 문서 검색</h1>
+            <p>프로젝트, 문서, 내용을 빠르게 찾아보세요</p>
+        </div>
+        
+        <div class="search-box-container">
+            <input type="text" class="search-input" placeholder="검색어를 입력하세요 (예: 프로젝트 계획, API 문서, 디자인 가이드 등)" value="웹사이트 리디자인">
+            <button class="search-btn">검색</button>
+        </div>
+        
+        <div class="scope-selection">
+            <div class="scope-option">내 문서</div>
+            <div class="scope-option active">내 프로젝트</div>
+            <div class="scope-option">전체 공개 문서</div>
+        </div>
+    </div>
+
+    <!-- 필터 및 정렬 -->
+    <div class="filter-section">
+        <div class="filter-options">
+            <button class="filter-btn active">전체</button>
+            <button class="filter-btn">문서</button>
+            <button class="filter-btn">프로젝트</button>
+            <button class="filter-btn">이미지</button>
+            <button class="filter-btn">PDF</button>
+        </div>
+        
+        <div class="sort-options">
+            <span class="sort-label">정렬:</span>
+            <select class="sort-select">
+                <option>최근 편집일</option>
+                <option>관련도</option>
+                <option>제목</option>
+                <option>작성일</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- 결과 영역 -->
+    <div class="results-section">
+        <div class="results-header">
+            <h2>검색 결과</h2>
+            <div class="results-count">총 24개의 결과</div>
+        </div>
+        
+        <div class="results-list">
+            <div class="result-item">
+                <div class="result-title">
+                    <i class="fas fa-file-alt result-icon"></i>
+                    웹사이트 리디자인 프로젝트 계획서
+                </div>
+                <div class="result-preview">
+                    본 문서는 웹사이트 리디자인 프로젝트의 전체 계획을 담고 있습니다. 프로젝트 목표, 범위, 일정, 리소스 배분에 대한 상세 내용을 포함하고 있습니다. UI/UX 개선 방향과 기술 스택도 명시되어 있습니다...
+                </div>
+                <div class="result-meta">
+                    <div class="result-author">
+                        <div class="author-avatar">K</div>
+                        <span>김개발</span>
+                    </div>
+                    <div class="result-date">
+                        <i class="far fa-clock"></i>
+                        <span>2023.11.20 14:30</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="result-item">
+                <div class="result-title">
+                    <i class="fas fa-folder result-icon"></i>
+                    웹사이트 리디자인 프로젝트
+                </div>
+                <div class="result-preview">
+                    웹사이트 리디자인 프로젝트의 메인 프로젝트 폴더입니다. 하위에 디자인, 개발, 테스트 관련 문서들이 포함되어 있습니다. 현재 진행 상황은 60%이며, 예상 완료일은 2023.12.30입니다.
+                </div>
+                <div class="result-meta">
+                    <div class="result-author">
+                        <div class="author-avatar">P</div>
+                        <span>박매니저</span>
+                    </div>
+                    <div class="result-date">
+                        <i class="far fa-clock"></i>
+                        <span>2023.11.19 16:45</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="result-item">
+                <div class="result-title">
+                    <i class="fas fa-file-alt result-icon"></i>
+                    홈페이지 레이아웃 디자인
+                </div>
+                <div class="result-preview">
+                    새로운 홈페이지의 레이아웃 디자인안입니다. Figma 파일 링크와 함께 주요 컴포넌트들의 위치, 색상, 타이포그래피 가이드가 포함되어 있습니다. 반응형 디자인 고려사항도 명시되어 있습니다.
+                </div>
+                <div class="result-meta">
+                    <div class="result-author">
+                        <div class="author-avatar">L</div>
+                        <span>이디자인</span>
+                    </div>
+                    <div class="result-date">
+                        <i class="far fa-clock"></i>
+                        <span>2023.11.18 10:15</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="result-item">
+                <div class="result-title">
+                    <i class="fas fa-file-pdf result-icon"></i>
+                    웹사이트 리디자인 프로젝트 진행 보고서.pdf
+                </div>
+                <div class="result-preview">
+                    11월 3주차 프로젝트 진행 상황 보고서입니다. 현재까지의 성과, 발생한 이슈, 다음 주 계획이 포함되어 있습니다. 예산 사용 현황과 리스크 관리 계획도 상세히 기술되어 있습니다.
+                </div>
+                <div class="result-meta">
+                    <div class="result-author">
+                        <div class="author-avatar">C</div>
+                        <span>최분석</span>
+                    </div>
+                    <div class="result-date">
+                        <i class="far fa-clock"></i>
+                        <span>2023.11.17 15:30</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="result-item">
+                <div class="result-title">
+                    <i class="fas fa-file-image result-icon"></i>
+                    내부 페이지 디자인 컨셉.png
+                </div>
+                <div class="result-preview">
+                    내부 페이지들의 디자인 컨셉 이미지입니다. 메인 페이지와 일관성을 유지하면서도 각 페이지의 특성에 맞는 디자인 요소들을 제안하고 있습니다. 색상 팔레트와 컴포넌트 사용 가이드가 포함되어 있습니다.
+                </div>
+                <div class="result-meta">
+                    <div class="result-author">
+                        <div class="author-avatar">L</div>
+                        <span>이디자인</span>
+                    </div>
+                    <div class="result-date">
+                        <i class="far fa-clock"></i>
+                        <span>2023.11.16 09:20</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 페이지네이션 -->
+        <div class="pagination">
+            <button class="page-btn">이전</button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">3</button>
+            <button class="page-btn">다음</button>
+        </div>
+    </div>
+
+    <script>
+        // 범위 선택 기능
+        document.querySelectorAll('.scope-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.scope-option').forEach(o => o.classList.remove('active'));
+                option.classList.add('active');
+            });
+        });
+
+        // 필터 버튼 기능
+        document.querySelectorAll('.filter-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                button.classList.add('active');
+            });
+        });
+
+        // 검색 결과 클릭 이벤트
+        document.querySelectorAll('.result-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const title = item.querySelector('.result-title').textContent.trim();
+                alert(`"${title}" 문서로 이동합니다.\n(실제 구현 시 에디터 화면으로 이동)`);
+            });
+        });
+
+        // 검색 버튼 클릭 이벤트
+        document.querySelector('.search-btn').addEventListener('click', () => {
+            const searchTerm = document.querySelector('.search-input').value;
+            if (searchTerm) {
+                // 로딩 상태 표시
+                const resultsSection = document.querySelector('.results-section');
+                resultsSection.innerHTML = `
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>"${searchTerm}" 검색 중...</p>
+                    </div>
+                `;
+                
+                // 1초 후에 결과 표시 (시뮬레이션)
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html>

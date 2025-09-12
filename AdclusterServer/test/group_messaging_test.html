@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Group Messaging Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+        }
+        #messages {
+            height: 300px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        .message {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        .info {
+            background-color: #e7f3ff;
+        }
+        .group-a {
+            background-color: #ffe7e7;
+        }
+        .group-b {
+            background-color: #e7ffe7;
+        }
+    </style>
+</head>
+<body>
+    <h1>Group Messaging Test</h1>
+    
+    <div class="container">
+        <h2>Connection</h2>
+        <input type="text" id="clientId" placeholder="Client ID (number)" />
+        <input type="text" id="groupName" placeholder="Group Name (e.g., A or B)" />
+        <button onclick="connect()">Connect</button>
+        <button onclick="disconnect()">Disconnect</button>
+    </div>
+    
+    <div class="container">
+        <h2>Messages</h2>
+        <div id="messages"></div>
+    </div>
+    
+    <div class="container">
+        <h2>Send Messages</h2>
+        <input type="text" id="messageInput" placeholder="Type your message here" />
+        <button onclick="sendMessage()">Send to Group</button>
+        <br>
+        <input type="text" id="privateClientId" placeholder="Target Client ID" />
+        <button onclick="sendPrivateMessage()">Send Private Message</button>
+        <br>
+        <input type="text" id="newGroupName" placeholder="Group to join" />
+        <button onclick="joinGroup()">Join Group</button>
+    </div>
+
+    <script>
+        let ws = null;
+        
+        function connect() {
+            const clientId = document.getElementById('clientId').value;
+            const groupName = document.getElementById('groupName').value;
+            
+            if (!clientId) {
+                alert('Please enter a client ID');
+                return;
+            }
+            
+            // Close existing connection if any
+            if (ws) {
+                ws.close();
+            }
+            
+            // Connect to WebSocket WITHOUT the /api prefix
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.host;
+            let url = `${protocol}//${host}/ws/${clientId}`;
+            if (groupName) {
+                url += `/${groupName}`;
+            }
+            
+            ws = new WebSocket(url);
+            
+            ws.onopen = function(event) {
+                addMessage('Connected to server', 'info');
+            };
+            
+            ws.onmessage = function(event) {
+                const data = event.data;
+                try {
+                    const jsonData = JSON.parse(data);
+                    if (jsonData.type === 'client_list') {
+                        addMessage(`Connected clients: ${JSON.stringify(jsonData.clients)}`, 'info');
+                    } else if (jsonData.type === 'group_info') {
+                        addMessage(`Groups: ${JSON.stringify(jsonData.groups)}`, 'info');
+                    } else {
+                        addMessage(data, 'info');
+                    }
+                } catch (e) {
+                    addMessage(data);
+                }
+            };
+            
+            ws.onclose = function(event) {
+                addMessage('Disconnected from server', 'info');
+            };
+            
+            ws.onerror = function(error) {
+                addMessage('Error: ' + error, 'info');
+            };
+        }
+        
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+        }
+        
+        function sendMessage() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert('Not connected to server');
+                return;
+            }
+            
+            const message = document.getElementById('messageInput').value;
+            if (message) {
+                ws.send(`/group ${message}`);
+                document.getElementById('messageInput').value = '';
+            }
+        }
+        
+        function sendPrivateMessage() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert('Not connected to server');
+                return;
+            }
+            
+            const targetClientId = document.getElementById('privateClientId').value;
+            const message = document.getElementById('messageInput').value;
+            
+            if (targetClientId && message) {
+                ws.send(`/send_to ${targetClientId} ${message}`);
+                document.getElementById('messageInput').value = '';
+            }
+        }
+        
+        function joinGroup() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert('Not connected to server');
+                return;
+            }
+            
+            const groupName = document.getElementById('newGroupName').value;
+            if (groupName) {
+                ws.send(`/join ${groupName}`);
+                document.getElementById('newGroupName').value = '';
+            }
+        }
+        
+        function addMessage(message, type = '') {
+            const messagesDiv = document.getElementById('messages');
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message ' + type;
+            messageElement.textContent = message;
+            messagesDiv.appendChild(messageElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        // Allow sending messages with Enter key
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>

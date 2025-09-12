@@ -1,0 +1,245 @@
+/* Top Menu Bar - Ribbon Style */
+
+.editor-ribbon {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1000;
+}
+
+/* Tab Navigation */
+.ribbon-tabs {
+  display: flex;
+  background: rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.ribbon-tab {
+  background: transparent;
+  border: none;
+  color: white;
+  padding: 12px 24px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+  position: relative;
+}
+
+.ribbon-tab:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.ribbon-tab.active {
+  background: rgba(255, 255, 255, 0.2);
+  border-bottom-color: #fff;
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.ribbon-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #fff;
+}
+
+/* Tab Content */
+.ribbon-content {
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.ribbon-pane {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.ribbon-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+}
+
+.ribbon-group h3 {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a5568;
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ribbon-buttons {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.ribbon-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 60px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ribbon-button:hover {
+  background: #f7fafc;
+  border-color: #cbd5e0;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.ribbon-button.active {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border-color: #667eea;
+}
+
+.ribbon-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.ribbon-icon {
+  font-size: 16px;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+
+.ribbon-label {
+  font-size: 10px;
+  color: #4a5568;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.ribbon-button.active .ribbon-label {
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .editor-ribbon {
+    overflow-x: auto;
+  }
+  
+  .ribbon-tabs {
+    justify-content: center;
+  }
+  
+  .ribbon-tab {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+  
+  .ribbon-pane {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .ribbon-group {
+    min-width: 100%;
+    align-items: stretch;
+  }
+  
+  .ribbon-buttons {
+    justify-content: center;
+  }
+  
+  .ribbon-button {
+    min-width: 70px;
+    padding: 12px 8px;
+  }
+}
+
+/* Loading State */
+.editor-ribbon.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  color: white;
+  font-size: 14px;
+}
+
+/* Animation for tab transitions */
+.ribbon-pane {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Special styling for important buttons */
+.ribbon-button[data-action="pdf"] {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  color: white;
+  border-color: #ff6b6b;
+}
+
+.ribbon-button[data-action="pdf"]:hover {
+  background: linear-gradient(135deg, #ff5252, #e53935);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .editor-ribbon {
+    background: linear-gradient(135deg, #2d3748, #4a5568);
+  }
+  
+  .ribbon-content {
+    background: rgba(45, 55, 72, 0.95);
+  }
+  
+  .ribbon-group h3 {
+    color: #cbd5e0;
+  }
+  
+  .ribbon-button {
+    background: #4a5568;
+    border-color: #718096;
+    color: #e2e8f0;
+  }
+  
+  .ribbon-button:hover {
+    background: #2d3748;
+    border-color: #4a5568;
+  }
+  
+  .ribbon-label {
+    color: #cbd5e0;
+  }
+}

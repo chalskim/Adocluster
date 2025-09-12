@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>redme_api 메시지 테스트</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .panel {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .message-container {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .message {
+            margin-bottom: 8px;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .received {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196F3;
+        }
+        .sent {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+        }
+        .error {
+            background-color: #ffebee;
+            border-left: 4px solid #f44336;
+        }
+        .system {
+            background-color: #fff3e0;
+            border-left: 4px solid #ff9800;
+            font-style: italic;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea, button {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .button-group button {
+            margin: 0;
+        }
+        .json-input {
+            font-family: monospace;
+            height: 150px;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+            background-color: #f1f1f1;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: white;
+            border-bottom: 1px solid white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="panel">
+            <h2>클라이언트 설정</h2>
+            <div class="form-group">
+                <label for="wsUrl">웹소켓 URL:</label>
+                <select id="wsUrl">
+                    <option value="/ws">기본 엔드포인트 (/ws)</option>
+                <option value="/ws/" selected>클라이언트 ID 엔드포인트 (/ws/{client_id})</option>
+                <option value="/ws//">클라이언트 ID + 그룹 엔드포인트 (/ws/{client_id}/{group})</option>
+                <option value="/ws/db">데이터베이스 엔드포인트 (/ws/db)</option>
+                </select>
+            </div>
+            <div class="form-group" id="clientIdGroup">
+                <label for="clientId">클라이언트 ID:</label>
+                <input type="number" id="clientId" value="101" min="1">
+            </div>
+            <div class="form-group" id="groupNameGroup" style="display: none;">
+                <label for="groupName">그룹 이름:</label>
+                <input type="text" id="groupName" value="test-group">
+            </div>
+            <button id="connectBtn">연결</button>
+            <button id="disconnectBtn" disabled>연결 해제</button>
+            
+            <h2>메시지</h2>
+            <div class="message-container" id="messageContainer"></div>
+            
+            <div class="tabs">
+                <div class="tab active" data-tab="textMessage">텍스트 메시지</div>
+                <div class="tab" data-tab="commandMessage">명령어 메시지</div>
+                <div class="tab" data-tab="jsonMessage">JSON 메시지</div>
+            </div>
+            
+            <div class="tab-content active" id="textMessage">
+                <div class="form-group">
+                    <label for="messageText">메시지:</label>
+                    <input type="text" id="messageText" placeholder="보낼 메시지를 입력하세요">
+                </div>
+                <button id="sendTextBtn" disabled>텍스트 메시지 전송</button>
+            </div>
+            
+            <div class="tab-content" id="commandMessage">
+                <div class="form-group">
+                    <label for="commandType">명령어 유형:</label>
+                    <select id="commandType">
+                        <option value="send_to">개인 메시지 전송 (/send_to)</option>
+                        <option value="group">그룹 메시지 전송 (/group)</option>
+                        <option value="join">그룹 참여 (/join)</option>
+                        <option value="groups">그룹 목록 조회 (/groups)</option>
+                        <option value="group_members">그룹 멤버 조회 (/group_members)</option>
+                    </select>
+                </div>
+                <div class="form-group" id="targetClientGroup">
+                    <label for="targetClientId">대상 클라이언트 ID:</label>
+                    <input type="number" id="targetClientId" value="102" min="1">
+                </div>
+                <div class="form-group" id="targetGroupGroup" style="display: none;">
+                    <label for="targetGroupName">대상 그룹 이름:</label>
+                    <input type="text" id="targetGroupName" value="target-group">
+                </div>
+                <div class="form-group" id="commandMessageGroup">
+                    <label for="commandMessage">메시지 내용:</label>
+                    <input type="text" id="commandMessage" placeholder="메시지 내용을 입력하세요">
+                </div>
+                <button id="sendCommandBtn" disabled>명령어 전송</button>
+            </div>
+            
+            <div class="tab-content" id="jsonMessage">
+                <div class="form-group">
+                    <label for="jsonTemplate">JSON 템플릿:</label>
+                    <select id="jsonTemplate">
+                        <option value="connect">데이터베이스 연결</option>
+                        <option value="disconnect">데이터베이스 연결 해제</option>
+                        <option value="query">쿼리 실행</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="jsonData">JSON 데이터:</label>
+                    <textarea id="jsonData" class="json-input" placeholder="JSON 데이터를 입력하세요"></textarea>
+                </div>
+                <button id="sendJsonBtn" disabled>JSON 메시지 전송</button>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h2>HTTP API 테스트</h2>
+            <div class="tabs">
+                <div class="tab active" data-tab="getClients">클라이언트 조회</div>
+                <div class="tab" data-tab="getGroups">그룹 조회</div>
+                <div class="tab" data-tab="sendMessage">메시지 전송</div>
+            </div>
+            
+            <div class="tab-content active" id="getClients">
+                <button id="getClientsBtn">연결된 클라이언트 조회</button>
+                <div class="form-group">
+                    <label>응답:</label>
+                    <pre id="getClientsResponse"></pre>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="getGroups">
+                <div class="form-group">
+                    <label for="groupNameForList">그룹 이름 (선택사항):</label>
+                    <input type="text" id="groupNameForList" placeholder="비워두면 모든 그룹 조회">
+                </div>
+                <button id="getGroupsBtn">그룹 목록 조회</button>
+                <button id="getGroupMembersBtn">그룹 멤버 조회</button>
+                <div class="form-group">
+                    <label>응답:</label>
+                    <pre id="getGroupsResponse"></pre>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="sendMessage">
+                <div class="form-group">
+                    <label for="messageType">메시지 유형:</label>
+                    <select id="messageType">
+                        <option value="client">특정 클라이언트에게 전송</option>
+                        <option value="group">특정 그룹에 브로드캐스트</option>
+                    </select>
+                </div>
+                <div class="form-group" id="httpTargetClientGroup">
+                    <label for="httpTargetClientId">대상 클라이언트 ID:</label>
+                    <input type="number" id="httpTargetClientId" value="101" min="1">
+                </div>
+                <div class="form-group" id="httpTargetGroupGroup" style="display: none;">
+                    <label for="httpTargetGroupName">대상 그룹 이름:</label>
+                    <input type="text" id="httpTargetGroupName" value="test-group">
+                </div>
+                <div class="form-group">
+                    <label for="httpMessage">메시지 내용:</label>
+                    <input type="text" id="httpMessage" placeholder="메시지 내용을 입력하세요">
+                </div>
+                <button id="sendHttpMessageBtn">HTTP로 메시지 전송</button>
+                <div class="form-group">
+                    <label>응답:</label>
+                    <pre id="sendMessageResponse"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수
+        let ws = null;
+        let isConnected = false;
+        
+        // DOM 요소
+        const wsUrlSelect = document.getElementById('wsUrl');
+        const clientIdInput = document.getElementById('clientId');
+        const groupNameInput = document.getElementById('groupName');
+        const clientIdGroup = document.getElementById('clientIdGroup');
+        const groupNameGroup = document.getElementById('groupNameGroup');
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const messageContainer = document.getElementById('messageContainer');
+        const messageText = document.getElementById('messageText');
+        const sendTextBtn = document.getElementById('sendTextBtn');
+        const commandType = document.getElementById('commandType');
+        const targetClientId = document.getElementById('targetClientId');
+        const targetGroupName = document.getElementById('targetGroupName');
+        const targetClientGroup = document.getElementById('targetClientGroup');
+        const targetGroupGroup = document.getElementById('targetGroupGroup');
+        const commandMessage = document.getElementById('commandMessage');
+        const commandMessageGroup = document.getElementById('commandMessageGroup');
+        const sendCommandBtn = document.getElementById('sendCommandBtn');
+        const jsonTemplate = document.getElementById('jsonTemplate');
+        const jsonData = document.getElementById('jsonData');
+        const sendJsonBtn = document.getElementById('sendJsonBtn');
+        const getClientsBtn = document.getElementById('getClientsBtn');
+        const getClientsResponse = document.getElementById('getClientsResponse');
+        const groupNameForList = document.getElementById('groupNameForList');
+        const getGroupsBtn = document.getElementById('getGroupsBtn');
+        const getGroupMembersBtn = document.getElementById('getGroupMembersBtn');
+        const getGroupsResponse = document.getElementById('getGroupsResponse');
+        const messageType = document.getElementById('messageType');
+        const httpTargetClientId = document.getElementById('httpTargetClientId');
+        const httpTargetGroupName = document.getElementById('httpTargetGroupName');
+        const httpTargetClientGroup = document.getElementById('httpTargetClientGroup');
+        const httpTargetGroupGroup = document.getElementById('httpTargetGroupGroup');
+        const httpMessage = document.getElementById('httpMessage');
+        const sendHttpMessageBtn = document.getElementById('sendHttpMessageBtn');
+        const sendMessageResponse = document.getElementById('sendMessageResponse');
+        
+        // 탭 기능
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                const tabContent = document.getElementById(tabId);
+                
+                // 현재 탭 섹션에서 모든 탭과 콘텐츠 비활성화
+                const tabsContainer = tab.parentElement;
+                tabsContainer.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                
+                const tabContents = document.querySelectorAll('.tab-content');
+                tabContents.forEach(content => {
+                    if (content.parentElement === tabContent.parentElement) {
+                        content.classList.remove('active');
+                    }
+                });
+                
+                // 선택한 탭과 콘텐츠 활성화
+                tab.classList.add('active');
+                tabContent.classList.add('active');
+                
+                // 명령어 탭 UI 업데이트
+                if (tabId === 'commandMessage') {
+                    updateCommandUI();
+                }
+                
+                // HTTP 메시지 탭 UI 업데이트
+                if (tabId === 'sendMessage') {
+                    updateHttpMessageUI();
+                }
+            });
+        });
+        
+        // 웹소켓 URL 변경 시 UI 업데이트
+        wsUrlSelect.addEventListener('change', updateConnectionUI);
+        
+        // 명령어 유형 변경 시 UI 업데이트
+        commandType.addEventListener('change', updateCommandUI);
+        
+        // 메시지 유형 변경 시 UI 업데이트
+        messageType.addEventListener('change', updateHttpMessageUI);
+        
+        // JSON 템플릿 변경 시 업데이트
+        jsonTemplate.addEventListener('change', updateJsonTemplate);
+        
+        // 연결 버튼 클릭 이벤트
+        connectBtn.addEventListener('click', connectWebSocket);
+        
+        // 연결 해제 버튼 클릭 이벤트
+        disconnectBtn.addEventListener('click', disconnectWebSocket);
+        
+        // 텍스트 메시지 전송 버튼 클릭 이벤트
+        sendTextBtn.addEventListener('click', sendTextMessage);
+        
+        // 명령어 전송 버튼 클릭 이벤트
+        sendCommandBtn.addEventListener('click', sendCommandMessage);
+        
+        // JSON 메시지 전송 버튼 클릭 이벤트
+        sendJsonBtn.addEventListener('click', sendJsonMessage);
+        
+        // HTTP API 버튼 클릭 이벤트
+        getClientsBtn.addEventListener('click', getConnectedClients);
+        getGroupsBtn.addEventListener('click', getGroups);
+        getGroupMembersBtn.addEventListener('click', getGroupMembers);
+        sendHttpMessageBtn.addEventListener('click', sendHttpMessage);
+        
+        // 초기 UI 설정
+        updateConnectionUI();
+        updateCommandUI();
+        updateHttpMessageUI();
+        updateJsonTemplate();
+        
+        // 웹소켓 URL에 따른 UI 업데이트
+        function updateConnectionUI() {
+            const selectedUrl = wsUrlSelect.value;
+            
+            if (selectedUrl.includes('{client_id}') || selectedUrl.endsWith('/')) {
+                clientIdGroup.style.display = 'block';
+            } else {
+                clientIdGroup.style.display = 'none';
+            }
+            
+            if (selectedUrl.includes('{group}') || selectedUrl.endsWith('//')) {
+                groupNameGroup.style.display = 'block';
+            } else {
+                groupNameGroup.style.display = 'none';
+            }
+        }
+        
+        // 명령어 유형에 따른 UI 업데이트
+        function updateCommandUI() {
+            const selectedCommand = commandType.value;
+            
+            // 기본적으로 모든 필드 숨김
+            targetClientGroup.style.display = 'none';
+            targetGroupGroup.style.display = 'none';
+            commandMessageGroup.style.display = 'none';
+            
+            // 명령어 유형에 따라 필요한 필드 표시
+            switch (selectedCommand) {
+                case 'send_to':
+                    targetClientGroup.style.display = 'block';
+                    commandMessageGroup.style.display = 'block';
+                    break;
+                case 'group':
+                    commandMessageGroup.style.display = 'block';
+                    break;
+                case 'join':
+                    targetGroupGroup.style.display = 'block';
+                    break;
+                case 'group_members':
+                    targetGroupGroup.style.display = 'block';
+                    break;
+                case 'groups':
+                    // 추가 필드 필요 없음
+                    break;
+            }
+        }
+        
+        // HTTP 메시지 유형에 따른 UI 업데이트
+        function updateHttpMessageUI() {
+            const selectedType = messageType.value;
+            
+            if (selectedType === 'client') {
+                httpTargetClientGroup.style.display = 'block';
+                httpTargetGroupGroup.style.display = 'none';
+            } else {
+                httpTargetClientGroup.style.display = 'none';
+                httpTargetGroupGroup.style.display = 'block';
+            }
+        }
+        
+        // JSON 템플릿 업데이트
+        function updateJsonTemplate() {
+            const selectedTemplate = jsonTemplate.value;
+            let templateJson = {};
+            
+            switch (selectedTemplate) {
+                case 'connect':
+                    templateJson = {
+                        "action": "connect",
+                        "host": "localhost",
+                        "port": 5432,
+                        "database": "your_database",
+                        "user": "your_username",
+                        "password": "your_password",
+                        "client_id": 101
+                    };
+                    break;
+                case 'disconnect':
+                    templateJson = {
+                        "action": "disconnect"
+                    };
+                    break;
+                case 'query':
+                    templateJson = {
+                        "action": "query",
+                        "query": "SELECT * FROM users LIMIT 10"
+                    };
+                    break;
+            }
+            
+            jsonData.value = JSON.stringify(templateJson, null, 2);
+        }
+        
+        // 웹소켓 연결
+        function connectWebSocket() {
+            if (isConnected) {
+                addMessage("이미 연결되어 있습니다.", "error");
+                return;
+            }
+            
+            let url = wsUrlSelect.value;
+            
+            // URL에 클라이언트 ID와 그룹 이름 삽입
+            if (url.endsWith('/')) {
+                url = url + clientIdInput.value;
+                
+                if (url.endsWith('//')) {
+                    url = url.slice(0, -1) + '/' + groupNameInput.value;
+                }
+            }
+            
+            // 중복 슬래시 제거
+            url = url.replace(/\/\/+/g, '/');
+            url = url.replace(':/', '://');
+            
+            // 동적 WebSocket URL 생성
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.host;
+            const fullUrl = `${protocol}//${host}${url}`;
+            
+            try {
+                addMessage(`웹소켓 연결 시도: ${fullUrl}`, "system");
+                ws = new WebSocket(fullUrl);
+                
+                ws.onopen = function(event) {
+                    isConnected = true;
+                    addMessage("웹소켓 연결 성공", "system");
+                    updateConnectionButtons();
+                };
+                
+                ws.onmessage = function(event) {
+                    try {
+                        // JSON 메시지인지 확인
+                        const jsonData = JSON.parse(event.data);
+                        addMessage("수신: " + JSON.stringify(jsonData, null, 2), "received");
+                    } catch (e) {
+                        // 일반 텍스트 메시지
+                        addMessage("수신: " + event.data, "received");
+                    }
+                };
+                
+                ws.onclose = function(event) {
+                    isConnected = false;
+                    addMessage("웹소켓 연결 종료", "system");
+                    updateConnectionButtons();
+                };
+                
+                ws.onerror = function(event) {
+                    addMessage("웹소켓 오류 발생", "error");
+                };
+            } catch (error) {
+                addMessage("웹소켓 연결 오류: " + error.message, "error");
+            }
+        }
+        
+        // 웹소켓 연결 해제
+        function disconnectWebSocket() {
+            if (!isConnected) {
+                addMessage("연결되어 있지 않습니다.", "error");
+                return;
+            }
+            
+            try {
+                ws.close();
+                addMessage("웹소켓 연결 해제 요청", "system");
+            } catch (error) {
+                addMessage("웹소켓 연결 해제 오류: " + error.message, "error");
+            }
+        }
+        
+        // 텍스트 메시지 전송
+        function sendTextMessage() {
+            if (!isConnected) {
+                addMessage("연결되어 있지 않습니다.", "error");
+                return;
+            }
+            
+            const message = messageText.value.trim();
+            if (!message) {
+                addMessage("메시지를 입력하세요.", "error");
+                return;
+            }
+            
+            try {
+                ws.send(message);
+                addMessage("전송: " + message, "sent");
+                messageText.value = "";
+            } catch (error) {
+                addMessage("메시지 전송 오류: " + error.message, "error");
+            }
+        }
+        
+        // 명령어 메시지 전송
+        function sendCommandMessage() {
+            if (!isConnected) {
+                addMessage("연결되어 있지 않습니다.", "error");
+                return;
+            }
+            
+            const command = commandType.value;
+            let fullCommand = "";
+            
+            switch (command) {
+                case 'send_to':
+                    const targetId = targetClientId.value.trim();
+                    const privateMessage = commandMessage.value.trim();
+                    if (!targetId || !privateMessage) {
+                        addMessage("대상 ID와 메시지를 모두 입력하세요.", "error");
+                        return;
+                    }
+                    fullCommand = `/send_to ${targetId} ${privateMessage}`;
+                    break;
+                case 'group':
+                    const groupMessage = commandMessage.value.trim();
+                    if (!groupMessage) {
+                        addMessage("메시지를 입력하세요.", "error");
+                        return;
+                    }
+                    fullCommand = `/group ${groupMessage}`;
+                    break;
+                case 'join':
+                    const joinGroup = targetGroupName.value.trim();
+                    if (!joinGroup) {
+                        addMessage("그룹 이름을 입력하세요.", "error");
+                        return;
+                    }
+                    fullCommand = `/join ${joinGroup}`;
+                    break;
+                case 'groups':
+                    fullCommand = `/groups`;
+                    break;
+                case 'group_members':
+                    const groupName = targetGroupName.value.trim();
+                    if (!groupName) {
+                        addMessage("그룹 이름을 입력하세요.", "error");
+                        return;
+                    }
+                    fullCommand = `/group_members ${groupName}`;
+                    break;
+            }
+            
+            try {
+                ws.send(fullCommand);
+                addMessage("전송: " + fullCommand, "sent");
+                
+                // 입력 필드 초기화
+                if (command === 'send_to' || command === 'group') {
+                    commandMessage.value = "";
+                }
+            } catch (error) {
+                addMessage("명령어 전송 오류: " + error.message, "error");
+            }
+        }
+        
+        // JSON 메시지 전송
+        function sendJsonMessage() {
+            if (!isConnected) {
+                addMessage("연결되어 있지 않습니다.", "error");
+                return;
+            }
+            
+            try {
+                const jsonStr = jsonData.value.trim();
+                if (!jsonStr) {
+                    addMessage("JSON 데이터를 입력하세요.", "error");
+                    return;
+                }
+                
+                // JSON 형식 검증
+                const jsonObj = JSON.parse(jsonStr);
+                
+                ws.send(jsonStr);
+                addMessage("전송: " + JSON.stringify(jsonObj, null, 2), "sent");
+            } catch (error) {
+                addMessage("JSON 메시지 전송 오류: " + error.message, "error");
+            }
+        }
+        
+        // 연결된 클라이언트 조회
+        async function getConnectedClients() {
+            try {
+                const baseUrl = `${window.location.protocol}//${window.location.host}`;
+                const response = await fetch(`${baseUrl}/ws/clients`);
+                const data = await response.json();
+                getClientsResponse.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                getClientsResponse.textContent = `오류: ${error.message}`;
+            }
+        }
+        
+        // 그룹 목록 조회
+        async function getGroups() {
+            try {
+                const baseUrl = `${window.location.protocol}//${window.location.host}`;
+                const response = await fetch(`${baseUrl}/ws/groups`);
+                const data = await response.json();
+                getGroupsResponse.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                getGroupsResponse.textContent = `오류: ${error.message}`;
+            }
+        }
+        
+        // 그룹 멤버 조회
+        async function getGroupMembers() {
+            const groupName = groupNameForList.value.trim();
+            if (!groupName) {
+                getGroupsResponse.textContent = "그룹 이름을 입력하세요.";
+                return;
+            }
+            
+            try {
+                const baseUrl = `${window.location.protocol}//${window.location.host}`;
+                const response = await fetch(`${baseUrl}/ws/groups/${groupName}`);
+                const data = await response.json();
+                getGroupsResponse.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                getGroupsResponse.textContent = `오류: ${error.message}`;
+            }
+        }
+        
+        // HTTP로 메시지 전송
+        async function sendHttpMessage() {
+            const message = httpMessage.value.trim();
+            if (!message) {
+                sendMessageResponse.textContent = "메시지를 입력하세요.";
+                return;
+            }
+            
+            let url = '';
+            if (messageType.value === 'client') {
+                const clientId = httpTargetClientId.value.trim();
+                if (!clientId) {
+                    sendMessageResponse.textContent = "클라이언트 ID를 입력하세요.";
+                    return;
+                }
+                const baseUrl = `${window.location.protocol}//${window.location.host}`;
+                url = `${baseUrl}/ws/send_to/${clientId}`;
+            } else {
+                const groupName = httpTargetGroupName.value.trim();
+                if (!groupName) {
+                    sendMessageResponse.textContent = "그룹 이름을 입력하세요.";
+                    return;
+                }
+                const baseUrl = `${window.location.protocol}//${window.location.host}`;
+                url = `${baseUrl}/ws/broadcast_to_group/${groupName}`;
+            }
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+                const data = await response.json();
+                sendMessageResponse.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                sendMessageResponse.textContent = `오류: ${error.message}`;
+            }
+        }
+        
+        // 메시지 추가
+        function addMessage(message, type) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', type);
+            messageElement.textContent = message;
+            messageContainer.appendChild(messageElement);
+            messageContainer.scrollTop = messageContainer.scrollHeight;
+        }
+        
+        // 연결 상태에 따른 버튼 업데이트
+        function updateConnectionButtons() {
+            connectBtn.disabled = isConnected;
+            disconnectBtn.disabled = !isConnected;
+            sendTextBtn.disabled = !isConnected;
+            sendCommandBtn.disabled = !isConnected;
+            sendJsonBtn.disabled = !isConnected;
+        }
+    </script>
+</body>
+</html>

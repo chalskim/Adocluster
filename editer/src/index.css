@@ -1,0 +1,273 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  /* ============================================= */
+  /* 1. 최상위 레이아웃 */
+  /* ============================================= */
+  .app-layout {
+    @apply flex flex-row h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200;
+  }
+  .main-content-wrapper {
+    @apply flex flex-1 min-w-0;
+  }
+  .main-content {
+    @apply flex flex-col flex-1 min-w-0;
+  }
+  .sidebar-container {
+    @apply h-full flex-shrink-0; /* 높이를 100%로 채우고, 너비가 줄어들지 않도록 설정 */
+  }
+  .resize-handle {
+    @apply w-1 h-full cursor-col-resize bg-gray-200 dark:bg-gray-700 hover:bg-blue-500 flex-shrink-0;
+  }
+
+  /* ============================================= */
+  /* 2. 왼쪽 사이드바 (.sidebar) */
+  /* ============================================= */
+  .sidebar {
+    @apply h-full w-full flex-shrink-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col;
+  }
+  .sidebar-tabs {
+    @apply flex border-b border-gray-200 dark:border-gray-700 flex-shrink-0;
+  }
+  .sidebar-tab {
+    @apply px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 border-b-2 border-transparent hover:text-gray-700 dark:hover:text-gray-200;
+    margin-bottom: -1px;
+  }
+  .sidebar-tab.active {
+    @apply text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400 font-semibold;
+  }
+  .sidebar .sidebar-content {
+    @apply flex-grow overflow-y-auto;
+  }
+  .tab-pane { @apply hidden; }
+  .tab-pane.active { @apply block; }
+  
+  /* 2-1. 왼쪽 사이드바: 공통 (검색창) */
+  .sidebar .search-bar-container {
+    @apply flex items-center gap-2 p-2 m-2 border border-gray-300 dark:border-gray-600 rounded-md;
+  }
+  .sidebar .search-icon { @apply text-gray-400; }
+  .sidebar .search-input { @apply w-full bg-transparent focus:outline-none; }
+
+  /* 2-2. 왼쪽 사이드바: 프로젝트 탭 */
+  .tree-view-container { @apply p-2; }
+  .children-container { transition: all 0.3s ease-in-out; overflow: hidden; }
+
+  /* 2-3. 왼쪽 사이드바: 자료 탭 */
+  .file-explorer-container { @apply p-2; }
+  .file-node { @apply my-1; }
+  .file-item { @apply flex items-center gap-2 p-2 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700; }
+  .file-item:has(+ .file-children) { @apply font-semibold; }
+  .file-item .file-icon { @apply text-lg text-gray-500; }
+  .file-name { @apply flex-grow text-sm; }
+  .folder-arrow { @apply text-lg text-gray-400; }
+  .file-children { @apply pl-6; }
+  
+  /* 2-4. 왼쪽 사이드바: 참고문헌 탭 (새 UI) */
+  .reference-panel { @apply h-full flex flex-col; }
+  .search-filter-section { @apply p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0; }
+  .saved-searches-container { @apply flex items-center gap-2 mt-3; }
+  .saved-searches-container label { @apply text-xs font-medium text-gray-500 dark:text-gray-400; }
+  .saved-searches-select { @apply flex-grow text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 p-1; }
+  .search-filter-section .btn-icon .material-symbols-outlined { @apply text-lg text-gray-500 dark:text-gray-400; }
+  .content-display-section { @apply flex-grow overflow-y-auto p-4; }
+  .content-display-section h3 { @apply text-xs font-bold uppercase text-gray-400 dark:text-gray-500 mb-3; }
+  .ref-card { @apply bg-gray-50 dark:bg-gray-700/50 rounded-md p-3 mb-3 relative cursor-pointer; }
+  .ref-card p { @apply text-xs leading-normal m-0 text-gray-600 dark:text-gray-400; }
+  .ref-card .ref-author { @apply font-semibold text-sm text-gray-800 dark:text-gray-200; }
+  .ref-card .ref-title { @apply text-gray-700 dark:text-gray-300; }
+  .ref-card-actions { @apply absolute top-2 right-2 flex gap-1 opacity-0 transition-opacity; }
+  .ref-card:hover .ref-card-actions { @apply opacity-100; }
+  .import-export-section { @apply p-3 border-t border-gray-200 dark:border-gray-700 flex gap-3 flex-shrink-0; }
+  .import-export-section .btn { @apply flex-1 py-2 px-3 rounded-md text-sm font-medium cursor-pointer border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center justify-center gap-2; }
+  .import-export-section .btn .material-symbols-outlined { @apply text-base; }
+
+  /* 2-5. 왼쪽 사이드바: Todo List 탭 (새 UI) */
+  .todo-panel { @apply h-full flex flex-col; }
+  .todo-header { @apply p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 flex justify-between items-center; }
+  .todo-header h3 { @apply text-base font-bold; }
+  .todo-header .btn-icon .material-symbols-outlined { @apply text-lg text-gray-500 dark:text-gray-400; }
+  .todo-list { @apply flex-grow overflow-y-auto px-4; }
+  .todo-item { @apply flex items-start py-3 border-b border-gray-200 dark:border-gray-700; }
+  .todo-item:last-child { @apply border-b-0; }
+  .todo-checkbox { @apply mt-1 mr-3 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0; }
+  .todo-content { @apply flex-grow; }
+  .todo-text { @apply text-sm font-medium text-gray-800 dark:text-gray-200; }
+  .todo-time { @apply text-xs text-gray-500 dark:text-gray-400 mt-1; }
+  .todo-item.completed .todo-text { @apply line-through text-gray-400 dark:text-gray-500; }
+  .new-todo-form { @apply p-3 border-t border-gray-200 dark:border-gray-700 flex gap-2 flex-shrink-0; }
+  .new-todo-input { @apply flex-grow p-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent; }
+  .btn-add { @apply px-4 py-2 rounded-md text-sm font-semibold cursor-pointer border-none bg-blue-600 text-white hover:bg-blue-700; }
+  
+  /* ============================================= */
+  /* 3. 오른쪽 사이드바 (.right-sidebar) */
+  /* ============================================= */
+  .right-sidebar {
+    @apply w-80 flex-shrink-0 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col;
+  }
+  .right-sidebar.empty {
+    @apply bg-gray-50 dark:bg-gray-900/50 flex items-center justify-center p-4 text-center text-sm text-gray-500;
+  }
+  .right-sidebar .sidebar-content {
+    @apply p-4 flex-grow overflow-y-auto;
+  }
+  .properties-pane { @apply flex flex-col gap-4; }
+  .property-item label { @apply text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 block; }
+  .property-item input { @apply w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700; }
+  .references-pane { @apply flex flex-col gap-4; }
+  .references-header { @apply flex justify-between items-center mb-2; }
+  .references-header h3 { @apply text-sm font-bold; }
+  .add-reference-btn { @apply p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600; }
+  .add-reference-btn .material-symbols-outlined { font-size: 20px; }
+  .reference-card { @apply relative p-4 border border-gray-200 dark:border-gray-600 rounded-lg text-sm leading-relaxed; }
+  .reference-card p { @apply my-1; }
+  .delete-reference-btn { @apply absolute top-2 right-2 p-1 rounded-full text-gray-400 dark:text-gray-500 opacity-0 hover:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-600 transition-opacity; }
+  .delete-reference-btn .material-symbols-outlined { font-size: 18px; }
+  .comments-pane { @apply flex flex-col gap-4; }
+  .comment-card { @apply p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg; }
+  .comment-author { @apply font-bold text-sm mb-1; }
+  .comment-text { @apply text-sm mb-2; }
+  .comment-timestamp { @apply text-xs text-gray-500 dark:text-gray-400; }
+
+  /* ============================================= */
+  /* 4. 메인 에디터 (TopMenuBar, Tiptap, StatusBar) */
+  /* ============================================= */
+  .editor-ribbon { @apply relative bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700; z-index: 20; }
+  .ribbon-tabs { @apply flex px-2 border-b border-gray-200 dark:border-gray-700; }
+  .ribbon-tab { @apply px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 border-b-2 border-transparent hover:text-gray-700 dark:hover:text-gray-200; margin-bottom: -1px; }
+  .ribbon-tab.active { @apply text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400; }
+  .ribbon-content { @apply p-2 flex items-start gap-2 flex-wrap; overflow: visible; }
+  .ribbon-pane { @apply hidden w-full items-start gap-2 flex-wrap; overflow: visible; }
+  .ribbon-pane.active { @apply flex; }
+  .ribbon-group { @apply relative flex flex-col items-center justify-start p-2 border-r border-gray-200 dark:border-gray-600; padding-bottom: 20px; overflow: visible; }
+  .ribbon-group:last-child { @apply border-r-0; }
+  .ribbon-group-title { @apply absolute bottom-1 text-xs text-gray-500 dark:text-gray-400; }
+  .ribbon-controls-row { @apply flex items-center gap-1; }
+  .ribbon-button { @apply flex flex-col items-center justify-center gap-1 rounded p-1 min-w-[32px] hover:bg-gray-200 dark:hover:bg-gray-700; }
+  .ribbon-button:disabled { @apply opacity-50 cursor-not-allowed hover:bg-transparent dark:hover:bg-transparent; }
+  .ribbon-button.is-active { @apply bg-gray-200 dark:bg-gray-600; }
+  .ribbon-icon { @apply text-xl; }
+  .ribbon-label { @apply text-xs whitespace-nowrap; }
+  .group-clipboard { @apply flex-row items-stretch; }
+  .paste-button { @apply p-2 text-center; }
+  .clipboard-actions { @apply flex items-center gap-1; }
+  .font-dropdown, .style-dropdown {
+    @apply relative bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 text-sm h-[32px];
+    width: 150px;
+    z-index: 30;
+  }
+  .font-size-input {
+    @apply bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 text-sm h-[32px];
+    width: 150px;
+  }
+  .ribbon-controls-row .ribbon-button, .ribbon-controls-row .font-dropdown, .ribbon-controls-row .font-size-input, .ribbon-controls-row .style-dropdown { @apply min-h-[32px]; }
+  .ribbon-controls-row .ribbon-button { @apply min-w-[32px]; }
+  .insert-button { @apply w-[60px] h-[50px] justify-center; }
+  
+  .editor-container { 
+    @apply flex-1 bg-gray-200 dark:bg-gray-700 overflow-y-auto p-8;
+  }
+  .a4-page-background {
+    @apply bg-white dark:bg-gray-800 shadow-lg mx-auto;
+    width: 21cm;
+    min-height: 29.7cm; /* 내용이 적어도 A4 높이를 유지 */
+    transition: box-shadow 0.2s ease-in-out;
+  }
+  .tiptap-wrapper { 
+    @apply bg-white dark:bg-gray-800 shadow-lg mx-auto flex flex-col;
+    width: 21cm;
+    height: 29.7cm;
+    transition: box-shadow 0.2s ease-in-out; 
+  }
+  /* --- [수정 2] header, footer, main 영역에 대한 스타일 추가 --- */
+  .page-header, .page-footer {
+    @apply flex-shrink-0 relative;
+    height: 2.5cm; /* 약 3~4줄 분량의 고정 높이 */
+  }
+  .page-header {
+    @apply border-b border-gray-200 dark:border-gray-600;
+  }
+  .page-footer {
+    @apply border-t border-gray-200 dark:border-gray-600;
+  }
+  .page-main {
+    @apply flex-grow overflow-auto relative; /* 남은 공간을 모두 차지하고, 내용이 길면 스크롤 */
+  }
+
+  .ProseMirror { 
+    @apply prose dark:prose-invert max-w-none w-full h-full outline-none;
+    
+    blockquote {
+      @apply border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic text-gray-500 dark:text-gray-400 relative;
+    }
+    mark {
+      @apply bg-yellow-200 dark:bg-yellow-400/70 text-black rounded px-1 py-0.5;
+    }
+    blockquote[cite]::after {
+      content: '— ' attr(cite);
+      @apply block not-italic text-right text-sm text-gray-400 dark:text-gray-500 mt-2;
+    }
+  }
+    /* 머리글/바닥글 내부 에디터는 자체 패딩을 제거하여 부모 패딩을 사용하도록 함 */
+  .page-header .ProseMirror, 
+  .page-footer .ProseMirror {
+    @apply flex items-center px-10; /* 수평 여백만 p-10으로 동일하게 적용 */
+  }
+  /* 머리글/바닥글 내부 에디터는 자체 패딩을 제거하여 부모 패딩을 사용하도록 함 */
+  .page-header .ProseMirror p,
+  .page-footer .ProseMirror p {
+    @apply m-0;
+  }
+
+  .main-content .ProseMirror {
+    @apply p-10;/* 본문 에디터는 기존 패딩 유지 */
+  }
+
+  .a4-page-background:has(.ProseMirror:focus) {
+    box-shadow: 0 0 0 3px #60a5fa, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+  .tiptap-wrapper:has(.ProseMirror:focus) { box-shadow: 0 0 0 3px #60a5fa, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+  .ProseMirror ul, .ProseMirror ol { list-style: revert; padding-left: revert; }
+
+  /* --- [ ▼▼▼ 이 부분을 추가해 주세요 ▼▼▼ ] --- */
+  .ProseMirror p[data-indent="1"] {
+    margin-left: 2em;
+  }
+  .ProseMirror p[data-indent="2"] {
+    margin-left: 4em;
+  }
+  .ProseMirror p[data-indent="3"] {
+    margin-left: 6em;
+  }
+  .ProseMirror p[data-indent="4"] {
+    margin-left: 8em;
+  }
+  .status-bar { @apply flex items-center justify-end p-1 border-t border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex-shrink-0; }
+  .status-text { @apply text-xs text-gray-500 dark:text-gray-400 px-2; }
+
+  /* ============================================= */
+  /* 5. 공용 컴포넌트 (모달 등) */
+  /* ============================================= */
+  .modal-overlay { @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50; }
+  .modal-content { @apply bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-sm flex flex-col gap-4; }
+  .modal-content h2 { @apply text-xl font-bold mt-0 text-center; }
+  .modal-field { @apply flex flex-col gap-1; }
+  .modal-field label { @apply text-sm font-medium text-gray-700 dark:text-gray-300; }
+  .modal-field input { @apply w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700; }
+  .modal-actions { @apply flex justify-center gap-2 mt-2; }
+  .modal-button { @apply px-4 py-2 rounded-md text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700; }
+  .modal-button.cancel { @apply bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500; }
+  
+  .datepicker-container { @apply flex justify-center; }
+  .date-time-modal .react-datepicker { @apply border-none shadow-none; }
+  
+  .equation-wrapper { @apply my-4 p-2 border border-dashed border-gray-300 dark:border-gray-600 rounded-md cursor-pointer; }
+  .equation-wrapper .katex-display { @apply m-0; }
+  
+  .graph-domain-inputs { @apply flex gap-4; }
+  .graph-domain-inputs .modal-field { @apply flex-1; }
+  .graph-preview-container { @apply w-full h-[260px] border border-gray-200 dark:border-gray-600 rounded-md p-2 flex items-center justify-center; }
+  .graph-error-message { @apply text-red-500 text-sm text-center; }
+}

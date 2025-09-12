@@ -1,0 +1,103 @@
+from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+from app.routers import users_router, auth_router, websocket_router, projects_router
+from app.routers.uploads_router import router as uploads_api_router
+from app.routers.db_tables import router as db_tables_router
+from app.routers.client_ip_router import router as client_ip_router
+from app.routers.todos import router as todos_router 
+from app.core.database import Base, engine
+from app.models import user, project, node, content_block, file, reference, citation, ai_job, revision, team, client_ip
+from sqlalchemy import MetaData
+import os
+import uvicorn # Added for direct uvicorn.run call within main.py
+import logging
+
+# 로깅 설정 - INFO 레벨 이상의 로그 출력
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+app = FastAPI(
+    title="Adcluster API",
+    description="API for the Adcluster server",
+    version="0.1.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174", 
+        "http://localhost:5175",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
+        "http://127.0.0.1:5175",
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+)
+
+logger.debug("--- main.py: Skipping database table creation (using migrations instead) ---")
+
+# === IMPORTANT: ROUTE ORDERING MATTERS ===
+
+logger.debug("--- main.py: Including API routers ---")
+# Include all API routers first
+app.include_router(users_router)
+app.include_router(auth_router)
+app.include_router(projects_router)
+# WebSocket endpoints don't use prefixes
+app.include_router(websocket_router)
+# HTTP API endpoints use the /api prefix
+app.include_router(websocket_router, prefix="/api", include_in_schema=False)  # Include HTTP endpoints with prefix
+app.include_router(uploads_api_router, prefix="/api")
+app.include_router(db_tables_router)
+app.include_router(client_ip_router)
+app.include_router(todos_router)
+logger.debug("--- main.py: API routers included ---")
+
+@app.get("/health-check")
+async def health_check():
+    """서버 상태 확인을 위한 엔드포인트"""
+    return {"status": "ok", "message": "서버가 정상적으로 실행 중입니다."}
+
+# Define specific GET routes for health and root
+@app.get("/health")
+async def health_check():
+    logger.debug("--- main.py: /health endpoint hit ---")
+    return {"status": "healthy"}
+
+@app.get("/")
+async def root():
+    logger.debug("--- main.py: / root endpoint hit ---")
+    # You can keep this or remove it. If removed, the final StaticFiles mount will
+    # serve index.html (or socket_test.html if it's renamed or configured) for '/'
+    return {"message": "Welcome to Adcluster API"}
+
+# Then include specific static file directories
+logger.debug("--- main.py: Mounting /uploads static files ---")
+# Mount the entire uploads directory to serve files from all subdirectories
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+logger.debug("--- main.py: /uploads static files mounted ---")
+
+# Finally, mount the root static files as a fallback for everything else.
+# This ensures API routes and specific static mounts are tried first.
+logger.debug("--- main.py: Mounting root static files as fallback ---")
+if __name__ == "__main__":
+    logger.debug("--- main.py: Checking/Creating 'uploads' directory structure ---")
+    # Create the directory structure for file uploads
+    directories = ["uploads", "uploads/images", "uploads/documents", "uploads/files"]
+    for directory in directories:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+            logger.debug(f"--- main.py: '{directory}' directory created ---")
+        else:
+            logger.debug(f"--- main.py: '{directory}' directory already exists ---")
+    
+    logger.info("--- main.py: Starting Uvicorn server ---")
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, log_level="info")

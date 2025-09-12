@@ -1,0 +1,207 @@
+// API 서비스 함수들
+
+// User 인터페이스 정의
+interface User {
+  uid: string;
+  uemail: string;
+  urole: string;
+  uname: string;
+  uavatar: string | null;
+  uisdel: boolean;
+  uactive: boolean;
+  ucreate_at: string;
+  ulast_login: string | null;
+  uupdated_at: string | null;
+}
+
+// Project 인터페이스 정의
+export interface Project {
+  prjID: string;
+  crtID: string;
+  title: string;
+  description: string;
+  visibility: string;
+  start_date: string;
+  end_date: string | null;
+  created_at: string;
+  update_at: string;
+}
+
+// API 기본 URL 가져오기
+export const getApiBaseUrl = () => {
+  try {
+    return import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+  } catch (err) {
+    console.error('Error accessing VITE_API_BASE_URL:', err);
+    return 'http://localhost:8000';
+  }
+};
+
+// 인증된 요청을 위한 헤더 생성
+export const getAuthHeaders = () => {
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    console.error('인증 토큰이 없습니다.');
+  }
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': token ? `Bearer ${token}` : ''
+  };
+};
+
+// 현재 사용자 정보 가져오기
+export const fetchCurrentUser = async (): Promise<User | null> => {
+  try {
+    console.log('API - 현재 사용자 정보를 가져오는 중...');
+    const token = localStorage.getItem('authToken');
+    
+    if (!token) {
+      console.log('API - 저장된 토큰이 없습니다.');
+      return null;
+    }
+    
+    // 토큰 디코딩하여 만료 시간 확인
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      
+      const payload = JSON.parse(jsonPayload);
+      const expTime = payload.exp * 1000; // 초를 밀리초로 변환
+      
+      if (Date.now() >= expTime) {
+        console.log('API - 토큰이 만료되었습니다. 토큰을 제거합니다.');
+        localStorage.removeItem('authToken');
+        return null;
+      }
+    } catch (e) {
+      console.error('API - 토큰 디코딩 오류:', e);
+    }
+    
+    const response = await fetch(`${getApiBaseUrl()}/users/me`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.log('API - 401 Unauthorized 응답을 받았습니다. 토큰을 제거합니다.');
+        localStorage.removeItem('authToken');
+        // 오류 메시지를 콘솔에만 출력하고 사용자에게는 표시하지 않음
+        console.log('인증이 만료되었습니다. 다시 로그인해주세요.');
+        return null;
+      }
+      throw new Error(`API 오류: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('API - 사용자 정보 가져오기 성공:', data);
+    return data;
+  } catch (error) {
+    console.log('API - 사용자 정보 조회 오류:', error);
+    if (error instanceof Error && error.message.includes('인증이 만료')) {
+      console.log('API - 인증 관련 오류로 토큰을 제거합니다:', error.message);
+      localStorage.removeItem('authToken');
+    }
+    return null;
+  }
+};
+
+// 모든 사용자 목록 가져오기 (관리자용)
+export const fetchAllUsers = async (skip = 0, limit = 10) => {
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/users?skip=${skip}&limit=${limit}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('사용자 목록을 가져오는데 실패했습니다.');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('사용자 목록 조회 오류:', error);
+    throw error;
+  }
+};
+
+// 사용자 프로필 업데이트
+interface UserProfileUpdate {
+  uname?: string;
+  upassword?: string;
+  uavatar?: string;
+}
+
+export const updateUserProfile = async (userData: UserProfileUpdate) => {
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/users/update-profile`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(userData)
+    });
+
+    if (!response.ok) {
+      throw new Error('프로필 업데이트에 실패했습니다.');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('프로필 업데이트 오류:', error);
+    throw error;
+  }
+};
+
+// 프로젝트 목록 가져오기
+export const fetchProjects = async (limit = 4): Promise<Project[] | null> => {
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/api/projects/?limit=${limit}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.log('API - 401 Unauthorized 응답을 받았습니다. 토큰을 제거합니다.');
+        localStorage.removeItem('authToken');
+        return null;
+      }
+      throw new Error('프로젝트 목록을 가져오는데 실패했습니다.');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('프로젝트 목록 조회 오류:', error);
+    return null;
+  }
+};
+
+// 프로젝트 상세 정보 가져오기
+export const fetchProjectById = async (projectId: string): Promise<Project | null> => {
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/api/projects/${projectId}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.log('API - 401 Unauthorized 응답을 받았습니다. 토큰을 제거합니다.');
+        localStorage.removeItem('authToken');
+        return null;
+      }
+      throw new Error('프로젝트 정보를 가져오는데 실패했습니다.');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('프로젝트 정보 조회 오류:', error);
+    return null;
+  }
+};

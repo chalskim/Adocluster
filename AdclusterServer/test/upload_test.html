@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>File Upload Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f8f9fa; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .upload-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; border-radius: 5px; background-color: white; }
+        .file-list { margin: 20px 0; }
+        .file-item { padding: 15px; margin: 10px 0; background-color: #f5f5f5; border-radius: 5px; border: 1px solid #ddd; }
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; margin: 5px 5px 5px 0; }
+        button:hover { background-color: #0056b3; }
+        button.secondary { background-color: #6c757d; }
+        button.secondary:hover { background-color: #545b62; }
+        button.danger { background-color: #dc3545; }
+        button.danger:hover { background-color: #bd2130; }
+        input[type="file"] { margin: 10px 0; }
+        input[type="text"] { padding: 8px; margin: 5px 0; width: 300px; }
+        label { display: block; margin: 10px 0 5px 0; font-weight: bold; }
+        #messages { margin: 10px 0; padding: 10px; border-radius: 3px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #cce5ff; color: #004085; }
+        h1 { color: #333; }
+        h2 { color: #555; }
+        .file-info { margin: 5px 0; }
+        .actions { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>File Upload Test</h1>
+        
+        <div class="upload-section">
+            <h2>Upload Single File</h2>
+            <form id="singleUploadForm">
+                <label for="singleFile">Choose a file:</label>
+                <input type="file" id="singleFile" name="file" required>
+                <br>
+                <label for="description">Description (optional):</label>
+                <input type="text" id="description" name="description" placeholder="Enter file description">
+                <br>
+                <button type="submit">Upload File</button>
+            </form>
+        </div>
+        
+        <div class="upload-section">
+            <h2>Upload Multiple Files</h2>
+            <form id="multipleUploadForm">
+                <label for="multipleFiles">Choose files (multiple):</label>
+                <input type="file" id="multipleFiles" name="files" multiple required>
+                <br>
+                <label for="multipleDescription">Description (optional):</label>
+                <input type="text" id="multipleDescription" name="description" placeholder="Enter files description">
+                <br>
+                <button type="submit">Upload Files</button>
+            </form>
+        </div>
+        
+        <div class="upload-section">
+            <h2>Uploaded Files</h2>
+            <button id="refreshFiles">Refresh File List</button>
+            <div id="fileList" class="file-list">
+                <p>No files uploaded yet.</p>
+            </div>
+        </div>
+        
+        <div id="messages"></div>
+    </div>
+
+    <script>
+        // Handle single file upload
+        document.getElementById('singleUploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('singleFile');
+            const descriptionInput = document.getElementById('description');
+            
+            if (!fileInput.files.length) {
+                showMessage('Please select a file to upload.', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            if (descriptionInput.value) {
+                formData.append('description', descriptionInput.value);
+            }
+            
+            try {
+                showMessage('Uploading file...', 'info');
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showMessage(`File uploaded successfully: ${result.original_filename}`, 'success');
+                    fileInput.value = '';
+                    descriptionInput.value = '';
+                    refreshFileList();
+                } else {
+                    showMessage(`Upload failed: ${result.detail || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`Upload error: ${error.message}`, 'error');
+            }
+        });
+        
+        // Handle multiple file upload
+        document.getElementById('multipleUploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('multipleFiles');
+            const descriptionInput = document.getElementById('multipleDescription');
+            
+            if (!fileInput.files.length) {
+                showMessage('Please select files to upload.', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            for (let i = 0; i < fileInput.files.length; i++) {
+                formData.append('files', fileInput.files[i]);
+            }
+            if (descriptionInput.value) {
+                formData.append('description', descriptionInput.value);
+            }
+            
+            try {
+                showMessage('Uploading files...', 'info');
+                const response = await fetch('/api/upload/multiple', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showMessage(`${result.files.length} files uploaded successfully`, 'success');
+                    fileInput.value = '';
+                    descriptionInput.value = '';
+                    refreshFileList();
+                } else {
+                    showMessage(`Upload failed: ${result.detail || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`Upload error: ${error.message}`, 'error');
+            }
+        });
+        
+        // Refresh file list
+        document.getElementById('refreshFiles').addEventListener('click', refreshFileList);
+        
+        // Load file list on page load
+        window.addEventListener('load', refreshFileList);
+        
+        async function refreshFileList() {
+            try {
+                const response = await fetch('/api/files');
+                const result = await response.json();
+                
+                const fileList = document.getElementById('fileList');
+                
+                if (result.files && result.files.length > 0) {
+                    fileList.innerHTML = '';
+                    result.files.forEach(file => {
+                        const fileItem = document.createElement('div');
+                        fileItem.className = 'file-item';
+                        
+                        // File info
+                        const fileInfo = document.createElement('div');
+                        fileInfo.className = 'file-info';
+                        fileInfo.innerHTML = `<strong>${file.filename}</strong> (${formatFileSize(file.size)})`;
+                        fileItem.appendChild(fileInfo);
+                        
+                        // File path
+                        const filePath = document.createElement('div');
+                        filePath.className = 'file-info';
+                        filePath.textContent = `Path: ${file.path}`;
+                        fileItem.appendChild(filePath);
+                        
+                        // Actions
+                        const actions = document.createElement('div');
+                        actions.className = 'actions';
+                        
+                        // View button
+                        const viewButton = document.createElement('button');
+                        viewButton.className = 'secondary';
+                        viewButton.textContent = 'View';
+                        viewButton.addEventListener('click', function() {
+                            window.open(`/${file.path}`, '_blank');
+                        });
+                        
+                        // Download button
+                        const downloadButton = document.createElement('button');
+                        downloadButton.className = 'secondary';
+                        downloadButton.textContent = 'Download';
+                        downloadButton.addEventListener('click', function() {
+                            const link = document.createElement('a');
+                            link.href = `/${file.path}`;
+                            link.download = file.filename;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                        });
+                        
+                        // Delete button
+                        const deleteButton = document.createElement('button');
+                        deleteButton.className = 'danger';
+                        deleteButton.textContent = 'Delete';
+                        deleteButton.addEventListener('click', function() {
+                            deleteFile(file.filename);
+                        });
+                        
+                        actions.appendChild(viewButton);
+                        actions.appendChild(downloadButton);
+                        actions.appendChild(deleteButton);
+                        fileItem.appendChild(actions);
+                        
+                        fileList.appendChild(fileItem);
+                    });
+                } else {
+                    fileList.innerHTML = '<p>No files uploaded yet.</p>';
+                }
+            } catch (error) {
+                showMessage(`Error loading file list: ${error.message}`, 'error');
+            }
+        }
+        
+        async function deleteFile(filename) {
+            if (!confirm(`Are you sure you want to delete ${filename}?`)) {
+                return;
+            }
+            
+            try {
+                showMessage('Deleting file...', 'info');
+                const response = await fetch(`/api/files/${encodeURIComponent(filename)}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showMessage(`File deleted successfully: ${filename}`, 'success');
+                    refreshFileList();
+                } else {
+                    showMessage(`Delete failed: ${result.detail || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`Delete error: ${error.message}`, 'error');
+            }
+        }
+        
+        function showMessage(message, type) {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = `<div class="${type}">${message}</div>`;
+            
+            // Auto-clear message after 5 seconds
+            setTimeout(() => {
+                messagesDiv.innerHTML = '';
+            }, 5000);
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    </script>
+</body>
+</html>

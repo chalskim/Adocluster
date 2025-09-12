@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple WebSocket Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
+        #messages { border: 1px solid #ccc; height: 300px; overflow-y: scroll; padding: 10px; margin: 10px 0; background-color: #f8f9fa; }
+        .message { margin: 5px 0; padding: 5px; border-radius: 3px; }
+        .info { background-color: #fff3cd; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .success { background-color: #d4edda; color: #155724; }
+        input, button { padding: 8px; margin: 5px; }
+        button { background-color: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #6c757d; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Simple WebSocket Test</h1>
+        
+        <div class="section">
+            <h2>Basic WebSocket Connection</h2>
+            <div>
+                <button id="connectBtn" onclick="connectBasicWS()">Connect to /ws</button>
+                <button id="disconnectBtn" onclick="disconnectWS()" disabled>Disconnect</button>
+            </div>
+            <div>
+                <input type="text" id="messageInput" placeholder="Enter message" style="width: 300px;">
+                <button onclick="sendMessage()" id="sendBtn" disabled>Send Message</button>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Client ID WebSocket Connection</h2>
+            <div>
+                <input type="number" id="clientIdInput" placeholder="Client ID (integer)" value="123">
+                <button onclick="connectClientWS()">Connect to /ws/{client_id}</button>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Messages</h2>
+            <div id="messages"></div>
+            <button onclick="clearMessages()">Clear Messages</button>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        
+        function addMessage(message, type = 'info') {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        function clearMessages() {
+            document.getElementById('messages').innerHTML = '';
+        }
+        
+        function updateButtons(connected) {
+            document.getElementById('connectBtn').disabled = connected;
+            document.getElementById('disconnectBtn').disabled = !connected;
+            document.getElementById('sendBtn').disabled = !connected;
+        }
+        
+        function connectBasicWS() {
+            if (ws) {
+                addMessage('Already connected', 'error');
+                return;
+            }
+            
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.hostname;
+            const port = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
+            const url = `${protocol}//${host}:${port}/ws`;
+            
+            addMessage(`Connecting to: ${url}`, 'info');
+            
+            try {
+                ws = new WebSocket(url);
+                
+                ws.onopen = function(event) {
+                    addMessage('WebSocket connection opened successfully', 'success');
+                    updateButtons(true);
+                };
+                
+                ws.onmessage = function(event) {
+                    addMessage(`Received: ${event.data}`, 'info');
+                };
+                
+                ws.onclose = function(event) {
+                    addMessage(`WebSocket closed. Code: ${event.code}, Reason: ${event.reason || 'No reason provided'}`, 'info');
+                    ws = null;
+                    updateButtons(false);
+                };
+                
+                ws.onerror = function(error) {
+                    addMessage(`WebSocket error: ${error}`, 'error');
+                    console.error('WebSocket error:', error);
+                };
+                
+            } catch (error) {
+                addMessage(`Failed to create WebSocket: ${error.message}`, 'error');
+                console.error('WebSocket creation error:', error);
+            }
+        }
+        
+        function connectClientWS() {
+            if (ws) {
+                addMessage('Please disconnect first', 'error');
+                return;
+            }
+            
+            const clientId = document.getElementById('clientIdInput').value;
+            if (!clientId || !/^\d+$/.test(clientId)) {
+                addMessage('Please enter a valid client ID (integer)', 'error');
+                return;
+            }
+            
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.hostname;
+            const port = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
+            const url = `${protocol}//${host}:${port}/ws/${clientId}`;
+            
+            addMessage(`Connecting to: ${url}`, 'info');
+            
+            try {
+                ws = new WebSocket(url);
+                
+                ws.onopen = function(event) {
+                    addMessage('WebSocket connection opened successfully', 'success');
+                    updateButtons(true);
+                };
+                
+                ws.onmessage = function(event) {
+                    addMessage(`Received: ${event.data}`, 'info');
+                };
+                
+                ws.onclose = function(event) {
+                    addMessage(`WebSocket closed. Code: ${event.code}, Reason: ${event.reason || 'No reason provided'}`, 'info');
+                    ws = null;
+                    updateButtons(false);
+                };
+                
+                ws.onerror = function(error) {
+                    addMessage(`WebSocket error: ${error}`, 'error');
+                    console.error('WebSocket error:', error);
+                };
+                
+            } catch (error) {
+                addMessage(`Failed to create WebSocket: ${error.message}`, 'error');
+                console.error('WebSocket creation error:', error);
+            }
+        }
+        
+        function disconnectWS() {
+            if (ws) {
+                ws.close();
+                addMessage('Disconnecting...', 'info');
+            }
+        }
+        
+        function sendMessage() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                addMessage('WebSocket is not connected', 'error');
+                return;
+            }
+            
+            const message = document.getElementById('messageInput').value;
+            if (!message) {
+                addMessage('Please enter a message', 'error');
+                return;
+            }
+            
+            try {
+                ws.send(message);
+                addMessage(`Sent: ${message}`, 'success');
+                document.getElementById('messageInput').value = '';
+            } catch (error) {
+                addMessage(`Failed to send message: ${error.message}`, 'error');
+            }
+        }
+        
+        // Allow Enter key to send message
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        // Initial message
+        addMessage('WebSocket test page loaded. Click Connect to start.', 'info');
+    </script>
+</body>
+</html>

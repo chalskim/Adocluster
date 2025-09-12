@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가져오기 / 내보내기</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            padding: 20px;
+            color: #333;
+        }
+
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+
+        /* 탭 컨테이너 */
+        .tab-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #eee;
+            background: #f8f9fa;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            font-weight: 500;
+            border-right: 1px solid #eee;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab.active {
+            background: white;
+            border-bottom: 3px solid #3498db;
+            color: #3498db;
+        }
+
+        .tab-content {
+            padding: 30px;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 섹션 제목 */
+        .section-title {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        /* 폼 요소 */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        /* 체크박스 그룹 */
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-item input {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* 버튼 */
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        /* 문서 목록 */
+        .document-list {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        .document-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .document-item:last-child {
+            border-bottom: none;
+        }
+
+        .document-item:hover {
+            background: #f8f9fa;
+        }
+
+        .document-checkbox {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* 포맷 선택 */
+        .format-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .format-option {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .format-option:hover {
+            border-color: #3498db;
+        }
+
+        .format-option.selected {
+            border-color: #3498db;
+            background: #e3f2fd;
+        }
+
+        .format-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #3498db;
+        }
+
+        /* 드래그 앤 드롭 */
+        .drop-zone {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            margin: 20px 0;
+            transition: all 0.3s;
+        }
+
+        .drop-zone:hover {
+            border-color: #3498db;
+            background: #f8f9fa;
+        }
+
+        .drop-zone.active {
+            border-color: #3498db;
+            background: #e3f2fd;
+        }
+
+        .drop-icon {
+            font-size: 3rem;
+            color: #95a5a6;
+            margin-bottom: 15px;
+        }
+
+        /* 미리보기 */
+        .preview-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 25px;
+        }
+
+        .preview-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .preview-content {
+            background: white;
+            border-radius: 5px;
+            padding: 15px;
+            min-height: 100px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .tabs {
+                flex-wrap: wrap;
+            }
+            
+            .format-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <h1>📥 가져오기 / 내보내기</h1>
+        <p>문서, 참고문헌, 템플릿, 자료를 다양한 형식으로 가져오고 내보낼 수 있습니다</p>
+    </div>
+
+    <div class="tab-container">
+        <div class="tabs">
+            <div class="tab active" data-tab="document">문서 내보내기/가져오기</div>
+            <div class="tab" data-tab="citation">참고문헌 내보내기/가져오기</div>
+            <div class="tab" data-tab="template">템플릿 내보내기/가져오기</div>
+            <div class="tab" data-tab="data">자료 내보내기/가져오기</div>
+        </div>
+
+        <!-- 문서 내보내기/가져오기 -->
+        <div class="tab-content active" id="document-tab">
+            <h2 class="section-title">문서 내보내기/가져오기</h2>
+            
+            <div class="form-group">
+                <label class="form-label">프로젝트 선택</label>
+                <select class="form-control">
+                    <option>웹사이트 리디자인 프로젝트</option>
+                    <option>모바일 앱 개발 프로젝트</option>
+                    <option>데이터 분석 대시보드 프로젝트</option>
+                    <option>마케팅 전략 문서</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">문서 선택</label>
+                <div class="document-list">
+                    <div class="document-item">
+                        <input type="checkbox" class="document-checkbox" checked>
+                        <i class="fas fa-file-alt"></i>
+                        <span>프로젝트 계획서</span>
+                    </div>
+                    <div class="document-item">
+                        <input type="checkbox" class="document-checkbox" checked>
+                        <i class="fas fa-file-alt"></i>
+                        <span>요구사항 명세서</span>
+                    </div>
+                    <div class="document-item">
+                        <input type="checkbox" class="document-checkbox">
+                        <i class="fas fa-file-alt"></i>
+                        <span>디자인 가이드</span>
+                    </div>
+                    <div class="document-item">
+                        <input type="checkbox" class="document-checkbox" checked>
+                        <i class="fas fa-file-pdf"></i>
+                        <span>진행 보고서.pdf</span>
+                    </div>
+                    <div class="document-item">
+                        <input type="checkbox" class="document-checkbox">
+                        <i class="fas fa-file-image"></i>
+                        <span>와이어프레임.png</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">포맷 선택</label>
+                <div class="format-grid">
+                    <div class="format-option selected">
+                        <div class="format-icon">
+                            <i class="fas fa-file-pdf"></i>
+                        </div>
+                        <div>PDF</div>
+                    </div>
+                    <div class="format-option">
+                        <div class="format-icon">
+                            <i class="fab fa-markdown"></i>
+                        </div>
+                        <div>Markdown</div>
+                    </div>
+                    <div class="format-option">
+                        <div class="format-icon">
+                            <i class="fas fa-file-word"></i>
+                        </div>
+                        <div>Word</div>
+                    </div>
+                    <div class="format-option">
+                        <div class="format-icon">
+                            <i class="fas fa-file-code"></i>
+                        </div>
+                        <div>HTML</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary">
+                    <i class="fas fa-download"></i> 내보내기
+                </button>
+                <button class="btn btn-secondary">
+                    <i class="fas fa-upload"></i> 가져오기
+                </button>
+            </div>
+        </div>
+
+        <!-- 참고문헌 내보내기/가져오기 -->
+        <div class="tab-content" id="citation-tab">
+            <h2 class="section-title">참고문헌 내보내기/가져오기</h2>
+            
+            <div class="form-group">
+                <label class="form-label">참고문헌 스타일 선택</label>
+                <div class="format-grid">
+                    <div class="format-option selected">
+                        <div class="format-icon">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <div>BibTeX</div>
+                    </div>
+                    <div class="format-option">
+                        <div class="format-icon">
+                            <i class="fas fa-font"></i>
+                        </div>
+                        <div>APA</div>
+                    </div>
+                    <div class="format-option">
+                        <div class="format-icon">
+                            <i class="fas fa-font"></i>
+                        </div>
+                        <div>MLA</div>
+                    </div>
+                    <div class="format-option">
+                        <div class="format-icon">
+                            <i class="fas fa-font"></i>
+                        </div>
+                        <div>Chicago</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">참고문헌 목록</label>
+                <div class="document-list">
+                    <div class="document-item">
+                        <input type="checkbox" class="document-checkbox" checked>
+                        <i class="fas fa-book"></i>
+                        <span>Smith, J. (2023). Web Design Principles. Journal of UX...</span>
+                    </div>
+                    <div class="document-item">
+                        <input type="checkbox" class="document-checkbox" checked>
+                        <i class="fas fa-book"></i>
+                        <span>Johnson, A. (2022). Mobile App Development Guide...</span>
+                    </div>
+                    <div class="document-item">
+                        <input type="checkbox" class="document-checkbox">
+                        <i class="fas fa-book"></i>
+                        <span>Brown, M. (2023). Data Visualization Techniques...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-success">
+                    <i class="fas fa-copy"></i> 클립보드 복사
+                </button>
+                <button class="btn btn-primary">
+                    <i class="fas fa-download"></i> 다운로드
+                </button>
+                <button class="btn btn-secondary">
+                    <i class="fas fa-upload"></i> 가져오기
+                </button>
+            </div>
+
+            <div class="preview-section">
+                <div class="preview-title">미리보기</div>
+                <div class="preview-content">@article{smith2023web,
+  title={Web Design Principles},
+  author={Smith, John},
+  journal={Journal of UX},
+  year={2023},
+  publisher={UX Press}
+}</div>
+            </div>
+        </div>
+
+        <!-- 템플릿 내보내기/가져오기 -->
+        <div class="tab-content" id="template-tab">
+            <h2 class="section-title">템플릿 내보내기/가져오기</h2>
+            
+            <div class="form-group">
+                <label class="form-label">템플릿 선택</label>
+                <div class="document-list">
+                    <div class="document-item">
+                        <input type="checkbox" class="document-checkbox" checked>
+                        <i class="fas fa-file-alt"></i>
+                        <span>프로젝트 계획서 템플릿</span>
+                    </div>
+                    <div class="document-item">
+                        <input type="checkbox" class="document-checkbox">
+                        <i class="fas fa-file-alt"></i>
+                        <span>회의록 템플릿</span>
+                    </div>
+                    <div class="document-item">
+                        <input type="checkbox" class="document-checkbox" checked>
+                        <i class="fas fa-file-alt"></i>
+                        <span>보고서 템플릿</span>
+                    </div>
+                    <div class="document-item">
+                        <input type="checkbox" class="document-checkbox">
+                        <i class="fas fa-file-alt"></i>
+                        <span>요구사항 명세서 템플릿</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">내보내기 포맷</label>
+                <div class="format-grid">
+                    <div class="format-option selected">
+                        <div class="format-icon">
+                            <i class="fas fa-file"></i>
+                        </div>
+                        <div>템플릿 파일</div>
+                    </div>
+                    <div class="format-option">
+                        <div class="format-icon">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <div>BibTeX</div>
+                    </div>
+                    <div class="format-option">
+                        <div class="format-icon">
+                            <i class="fas fa-font"></i>
+                        </div>
+                        <div>APA</div>
+                    </div>
+                    <div class="format-option">
+                        <div class="format-icon">
+                            <i class="fas fa-font"></i>
+                        </div>
+                        <div>MLA</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="drop-zone">
+                <div class="drop-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <h3>템플릿 가져오기</h3>
+                <p>여기에 템플릿 파일을 드래그 앤 드롭하거나 클릭하여 선택하세요</p>
+                <button class="btn btn-secondary" style="margin-top: 15px;">
+                    <i class="fas fa-folder-open"></i> 파일 선택
+                </button>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary">
+                    <i class="fas fa-download"></i> 내보내기
+                </button>
+            </div>
+        </div>
+
+        <!-- 자료 내보내기/가져오기 -->
+        <div class="tab-content" id="data-tab">
+            <h2 class="section-title">자료 내보내기/가져오기</h2>
+            
+            <div class="form-group">
+                <label class="form-label">자료 선택</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" checked>
+                        <span>문서</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" checked>
+                        <span>그림</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox">
+                        <span>표</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" checked>
+                        <span>웹사이트 주소</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox">
+                        <span>수식</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox">
+                        <span>동영상</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox">
+                        <span>음성</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" checked>
+                        <span>코드 스니펫</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" checked>
+                        <span>인용/발췌</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">압축 형식 선택</label>
+                <div class="format-grid">
+                    <div class="format-option selected">
+                        <div class="format-icon">
+                            <i class="far fa-file-archive"></i>
+                        </div>
+                        <div>ZIP</div>
+                    </div>
+                    <div class="format-option">
+                        <div class="format-icon">
+                            <i class="far fa-file-archive"></i>
+                        </div>
+                        <div>TAR.GZ</div>
+                    </div>
+                    <div class="format-option">
+                        <div class="format-icon">
+                            <i class="fas fa-folder"></i>
+                        </div>
+                        <div>폴더</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary">
+                    <i class="fas fa-download"></i> 내보내기
+                </button>
+                <button class="btn btn-secondary">
+                    <i class="fas fa-upload"></i> 가져오기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 탭 전환 기능
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // 모든 탭에서 active 클래스 제거
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // 클릭된 탭에 active 클래스 추가
+                tab.classList.add('active');
+                const tabId = tab.getAttribute('data-tab') + '-tab';
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // 포맷 선택 기능
+        document.querySelectorAll('.format-option').forEach(option => {
+            option.addEventListener('click', () => {
+                // 같은 그룹 내에서 선택 해제
+                const parent = option.parentElement;
+                parent.querySelectorAll('.format-option').forEach(o => o.classList.remove('selected'));
+                
+                // 클릭된 옵션 선택
+                option.classList.add('selected');
+            });
+        });
+
+        // 드래그 앤 드롭 기능
+        const dropZone = document.querySelector('.drop-zone');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight() {
+            dropZone.classList.add('active');
+        }
+
+        function unhighlight() {
+            dropZone.classList.remove('active');
+        }
+
+        dropZone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                alert(`${files.length}개의 파일이 선택되었습니다.`);
+            }
+        }
+    </script>
+</body>
+</html>

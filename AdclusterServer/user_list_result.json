@@ -1,0 +1,47 @@
+[
+  {
+    "uemail": "test@example.com",
+    "urole": "user",
+    "uavatar": null,
+    "uid": "0559988f-e084-4f7a-b6f6-012f411403ac",
+    "ucreate_at": "2025-09-05T08:14:10.405924+09:00",
+    "ulast_login": null,
+    "uupdated_at": "2025-09-05T08:14:10.405930+09:00"
+  },
+  {
+    "uemail": "test_1757060098@example.com",
+    "urole": "user",
+    "uavatar": null,
+    "uid": "815f124d-b794-44a3-a374-a8c8e985540f",
+    "ucreate_at": "2025-09-05T08:14:58.741349+09:00",
+    "ulast_login": null,
+    "uupdated_at": "2025-09-05T08:14:58.741355+09:00"
+  },
+  {
+    "uemail": "test@test.com",
+    "urole": "user",
+    "uavatar": null,
+    "uid": "392261bd-dc31-4107-870f-df3f8eb00744",
+    "ucreate_at": "2025-09-05T08:39:01.161472+09:00",
+    "ulast_login": null,
+    "uupdated_at": "2025-09-05T08:39:01.161481+09:00"
+  },
+  {
+    "uemail": "admin@example.com",
+    "urole": "admin",
+    "uavatar": null,
+    "uid": "8189f799-fa49-4436-bc0b-8214e9afc20c",
+    "ucreate_at": "2025-09-05T10:56:18.447055+09:00",
+    "ulast_login": null,
+    "uupdated_at": "2025-09-05T10:56:18.447061+09:00"
+  },
+  {
+    "uemail": "nicchals@naver.com",
+    "urole": "admin",
+    "uavatar": null,
+    "uid": "6dade884-eead-47de-be9d-21328e398d16",
+    "ucreate_at": "2025-09-05T08:39:37.162536+09:00",
+    "ulast_login": "2025-09-05T09:09:03.846070+09:00",
+    "uupdated_at": "2025-09-05T08:39:37.162541+09:00"
+  }
+]

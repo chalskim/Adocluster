@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"="content="width=device-width, initial-scale=1.0">
+    <title>대시보드</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        /* 그리드 레이아웃 */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-header h2 {
+            color: #2c3e50;
+            font-size: 1.3rem;
+        }
+
+        .view-all {
+            color: #3498db;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        /* 프로젝트 카드 */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .project-card {
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .project-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .project-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .project-desc {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .project-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #95a5a6;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+        }
+
+        .collaborators {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .avatar {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #3498db;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            margin-right: -8px;
+            border: 2px solid white;
+        }
+
+        .avatar:first-child {
+            margin-left: 0;
+        }
+
+        .project-actions {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .action-btn {
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: 1px solid #e1e8ed;
+            background: white;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: #f8f9fa;
+        }
+
+        /* 활동 내역 */
+        .activity-list {
+            list-style: none;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #3498db;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-text {
+            color: #2c3e50;
+            margin-bottom: 3px;
+        }
+
+        .activity-time {
+            color: #95a5a6;
+            font-size: 0.85rem;
+        }
+
+        /* 알림 센터 */
+        .notification-list {
+            list-style: none;
+        }
+
+        .notification-item {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+        }
+
+        .notification-item.unread {
+            background: #e3f2fd;
+            border-left: 4px solid #2980b9;
+        }
+
+        .notification-text {
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .notification-time {
+            color: #95a5a6;
+            font-size: 0.85rem;
+        }
+
+        /* KPI 대시보드 */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 10px 0;
+        }
+
+        .kpi-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .kpi-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #3498db;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 1.2rem;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 1200px) {
+            .projects-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>대시보드</h1>
+            <p>시스템 전체 현황을 확인할 수 있습니다</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-primary">
+                <i class="fas fa-plus"></i> 새 프로젝트
+            </button>
+        </div>
+    </div>
+
+    <!-- KPI 대시보드 -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-icon">
+                <i class="fas fa-folder"></i>
+            </div>
+            <div class="kpi-value">24</div>
+            <div class="kpi-label">활성 프로젝트</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="kpi-value">1,248</div>
+            <div class="kpi-label">총 문서</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="kpi-value">36</div>
+            <div class="kpi-label">협업자</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">
+                <i class="fas fa-edit"></i>
+            </div>
+            <div class="kpi-value">142</div>
+            <div class="kpi-label">최근 편집</div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- 프로젝트 섹션 -->
+        <div class="section-card">
+            <div class="section-header">
+                <h2>최근 프로젝트</h2>
+                <a href="#" class="view-all">전체 보기</a>
+            </div>
+            <div class="projects-grid">
+                <div class="project-card">
+                    <h3 class="project-title">웹사이트 리디자인</h3>
+                    <p class="project-desc">기존 웹사이트의 UI/UX 개선 및 반응형 디자인 적용</p>
+                    <div class="project-meta">
+                        <span>2023.11.15</span>
+                        <span>문서 24개</span>
+                    </div>
+                    <div class="collaborators">
+                        <div class="avatar">K</div>
+                        <div class="avatar">M</div>
+                        <div class="avatar">J</div>
+                        <div class="avatar">+2</div>
+                    </div>
+                    <div class="project-actions">
+                        <button class="action-btn">
+                            <i class="fas fa-external-link-alt"></i> 바로가기
+                        </button>
+                        <button class="action-btn">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="project-card">
+                    <h3 class="project-title">모바일 앱 개발</h3>
+                    <p class="project-desc">React Native를 사용한 크로스플랫폼 모바일 애플리케이션</p>
+                    <div class="project-meta">
+                        <span>2023.11.12</span>
+                        <span>문서 18개</span>
+                    </div>
+                    <div class="collaborators">
+                        <div class="avatar">S</div>
+                        <div class="avatar">L</div>
+                        <div class="avatar">+1</div>
+                    </div>
+                    <div class="project-actions">
+                        <button class="action-btn">
+                            <i class="fas fa-external-link-alt"></i> 바로가기
+                        </button>
+                        <button class="action-btn">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="project-card">
+                    <h3 class="project-title">데이터 분석 대시보드</h3>
+                    <p class="project-desc">실시간 데이터 시각화를 위한 대시보드 개발</p>
+                    <div class="project-meta">
+                        <span>2023.11.10</span>
+                        <span>문서 32개</span>
+                    </div>
+                    <div class="collaborators">
+                        <div class="avatar">P</div>
+                        <div class="avatar">T</div>
+                        <div class="avatar">R</div>
+                    </div>
+                    <div class="project-actions">
+                        <button class="action-btn">
+                            <i class="fas fa-external-link-alt"></i> 바로가기
+                        </button>
+                        <button class="action-btn">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 최근 활동 -->
+        <div class="section-card">
+            <div class="section-header">
+                <h2>최근 활동</h2>
+                <a href="#" class="view-all">전체 보기</a>
+            </div>
+            <ul class="activity-list">
+                <li class="activity-item">
+                    <div class="activity-icon" style="background: #27ae60;">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-text"><strong>김개발</strong>님이 "웹사이트 리디자인" 프로젝트의 문서를 편집했습니다</div>
+                        <div class="activity-time">2분 전</div>
+                    </div>
+                </li>
+                <li class="activity-item">
+                    <div class="activity-icon" style="background: #3498db;">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-text"><strong>이디자인</strong>님이 새 문서 "홈페이지 레이아웃"을 생성했습니다</div>
+                        <div class="activity-time">15분 전</div>
+                    </div>
+                </li>
+                <li class="activity-item">
+                    <div class="activity-icon" style="background: #f39c12;">
+                        <i class="fas fa-share-alt"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-text"><strong>박매니저</strong>님이 "모바일 앱 개발" 프로젝트를 공유했습니다</div>
+                        <div class="activity-time">1시간 전</div>
+                    </div>
+                </li>
+                <li class="activity-item">
+                    <div class="activity-icon" style="background: #9b59b6;">
+                        <i class="fas fa-file-export"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-text"><strong>최분석</strong>님이 데이터 보고서를 내보냈습니다</div>
+                        <div class="activity-time">3시간 전</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 알림 센터 -->
+        <div class="section-card">
+            <div class="section-header">
+                <h2>알림 센터</h2>
+                <a href="#" class="view-all">전체 보기</a>
+            </div>
+            <ul class="notification-list">
+                <li class="notification-item unread">
+                    <div class="notification-text"><strong>새 초대</strong>: "데이터 분석 대시보드" 프로젝트에 초대되었습니다</div>
+                    <div class="notification-time">5분 전</div>
+                </li>
+                <li class="notification-item unread">
+                    <div class="notification-text"><strong>댓글</strong>: 이디자인님이 "홈페이지 레이아웃" 문서에 댓글을 남겼습니다</div>
+                    <div class="notification-time">25분 전</div>
+                </li>
+                <li class="notification-item">
+                    <div class="notification-text"><strong>API 키 만료</strong>: 내일 만료되는 API 키가 있습니다</div>
+                    <div class="notification-time">2시간 전</div>
+                </li>
+                <li class="notification-item">
+                    <div class="notification-text"><strong>시스템 업데이트</strong>: 내일 오전 2시에 시스템 점검이 예정되어 있습니다</div>
+                    <div class="notification-time">1일 전</div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</body>
+<script>
+    // 새 프로젝트 버튼 클릭 이벤트 처리
+    document.querySelector('.btn.btn-primary').addEventListener('click', function() {
+        // 부모 창의 iframe 요소 찾기 (index.html의 iframe)
+        const parentIframe = window.parent.document.querySelector('iframe');
+        
+        // iframe의 src를 projectSetting.html로 변경
+        if (parentIframe) {
+            parentIframe.src = 'projectSetting.html';
+        }
+    });
+</script>
+</html>

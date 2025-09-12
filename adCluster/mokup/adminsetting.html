@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 설정</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            padding: 20px;
+            color: #333;
+        }
+
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+
+        .admin-badge {
+            background: #e74c3c;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+
+        /* 설정 섹션 */
+        .settings-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .settings-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 25px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #3498db;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        /* 탭 */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-weight: 500;
+            border-right: 1px solid #eee;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab.active {
+            background: white;
+            border-bottom: 3px solid #3498db;
+            color: #3498db;
+        }
+
+        /* 사용자 테이블 */
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .user-table th {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+        }
+
+        .user-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .user-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-active {
+            color: #27ae60;
+            font-weight: 500;
+        }
+
+        .status-blocked {
+            color: #e74c3c;
+            font-weight: 500;
+        }
+
+        .action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            margin: 0 2px;
+        }
+
+        .btn-edit {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-block {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+
+        /* KPI 카드 */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 10px 0;
+        }
+
+        .kpi-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .kpi-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #3498db;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 1.2rem;
+        }
+
+        /* 폼 요소 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        select.form-control {
+            appearance: none;
+            background-image: url("image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+
+        /* 공지사항 */
+        .notice-input {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        /* 버튼 */
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        /* 페이징 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .page-btn {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .page-btn.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .page-btn:hover:not(.active) {
+            background: #f8f9fa;
+        }
+
+        /* 프로젝트 권한 설정 */
+        .project-permission {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .project-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .permission-select {
+            width: auto;
+            padding: 5px 10px;
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .settings-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .user-table {
+                font-size: 0.9rem;
+            }
+            
+            .user-table th,
+            .user-table td {
+                padding: 8px 10px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <h1>🛡️ 관리자 설정 <span class="admin-badge">관리자 전용</span></h1>
+        <p>사용자 관리, 시스템 현황, AI 연동 설정 등을 관리할 수 있습니다</p>
+    </div>
+
+    <!-- KPI 대시보드 -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="kpi-value">1,248</div>
+            <div class="kpi-label">총 사용자</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">
+                <i class="fas fa-hdd"></i>
+            </div>
+            <div class="kpi-value">84.2GB</div>
+            <div class="kpi-label">스토리지 사용량</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="kpi-value">42,891</div>
+            <div class="kpi-label">AI 호출량</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">
+                <i class="fas fa-project-diagram"></i>
+            </div>
+            <div class="kpi-value">156</div>
+            <div class="kpi-label">활성 프로젝트</div>
+        </div>
+    </div>
+
+    <div class="settings-container">
+        <!-- 사용자 관리 -->
+        <div class="settings-card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-user-friends"></i>
+                </div>
+                <div class="card-title">사용자 관리</div>
+            </div>
+            
+            <div class="tabs">
+                <div class="tab active" data-tab="global">전체 권한</div>
+                <div class="tab" data-tab="project">프로젝트별 권한</div>
+            </div>
+            
+            <div class="tab-content active" id="global-tab" style="display: block;">
+                <div style="overflow-x: auto;">
+                    <table class="user-table">
+                        <thead>
+                            <tr>
+                                <th>이름</th>
+                                <th>이메일</th>
+                                <th>전체 권한</th>
+                                <th>상태</th>
+                                <th>작업</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>김개발</td>
+                                <td>kim.dev@example.com</td>
+                                <td>
+                                    <select class="form-control" style="width: auto;">
+                                        <option>일반 사용자</option>
+                                        <option selected>관리자</option>
+                                        <option>읽기 전용</option>
+                                    </select>
+                                </td>
+                                <td><span class="status-active">활성</span></td>
+                                <td>
+                                    <button class="action-btn btn-block">차단</button>
+                                    <button class="action-btn btn-delete">삭제</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>이디자인</td>
+                                <td>lee.design@example.com</td>
+                                <td>
+                                    <select class="form-control" style="width: auto;">
+                                        <option selected>일반 사용자</option>
+                                        <option>관리자</option>
+                                        <option>읽기 전용</option>
+                                    </select>
+                                </td>
+                                <td><span class="status-active">활성</span></td>
+                                <td>
+                                    <button class="action-btn btn-block">차단</button>
+                                    <button class="action-btn btn-delete">삭제</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>박매니저</td>
+                                <td>park.manager@example.com</td>
+                                <td>
+                                    <select class="form-control" style="width: auto;">
+                                        <option>일반 사용자</option>
+                                        <option>관리자</option>
+                                        <option selected>읽기 전용</option>
+                                    </select>
+                                </td>
+                                <td><span class="status-blocked">차단됨</span></td>
+                                <td>
+                                    <button class="action-btn btn-edit">해제</button>
+                                    <button class="action-btn btn-delete">삭제</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="project-tab" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">프로젝트 선택</label>
+                    <select class="form-control">
+                        <option>웹사이트 리디자인 프로젝트</option>
+                        <option>모바일 앱 개발 프로젝트</option>
+                        <option selected>데이터 분석 대시보드</option>
+                        <option>마케팅 전략 문서</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">사용자 선택</label>
+                    <select class="form-control">
+                        <option>김개발 (kim.dev@example.com)</option>
+                        <option selected>이디자인 (lee.design@example.com)</option>
+                        <option>박매니저 (park.manager@example.com)</option>
+                        <option>최분석 (choi.analyst@example.com)</option>
+                        <option>정연구 (jung.research@example.com)</option>
+                    </select>
+                </div>
+                
+                <div class="project-permission">
+                    <div class="project-header">
+                        <div class="project-name">웹사이트 리디자인 프로젝트</div>
+                        <select class="form-control permission-select">
+                            <option>읽기 전용</option>
+                            <option selected>편집 가능</option>
+                            <option>관리자</option>
+                            <option>접근 불가</option>
+                        </select>
+                    </div>
+                    <div style="font-size: 0.9rem; color: #7f8c8d;">
+                        문서 24개, 멤버 5명
+                    </div>
+                </div>
+                
+                <div class="project-permission">
+                    <div class="project-header">
+                        <div class="project-name">모바일 앱 개발 프로젝트</div>
+                        <select class="form-control permission-select">
+                            <option>읽기 전용</option>
+                            <option>편집 가능</option>
+                            <option>관리자</option>
+                            <option selected>접근 불가</option>
+                        </select>
+                    </div>
+                    <div style="font-size: 0.9rem; color: #7f8c8d;">
+                        문서 18개, 멤버 3명
+                    </div>
+                </div>
+                
+                <div class="project-permission">
+                    <div class="project-header">
+                        <div class="project-name">데이터 분석 대시보드</div>
+                        <select class="form-control permission-select">
+                            <option selected>읽기 전용</option>
+                            <option>편집 가능</option>
+                            <option>관리자</option>
+                            <option>접근 불가</option>
+                        </select>
+                    </div>
+                    <div style="font-size: 0.9rem; color: #7f8c8d;">
+                        문서 32개, 멤버 4명
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" style="margin-top: 15px;">
+                    <i class="fas fa-save"></i> 프로젝트 권한 저장
+                </button>
+            </div>
+            
+            <div class="pagination">
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">다음</button>
+            </div>
+        </div>
+
+        <!-- 시스템 현황 -->
+        <div class="settings-card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div class="card-title">시스템 현황</div>
+            </div>
+            
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: #9b59b6;">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <div class="kpi-value">98.5%</div>
+                    <div class="kpi-label">서버 가용성</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: #f39c12;">
+                        <i class="fas fa-microchip"></i>
+                    </div>
+                    <div class="kpi-value">72%</div>
+                    <div class="kpi-label">CPU 사용률</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: #1abc9c;">
+                        <i class="fas fa-memory"></i>
+                    </div>
+                    <div class="kpi-value">64%</div>
+                    <div class="kpi-label">메모리 사용률</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background: #e74c3c;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="kpi-value">3</div>
+                    <div class="kpi-label">경고 발생</div>
+                </div>
+            </div>
+            
+            <div class="form-group" style="margin-top: 20px;">
+                <label class="form-label">최근 경고 내역</label>
+                <div style="background: #fdf2f2; border-radius: 8px; padding: 15px; border-left: 4px solid #e74c3c;">
+                    <div style="margin-bottom: 10px;">
+                        <strong>스토리지 사용량 초과</strong> - 2023.11.20 14:30
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>CPU 사용률 과다</strong> - 2023.11.20 10:15
+                    </div>
+                    <div>
+                        <strong>백업 실패</strong> - 2023.11.19 23:45
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI 연동 설정 -->
+        <div class="settings-card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="card-title">AI 연동 설정</div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">기본 AI 모델</label>
+                <select class="form-control">
+                    <option>GPT-4 Turbo</option>
+                    <option selected>GPT-4o</option>
+                    <option>Claude 3 Opus</option>
+                    <option>Claude 3 Sonnet</option>
+                    <option>Gemini Pro</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">API Key</label>
+                <input type="password" class="form-control" value="sk-••••••••••••••••••••••••••••••••">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">모델 별 할당량</label>
+                <div style="background: #f8f9fa; border-radius: 8px; padding: 15px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>GPT-4o</span>
+                        <span>25,000 / 50,000</span>
+                    </div>
+                    <div style="background: #e0e0e0; border-radius: 4px; height: 8px;">
+                        <div style="background: #3498db; height: 100%; width: 50%; border-radius: 4px;"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                        <span>Claude 3</span>
+                        <span>12,000 / 30,000</span>
+                    </div>
+                    <div style="background: #e0e0e0; border-radius: 4px; height: 8px; margin-top: 5px;">
+                        <div style="background: #9b59b6; height: 100%; width: 40%; border-radius: 4px;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary">
+                <i class="fas fa-save"></i> 설정 저장
+            </button>
+        </div>
+
+        <!-- 공지사항 등록 -->
+        <div class="settings-card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-bullhorn"></i>
+                </div>
+                <div class="card-title">공지사항 등록</div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">공지사항 제목</label>
+                <input type="text" class="form-control" placeholder="공지사항 제목을 입력하세요">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">공지사항 내용</label>
+                <textarea class="form-control notice-input" placeholder="공지사항 내용을 입력하세요&#10;&#10;• 내용을 입력하세요&#10;• 중요한 사항을 강조하세요"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">공지 유형</label>
+                <select class="form-control">
+                    <option>팝업 알림</option>
+                    <option>상단 배너</option>
+                    <option>이메일 발송</option>
+                    <option>모두</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">게시 기간</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="date" class="form-control" style="flex: 1;">
+                    <span style="display: flex; align-items: center;">~</span>
+                    <input type="date" class="form-control" style="flex: 1;">
+                </div>
+            </div>
+            
+            <button class="btn btn-success">
+                <i class="fas fa-paper-plane"></i> 공지사항 발송
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 탭 전환 기능
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // 모든 탭에서 active 클래스 제거
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                
+                // 클릭된 탭에 active 클래스 추가
+                tab.classList.add('active');
+                
+                // 탭 콘텐츠 전환
+                const tabType = tab.getAttribute('data-tab');
+                document.getElementById('global-tab').style.display = tabType === 'global' ? 'block' : 'none';
+                document.getElementById('project-tab').style.display = tabType === 'project' ? 'block' : 'none';
+            });
+        });
+
+        // 사용자 관리 테이블 이벤트
+        document.querySelectorAll('.action-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const action = e.target.textContent;
+                const row = e.target.closest('tr');
+                const userName = row.cells[0].textContent;
+                
+                if (action === '차단') {
+                    if (confirm(`${userName}님을 차단하시겠습니까?`)) {
+                        alert(`${userName}님이 차단되었습니다.`);
+                        row.cells[3].innerHTML = '<span class="status-blocked">차단됨</span>';
+                        e.target.textContent = '해제';
+                        e.target.className = 'action-btn btn-edit';
+                    }
+                } else if (action === '해제') {
+                    if (confirm(`${userName}님의 차단을 해제하시겠습니까?`)) {
+                        alert(`${userName}님의 차단이 해제되었습니다.`);
+                        row.cells[3].innerHTML = '<span class="status-active">활성</span>';
+                        e.target.textContent = '차단';
+                        e.target.className = 'action-btn btn-block';
+                    }
+                } else if (action === '삭제') {
+                    if (confirm(`${userName}님의 계정을 삭제하시겠습니까?`)) {
+                        alert(`${userName}님의 계정이 삭제되었습니다.`);
+                        row.remove();
+                    }
+                }
+            });
+        });
+
+        // 권한 변경 이벤트
+        document.querySelectorAll('select').forEach(select => {
+            select.addEventListener('change', (e) => {
+                const row = e.target.closest('tr');
+                if (row) {
+                    const userName = row.cells[0].textContent;
+                    const newRole = e.target.value;
+                    alert(`${userName}님의 권한이 ${newRole}으로 변경되었습니다.`);
+                } else {
+                    // 프로젝트별 권한 변경
+                    const projectPermission = e.target.closest('.project-permission');
+                    if (projectPermission) {
+                        const projectName = projectPermission.querySelector('.project-name').textContent;
+                        const newPermission = e.target.value;
+                        console.log(`${projectName}의 권한이 ${newPermission}으로 변경됨`);
+                    }
+                }
+            });
+        });
+
+        // 설정 저장 버튼 이벤트
+        document.querySelectorAll('.btn-primary').forEach(button => {
+            button.addEventListener('click', () => {
+                if (button.textContent.includes('프로젝트 권한 저장')) {
+                    alert('프로젝트별 권한 설정이 저장되었습니다.');
+                } else if (button.textContent.includes('설정 저장')) {
+                    alert('AI 연동 설정이 저장되었습니다.');
+                }
+            });
+        });
+
+        // 공지사항 발송 버튼 이벤트
+        document.querySelector('.btn-success').addEventListener('click', () => {
+            const title = document.querySelector('input[placeholder="공지사항 제목을 입력하세요"]').value;
+            if (title) {
+                alert(`공지사항 "${title}"이(가) 모든 사용자에게 발송되었습니다.`);
+            } else {
+                alert('공지사항 제목을 입력해주세요.');
+            }
+        });
+    </script>
+</body>
+</html>

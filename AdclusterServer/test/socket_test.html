@@ -1,0 +1,1709 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket and File Upload Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f8f9fa; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; border-radius: 5px; background-color: white; }
+        .section h2 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+        #messages { border: 1px solid #ccc; height: 300px; overflow-y: scroll; padding: 10px; margin: 10px 0; background-color: #f8f9fa; }
+        #clients { border: 1px solid #ccc; height: 150px; overflow-y: scroll; padding: 10px; margin: 10px 0; background-color: #e9ecef; }
+        #groups { border: 1px solid #ccc; height: 150px; overflow-y: scroll; padding: 10px; margin: 10px 0; background-color: #d1ecf1; }
+        #fileList { border: 1px solid #ccc; height: 200px; overflow-y: scroll; padding: 10px; margin: 10px 0; background-color: #f8f9fa; }
+        .message { margin: 5px 0; padding: 5px; border-radius: 3px; }
+        .sent { background-color: #cce5ff; }
+        .received { background-color: #d4edda; }
+        .info { background-color: #fff3cd; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .success { background-color: #d4edda; color: #155724; }
+        .private { background-color: #e2d0f5; color: #6a1b9a; }
+        .client-list { background-color: #d1ecf1; padding: 8px; margin: 5px 0; border-radius: 3px; border: 1px solid #bee5eb; }
+        .group-list { background-color: #d4edda; padding: 8px; margin: 5px 0; border-radius: 3px; border: 1px solid #c3e6cb; }
+        .file-item { background-color: #e2e3e5; padding: 8px; margin: 5px 0; border-radius: 3px; border: 1px solid #d6d8db; }
+        input, button { padding: 8px; margin: 5px; }
+        .command-input { width: 300px; }
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; margin: 5px 5px 5px 0; }
+        button:hover { background-color: #0056b3; }
+        button.secondary { background-color: #6c757d; }
+        button.secondary:hover { background-color: #545b62; }
+        button.danger { background-color: #dc3545; }
+        button.danger:hover { background-color: #bd2130; }
+        .file-upload-section { margin-top: 20px; }
+        .file-info { margin: 5px 0; }
+        .actions { margin-top: 10px; }
+        .tab { overflow: hidden; border: 1px solid #ccc; background-color: #f1f1f1; }
+        .tab button { background-color: inherit; float: left; border: none; outline: none; cursor: pointer; padding: 14px 16px; transition: 0.3s; }
+        .tab button:hover { background-color: #ddd; }
+        .tab button.active { background-color: #007bff; color: white; }
+        .tabcontent { display: none; padding: 6px 12px; border: 1px solid #ccc; border-top: none; }
+        .tabcontent.active { display: block; }
+        
+        /* Progress bar styles */
+        .progress-container { margin: 10px 0; display: none; }
+        .progress-bar { width: 100%; background-color: #e9ecef; border-radius: 5px; overflow: hidden; }
+        .progress-fill { height: 20px; background-color: #007bff; width: 0%; transition: width 0.3s; }
+        .progress-text { text-align: center; font-size: 14px; margin-top: 5px; }
+        
+        /* Modal styles */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 5px; }
+        .modal-header { padding: 10px 0; border-bottom: 1px solid #eee; }
+        .modal-body { padding: 20px 0; }
+        .modal-footer { padding: 10px 0; border-top: 1px solid #eee; text-align: right; }
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close:hover { color: black; }
+        .success-modal { border-left: 5px solid #28a745; }
+        .error-modal { border-left: 5px solid #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>FastAPI WebSocket and File Upload Test</h1>
+        
+        <div class="tab">
+            <button class="tablinks active" onclick="openTab(event, 'websocket')">WebSocket Test</button>
+            <button class="tablinks" onclick="openTab(event, 'fileupload')">File Upload Test</button>
+            <button class="tablinks" onclick="openTab(event, 'database')">Database Test</button>
+        </div>
+
+        <div id="websocket" class="tabcontent active">
+            <div class="section">
+                <h2>WebSocket Connection</h2>
+                <div>
+                    <input type="text" id="clientId" placeholder="Client ID (optional)" />
+                    <input type="text" id="groupName" placeholder="Group Name (optional)" />
+                    <button onclick="connectWebSocket()">Connect</button>
+                    <button onclick="disconnectWebSocket()">Disconnect</button>
+                    <button onclick="refreshClients()">Refresh Clients</button>
+                    <button onclick="refreshGroups()">Refresh Groups</button>
+                </div>
+                <div>
+                    <input type="text" id="messageInput" placeholder="Enter message or command (/send_to &lt;client_id&gt; &lt;message&gt;)" class="command-input">
+                    <button onclick="sendMessage()">Send</button>
+                </div>
+                <div>
+                    <input type="text" id="groupCommandInput" placeholder="Group command (/join &lt;group&gt;, /group &lt;message&gt;, /groups, /group_members &lt;group&gt;)" class="command-input">
+                    <button onclick="sendGroupCommand()">Send Group Command</button>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Groups</h2>
+                <div id="groups">No groups available</div>
+            </div>
+            
+            <div class="section">
+                <h2>Connected Clients</h2>
+                <div id="clients">No clients connected</div>
+            </div>
+            
+            <div class="section">
+                <h2>Messages</h2>
+                <div id="messages"></div>
+            </div>
+        </div>
+
+        <div id="fileupload" class="tabcontent">
+            <div class="section">
+                <h2>File Upload</h2>
+                <div class="file-upload-section">
+                    <h3>Upload Single File</h3>
+                    <form id="singleUploadForm">
+                        <label for="singleFile">Choose a file:</label>
+                        <input type="file" id="singleFile" name="file" required>
+                        <br>
+                        <label for="fileDescription">Description (optional):</label>
+                        <input type="text" id="fileDescription" name="description" placeholder="Enter file description">
+                        <br>
+                        <button type="submit">Upload File</button>
+                        <button type="button" id="cancelSingleUpload" style="display:none;background-color:#ffc107;color:black;">Cancel Upload</button>
+                        
+                        <!-- Progress bar for single file upload -->
+                        <div id="singleFileProgress" class="progress-container">
+                            <div class="progress-bar">
+                                <div id="singleFileProgressFill" class="progress-fill"></div>
+                            </div>
+                            <div id="singleFileProgressText" class="progress-text">0%</div>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="file-upload-section">
+                    <h3>Upload Multiple Files</h3>
+                    <form id="multipleUploadForm">
+                        <label for="multipleFiles">Choose files (multiple):</label>
+                        <input type="file" id="multipleFiles" name="files" multiple required>
+                        <br>
+                        <label for="multipleFileDescription">Description (optional):</label>
+                        <input type="text" id="multipleFileDescription" name="description" placeholder="Enter files description">
+                        <br>
+                        <button type="submit">Upload Files</button>
+                        <button type="button" id="cancelMultipleUpload" style="display:none;background-color:#ffc107;color:black;">Cancel Upload</button>
+                        
+                        <!-- Progress bar for multiple file upload -->
+                        <div id="multipleFileProgress" class="progress-container">
+                            <div class="progress-bar">
+                                <div id="multipleFileProgressFill" class="progress-fill"></div>
+                            </div>
+                            <div id="multipleFileProgressText" class="progress-text">0%</div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Uploaded Files</h2>
+                <button id="refreshFiles">Refresh File List</button>
+                <div id="fileList">
+                    <p>No files uploaded yet.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="database" class="tabcontent">
+            <div class="section">
+                <h2>Database Connection</h2>
+                <div>
+                    <input type="text" id="dbHost" placeholder="Host (e.g. localhost)" value="localhost" />
+                    <input type="text" id="dbPort" placeholder="Port" value="5432" />
+                    <input type="text" id="dbName" placeholder="Database Name" value="adcluster_db" />
+                    <input type="text" id="dbUser" placeholder="Username" value="nicchals" />
+                    <input type="password" id="dbPassword" placeholder="Password" value="a770405z" />
+                    <button id="connectDbBtn" onclick="connectDatabase()">Connect to Database</button>
+                    <button onclick="disconnectDatabase()" disabled>Disconnect</button>
+                </div>
+                <div id="dbConnectionStatus" class="info" style="margin-top: 10px; padding: 10px; display: none;"></div>
+            </div>
+            
+            <div class="section">
+                <h2>SQL Query</h2>
+                <div>
+                    <textarea id="sqlQuery" placeholder="Enter SQL query here..." style="width: 100%; height: 100px; padding: 10px; margin-bottom: 10px; font-family: monospace;"></textarea>
+                    <div style="margin-bottom: 10px;">
+                        <button onclick="executeQuery()">Execute Query</button>
+                        <button onclick="clearQueryResults()">Clear Results</button>
+                        <button onclick="downloadResults()">Download Results</button>
+                    </div>
+                    <div>
+                        <label for="queryTemplates">Query Templates:</label>
+                        <select id="queryTemplates" onchange="applyTemplate()" style="padding: 8px; margin-left: 5px;">
+                            <option value="">-- Select Template --</option>
+                            <option value="select-all">SELECT * FROM table</option>
+                            <option value="create-table">CREATE TABLE</option>
+                            <option value="insert">INSERT INTO</option>
+                            <option value="update">UPDATE</option>
+                            <option value="delete">DELETE FROM</option>
+                            <option value="join">JOIN Example</option>
+                            <option value="group-by">GROUP BY Example</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Query Results</h2>
+                <div id="queryResults" style="border: 1px solid #ccc; height: 300px; overflow: auto; padding: 10px; background-color: #f8f9fa; font-family: monospace;">
+                    <p class="info">No query results to display.</p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Query History</h2>
+                <div>
+                    <select id="queryHistory" style="width: 80%; padding: 8px;" onchange="loadQueryFromHistory()">
+                        <option value="">-- Recent Queries --</option>
+                    </select>
+                    <button onclick="clearQueryHistory()">Clear History</button>
+                </div>
+                <div id="historyCount" style="margin-top: 5px; font-size: 0.9em; color: #6c757d;">No queries in history</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content success-modal">
+            <div class="modal-header">
+                <span class="close" onclick="closeModal('successModal')">&times;</span>
+                <h2>Upload Successful!</h2>
+            </div>
+            <div class="modal-body">
+                <p id="successMessage">File(s) uploaded successfully.</p>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('successModal')">OK</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal">
+        <div class="modal-content error-modal">
+            <div class="modal-header">
+                <span class="close" onclick="closeModal('errorModal')">&times;</span>
+                <h2>Upload Failed!</h2>
+            </div>
+            <div class="modal-body">
+                <p id="errorMessage">File upload failed.</p>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('errorModal')">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Database connection variables
+        let dbConnection = null;
+        let dbSocket = null;
+        let queryHistory = [];
+        let currentQueryResults = null;
+        const MAX_HISTORY_ITEMS = 10;
+        
+        // Auto-connect to database when page loads - DISABLED for debugging
+        window.addEventListener('load', function() {
+            console.log('Page loaded - auto database connection disabled for debugging');
+            // setTimeout(function() {
+            //     document.getElementById('connectDbBtn').click();
+            // }, 1000); // Wait 1 second before connecting to ensure everything is loaded
+            
+            // Load query history from localStorage if available
+            loadQueryHistoryFromStorage();
+        });
+        
+        // Database functionality
+        function connectDatabase() {
+            const host = document.getElementById('dbHost').value;
+            const port = document.getElementById('dbPort').value;
+            const dbName = document.getElementById('dbName').value;
+            const user = document.getElementById('dbUser').value;
+            const password = document.getElementById('dbPassword').value;
+            const clientIdInput = document.getElementById('clientId').value;
+            
+            // Validate client ID is an integer if provided
+            if (clientIdInput && !/^\d+$/.test(clientIdInput)) {
+                showDbStatus('Error: Invalid client_id. Must be an integer.', 'error');
+                return;
+            }
+            
+            if (!host || !port || !dbName || !user) {
+                showDbStatus('Please fill in all required fields.', 'error');
+                return;
+            }
+            
+            showDbStatus('Connecting to database...', 'info');
+            
+            // Connect to WebSocket for database operations
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/db`;
+            
+            console.log('Connecting to WebSocket:', wsUrl);
+            
+            // Close existing connection if any
+            if (dbSocket) {
+                dbSocket.close();
+            }
+            
+            // Create new WebSocket connection
+            try {
+                dbSocket = new WebSocket(wsUrl);
+                
+                dbSocket.onopen = function() {
+                    console.log('Database WebSocket connection established');
+                    
+                    // Send connection request
+                    const connectionData = {
+                        action: 'connect',
+                        host: host,
+                        port: parseInt(port),
+                        database: dbName,
+                        user: user,
+                        password: password
+                    };
+                    
+                    // Add client_id if provided
+                    if (clientIdInput) {
+                        try {
+                            // Ensure client_id is converted to integer
+                            const clientIdInt = parseInt(clientIdInput, 10);
+                            if (isNaN(clientIdInt)) {
+                                throw new Error('Client ID is not a valid number');
+                            }
+                            connectionData.client_id = clientIdInt;
+                            console.log('Adding client_id as integer:', clientIdInt, typeof clientIdInt);
+                            // Log the actual data being sent to verify type
+                            console.log('Connection data before stringify:', connectionData);
+                        } catch (e) {
+                            console.error('Error processing client ID:', e);
+                            showDbStatus('Error processing client ID: ' + e.message, 'error');
+                            dbSocket.close();
+                            return;
+                        }
+                    }
+                    
+                    console.log('Sending connection request:', connectionData);
+                    // Ensure we're sending a properly formatted JSON string
+                    try {
+                        // Check for circular references or other JSON stringification issues
+                        const jsonData = JSON.stringify(connectionData);
+                        console.log('Stringified data being sent:', jsonData);
+                        dbSocket.send(jsonData);
+                    } catch (e) {
+                        console.error('Error stringifying connection data:', e);
+                        showDbStatus('Error preparing connection data: ' + e.message, 'error');
+                        dbSocket.close();
+                    }
+                };
+                
+                dbSocket.onerror = function(error) {
+                    console.error('WebSocket error:', error);
+                    showDbStatus('WebSocket connection error. Please check console for details.', 'error');
+                };
+            } catch (error) {
+                console.error('Error creating WebSocket:', error);
+                showDbStatus('Failed to create WebSocket connection: ' + error.message, 'error');
+            }
+            
+            dbSocket.onmessage = function(event) {
+                try {
+                    // 데이터 유효성 검사 추가
+                    let rawData = event.data;
+                    console.log('Raw WebSocket message received:', rawData);
+                    
+                    // 데이터가 유효한 JSON인지 확인
+                    if (typeof rawData === 'string') {
+                        // 데이터가 'Error:' 또는 다른 오류 메시지로 시작하는지 확인
+                        if (rawData.startsWith('Error:') || rawData.startsWith('FATAL:')) {
+                            // 오류 메시지를 직접 표시
+                            showDbStatus('Server error: ' + rawData, 'error');
+                            return;
+                        }
+                        
+                        // JSON 파싱 시도
+                        try {
+                            var data = JSON.parse(rawData);
+                        } catch (parseError) {
+                            console.error('Invalid JSON received:', rawData);
+                            showDbStatus('Invalid response format from server. See console for details.', 'error');
+                            return;
+                        }
+                    } else {
+                        console.error('Non-string data received:', rawData);
+                        showDbStatus('Unexpected data format from server', 'error');
+                        return;
+                    }
+                    
+                    console.log('Database WebSocket message processed:', data);
+                    
+                    if (data.status) {
+                        if (data.status === 'success') {
+                            // Connection successful
+                            dbConnection = {
+                                host,
+                                port,
+                                dbName,
+                                user,
+                                connected: true
+                            };
+                            
+                            // Update UI
+                            document.querySelector("button[onclick='connectDatabase()']").disabled = true;
+                            document.querySelector("button[onclick='disconnectDatabase()']").disabled = false;
+                            showDbStatus(data.message || `Connected to ${dbName} at ${host}:${port}`, 'success');
+                        } else {
+                            // Connection failed
+                            showDbStatus(data.message || 'Failed to connect to database.', 'error');
+                        }
+                    } else if (data.result_type === 'select') {
+                        // Handle SELECT query results
+                        displayQueryResults(data);
+                        showDbStatus('Query executed successfully.', 'success');
+                    } else if (data.result_type === 'dml') {
+                        // Handle DML query results
+                        displayDmlResults(data);
+                        showDbStatus(`${data.message} Rows affected: ${data.rows_affected}`, 'success');
+                    } else {
+                        // Handle other responses
+                        displayOtherResults(data);
+                        showDbStatus(data.message || 'Operation completed.', data.status === 'error' ? 'error' : 'success');
+                    }
+                } catch (error) {
+                    console.error('Error processing WebSocket message:', error, event.data);
+                    showDbStatus('Error processing server response: ' + error.message, 'error');
+                }
+            };
+
+            
+            dbSocket.onclose = function() {
+                console.log('Database WebSocket connection closed');
+                if (dbConnection && dbConnection.connected) {
+                    dbConnection = null;
+                    document.querySelector("button[onclick='connectDatabase()']").disabled = false;
+                    document.querySelector("button[onclick='disconnectDatabase()']").disabled = true;
+                    showDbStatus('Database connection closed.', 'info');
+                }
+            };
+        }
+        
+        function disconnectDatabase() {
+            if (!dbConnection || !dbSocket) {
+                showDbStatus('Not connected to any database.', 'error');
+                return;
+            }
+            
+            showDbStatus('Disconnecting from database...', 'info');
+            
+            // Send disconnect request
+            dbSocket.send(JSON.stringify({
+                action: 'disconnect'
+            }));
+            
+            // The rest will be handled by the onmessage event handler
+        }
+        
+        function executeQuery() {
+            if (!dbConnection || !dbSocket) {
+                showDbStatus('Not connected to any database. Please connect first.', 'error');
+                return;
+            }
+            
+            const query = document.getElementById('sqlQuery').value.trim();
+            if (!query) {
+                showDbStatus('Please enter a SQL query.', 'error');
+                return;
+            }
+            
+            showDbStatus(`Executing query on ${dbConnection.dbName}...`, 'info');
+            
+            // Add to query history
+            addToQueryHistory(query);
+            
+            // Send query to server via WebSocket
+            dbSocket.send(JSON.stringify({
+                action: 'query',
+                query: query
+            }));
+            
+            // Results will be handled by the WebSocket onmessage event handler
+        }
+        
+        // Query template functions
+        function applyTemplate() {
+            const templateSelect = document.getElementById('queryTemplates');
+            const selectedTemplate = templateSelect.value;
+            const sqlQueryTextarea = document.getElementById('sqlQuery');
+            
+            if (!selectedTemplate) return;
+            
+            let templateQuery = '';
+            
+            switch(selectedTemplate) {
+                case 'select-all':
+                    templateQuery = 'SELECT * FROM table_name;';
+                    break;
+                case 'create-table':
+                    templateQuery = 'CREATE TABLE table_name (\n' +
+                                   '    id SERIAL PRIMARY KEY,\n' +
+                                   '    column1 VARCHAR(100),\n' +
+                                   '    column2 INTEGER,\n' +
+                                   '    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n' +
+                                   ');';
+                    break;
+                case 'insert':
+                    templateQuery = 'INSERT INTO table_name (column1, column2)\n' +
+                                   'VALUES (value1, value2);';
+                    break;
+                case 'update':
+                    templateQuery = 'UPDATE table_name\n' +
+                                   'SET column1 = value1, column2 = value2\n' +
+                                   'WHERE condition;';
+                    break;
+                case 'delete':
+                    templateQuery = 'DELETE FROM table_name\n' +
+                                   'WHERE condition;';
+                    break;
+                case 'join':
+                    templateQuery = 'SELECT a.column1, b.column2\n' +
+                                   'FROM table1 a\n' +
+                                   'JOIN table2 b ON a.id = b.table1_id\n' +
+                                   'WHERE a.column3 = value;';
+                    break;
+                case 'group-by':
+                    templateQuery = 'SELECT column1, COUNT(*) as count\n' +
+                                   'FROM table_name\n' +
+                                   'GROUP BY column1\n' +
+                                   'ORDER BY count DESC;';
+                    break;
+            }
+            
+            sqlQueryTextarea.value = templateQuery;
+            templateSelect.value = ''; // Reset the dropdown
+        }
+        
+        function simulateSelectResults(query) {
+            // Parse the query to extract table and column information
+            const columns = [];
+            const rows = [];
+            
+            // Extract column names from the query or generate random ones
+            if (query.includes('*')) {
+                // Generate column names based on the table in the query
+                const fromMatch = query.match(/from\s+([\w\.]+)/i);
+                let tableName = 'table';
+                if (fromMatch && fromMatch[1]) {
+                    tableName = fromMatch[1].trim();
+                }
+                
+                // Generate columns based on common table schemas
+                if (tableName.includes('user')) {
+                    columns.push('id', 'username', 'email', 'created_at');
+                } else if (tableName.includes('product')) {
+                    columns.push('id', 'name', 'price', 'category', 'stock');
+                } else if (tableName.includes('order')) {
+                    columns.push('id', 'customer_id', 'order_date', 'status', 'total');
+                } else {
+                    // Default columns
+                    columns.push('id', 'name', 'description', 'created_at');
+                }
+            } else {
+                // Try to extract column names from the query
+                const selectMatch = query.match(/select\s+([\s\S]+?)\s+from/i);
+                if (selectMatch && selectMatch[1]) {
+                    const columnPart = selectMatch[1];
+                    const columnNames = columnPart.split(',').map(col => {
+                        // Handle column aliases
+                        const parts = col.trim().split(/\s+as\s+/i);
+                        return parts.length > 1 ? parts[1].trim() : parts[0].trim();
+                    });
+                    columns.push(...columnNames);
+                } else {
+                    // Fallback to default columns
+                    columns.push('id', 'name', 'value');
+                }
+            }
+            
+            // Generate sample data rows
+            const numRows = 10; // Fixed number of rows for consistency
+            for (let i = 0; i < numRows; i++) {
+                const row = {};
+                columns.forEach((col, colIndex) => {
+                    // Generate actual-looking data for each column
+                    if (col.includes('id')) {
+                        row[col] = i + 1;
+                    } else if (col.includes('name') || col.includes('title')) {
+                        row[col] = `Name ${i + 1}`;
+                    } else if (col.includes('email')) {
+                        row[col] = `user${i + 1}@example.com`;
+                    } else if (col.includes('date') || col.includes('time') || col.includes('created') || col.includes('updated')) {
+                        row[col] = `2023-${String(i % 12 + 1).padStart(2, '0')}-${String(i % 28 + 1).padStart(2, '0')}`;
+                    } else if (col.includes('price') || col.includes('cost') || col.includes('amount') || col.includes('total')) {
+                        row[col] = (i * 10 + 99.99).toFixed(2);
+                    } else if (col.includes('quantity') || col.includes('count') || col.includes('stock')) {
+                        row[col] = i * 5 + 10;
+                    } else if (col.includes('status')) {
+                        const statuses = ['active', 'pending', 'completed', 'cancelled'];
+                        row[col] = statuses[i % statuses.length];
+                    } else if (col.includes('description') || col.includes('comment')) {
+                        row[col] = `Description for item ${i + 1}`;
+                    } else if (col.includes('category') || col.includes('type')) {
+                        const categories = ['Type A', 'Type B', 'Type C', 'Type D'];
+                        row[col] = categories[i % categories.length];
+                    } else {
+                        // For any other column
+                        row[col] = `Value ${i + 1} for ${col}`;
+                    }
+                });
+                rows.push(row);
+            }
+            
+            return { columns, rows };
+         }
+        
+        function displayQueryResults(results) {
+            const resultsContainer = document.getElementById('queryResults');
+            resultsContainer.innerHTML = '';
+            
+            // Store results for potential download
+            currentQueryResults = results.rows;
+            
+            // Create table element
+            const table = document.createElement('table');
+            table.style.width = '100%';
+            table.style.borderCollapse = 'collapse';
+            table.style.marginBottom = '20px';
+            
+            // Create header row
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            results.columns.forEach(column => {
+                const th = document.createElement('th');
+                th.textContent = column;
+                th.style.padding = '8px';
+                th.style.borderBottom = '2px solid #007bff';
+                th.style.textAlign = 'left';
+                th.style.fontWeight = 'bold';
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+            
+            // Create table body with data rows
+            const tbody = document.createElement('tbody');
+            results.rows.forEach((row, rowIndex) => {
+                const tr = document.createElement('tr');
+                tr.style.backgroundColor = rowIndex % 2 === 0 ? '#f8f9fa' : '#ffffff';
+                
+                results.columns.forEach(column => {
+                    const td = document.createElement('td');
+                    td.textContent = row[column];
+                    td.style.padding = '8px';
+                    td.style.borderBottom = '1px solid #dee2e6';
+                    tr.appendChild(td);
+                });
+                
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            
+            // Add row count information
+            const rowCount = document.createElement('p');
+            rowCount.textContent = `${results.rows.length} row(s) returned`;
+            rowCount.className = 'info';
+            
+            // Add to results container
+            resultsContainer.appendChild(table);
+            resultsContainer.appendChild(rowCount);
+        }
+        
+        function displayDmlResults(results) {
+            const resultsContainer = document.getElementById('queryResults');
+            resultsContainer.innerHTML = '';
+            
+            // Store results for potential download
+            currentQueryResults = { rowCount: results.rowsAffected };
+            
+            const resultInfo = document.createElement('div');
+            resultInfo.className = 'success';
+            resultInfo.style.padding = '15px';
+            resultInfo.style.borderRadius = '5px';
+            resultInfo.style.marginBottom = '10px';
+            resultInfo.innerHTML = `<strong>${results.message}</strong><br>Rows affected: ${results.rowsAffected}`;
+            
+            resultsContainer.appendChild(resultInfo);
+        }
+        
+        function displayOtherResults(results) {
+            const resultsContainer = document.getElementById('queryResults');
+            resultsContainer.innerHTML = '';
+            
+            const resultInfo = document.createElement('div');
+            resultInfo.className = 'info';
+            resultInfo.style.padding = '15px';
+            resultInfo.style.borderRadius = '5px';
+            resultInfo.innerHTML = `<strong>${results.message}</strong>`;
+            
+            resultsContainer.appendChild(resultInfo);
+        }
+        
+        function clearQueryResults() {
+            const resultsContainer = document.getElementById('queryResults');
+            resultsContainer.innerHTML = '<p class="info">No query results to display.</p>';
+            currentQueryResults = null;
+        }
+        
+        // Query history functions
+        function addToQueryHistory(query) {
+            // Don't add duplicates of the most recent query
+            if (queryHistory.length > 0 && queryHistory[0] === query) {
+                return;
+            }
+            
+            // Add to the beginning of the array
+            queryHistory.unshift(query);
+            
+            // Limit history size
+            if (queryHistory.length > MAX_HISTORY_ITEMS) {
+                queryHistory.pop();
+            }
+            
+            // Update the history dropdown
+            updateQueryHistoryDropdown();
+            
+            // Save to localStorage
+            saveQueryHistoryToStorage();
+        }
+        
+        function updateQueryHistoryDropdown() {
+            const historySelect = document.getElementById('queryHistory');
+            const historyCount = document.getElementById('historyCount');
+            
+            // Clear all options except the first one
+            while (historySelect.options.length > 1) {
+                historySelect.remove(1);
+            }
+            
+            // Add history items
+            queryHistory.forEach((query, index) => {
+                const option = document.createElement('option');
+                // Truncate long queries for display
+                const displayText = query.length > 50 ? query.substring(0, 47) + '...' : query;
+                option.text = displayText;
+                option.value = index;
+                historySelect.add(option);
+            });
+            
+            // Update count display
+            if (queryHistory.length === 0) {
+                historyCount.textContent = 'No queries in history';
+            } else {
+                historyCount.textContent = `${queryHistory.length} ${queryHistory.length === 1 ? 'query' : 'queries'} in history`;
+            }
+        }
+        
+        function loadQueryFromHistory() {
+            const historySelect = document.getElementById('queryHistory');
+            const selectedIndex = historySelect.value;
+            
+            if (selectedIndex === '') return;
+            
+            const sqlQueryTextarea = document.getElementById('sqlQuery');
+            sqlQueryTextarea.value = queryHistory[selectedIndex];
+            
+            // Reset the dropdown
+            historySelect.value = '';
+        }
+        
+        function clearQueryHistory() {
+            if (confirm('Are you sure you want to clear your query history?')) {
+                queryHistory = [];
+                updateQueryHistoryDropdown();
+                localStorage.removeItem('sqlQueryHistory');
+            }
+        }
+        
+        function saveQueryHistoryToStorage() {
+            try {
+                localStorage.setItem('sqlQueryHistory', JSON.stringify(queryHistory));
+            } catch (e) {
+                console.error('Failed to save query history to localStorage:', e);
+            }
+        }
+        
+        function loadQueryHistoryFromStorage() {
+            try {
+                const savedHistory = localStorage.getItem('sqlQueryHistory');
+                if (savedHistory) {
+                    queryHistory = JSON.parse(savedHistory);
+                    updateQueryHistoryDropdown();
+                }
+            } catch (e) {
+                console.error('Failed to load query history from localStorage:', e);
+            }
+        }
+        
+        function downloadResults() {
+            if (!currentQueryResults) {
+                alert('No query results to download');
+                return;
+            }
+            
+            let csvContent = '';
+            
+            // Handle different result types
+            if (Array.isArray(currentQueryResults) && currentQueryResults.length > 0) {
+                // For SELECT queries with results
+                const headers = Object.keys(currentQueryResults[0]);
+                csvContent = headers.join(',') + '\n';
+                
+                currentQueryResults.forEach(row => {
+                    const values = headers.map(header => {
+                        const value = row[header];
+                        // Handle values with commas, quotes, etc.
+                        if (value === null || value === undefined) return '';
+                        const stringValue = String(value);
+                        return stringValue.includes(',') ? `"${stringValue}"` : stringValue;
+                    });
+                    csvContent += values.join(',') + '\n';
+                });
+            } else if (typeof currentQueryResults === 'object') {
+                // For DML queries with rowCount
+                csvContent = 'Operation,RowCount\n';
+                csvContent += `SQL Query,${currentQueryResults.rowCount || 0}\n`;
+            }
+            
+            // Create and trigger download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'query_results_' + new Date().toISOString().slice(0, 19).replace(/:/g, '-') + '.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        function showDbStatus(message, type) {
+            const statusElement = document.getElementById('dbConnectionStatus');
+            statusElement.textContent = message;
+            statusElement.className = type;
+            statusElement.style.display = 'block';
+        }
+        
+        // Tab functionality
+        function openTab(evt, tabName) {
+            console.log(`Opening tab: ${tabName}`);
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            console.log(`Found ${tabcontent.length} tab content elements`);
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            console.log(`Found ${tablinks.length} tab link elements`);
+            for (i = 0; i < tablinks.length; i++) {
+                console.log(`Processing tab link ${i}: ${tablinks[i].textContent}`);
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            const targetTab = document.getElementById(tabName);
+            if (!targetTab) {
+                console.error(`Tab element with ID '${tabName}' not found`);
+                return;
+            }
+            targetTab.classList.add("active");
+            evt.currentTarget.className += " active";
+            console.log(`Tab ${tabName} activated successfully`);
+        }
+        
+        // Modal functionality
+        function showModal(modalId, message) {
+            if (modalId === 'successModal') {
+                document.getElementById('successMessage').textContent = message;
+                document.getElementById(modalId).style.display = 'block';
+            } else if (modalId === 'errorModal') {
+                document.getElementById('errorMessage').textContent = message;
+                document.getElementById(modalId).style.display = 'block';
+            }
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+        
+        // WebSocket functionality
+        let ws = null;
+        
+        // Set initial button states when page loads
+        window.addEventListener('load', function() {
+            // Initially enable Connect button and disable Disconnect button
+            document.querySelector("button[onclick='connectWebSocket()']").disabled = false;
+            document.querySelector("button[onclick='disconnectWebSocket()']").disabled = true;
+        });
+        
+        function connectWebSocket() {
+            const clientIdInput = document.getElementById("clientId").value;
+            const groupName = document.getElementById("groupName").value;
+            let url;
+            
+            // Validate client ID is an integer if provided
+            if (clientIdInput && !/^\d+$/.test(clientIdInput)) {
+                addMessage("Error: Invalid client_id. Must be an integer.", "error");
+                return;
+            }
+            
+            // Use current host and port for WebSocket connection
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.hostname;
+            const port = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
+            
+            if (clientIdInput && groupName) {
+                url = `${protocol}//${host}:${port}/ws/${clientIdInput}/${groupName}`;
+            } else if (clientIdInput) {
+                url = `${protocol}//${host}:${port}/ws/${clientIdInput}`;
+            } else {
+                url = `${protocol}//${host}:${port}/ws`;
+            }
+            
+            console.log(`Attempting to connect to WebSocket at: ${url}`);
+            try {
+                ws = new WebSocket(url);
+                console.log('WebSocket instance created');
+            } catch (error) {
+                console.error(`Error creating WebSocket: ${error.message}`);
+                addMessage(`Failed to create WebSocket: ${error.message}`, "error");
+                return;
+            }
+            
+            // Disable Connect button and enable Disconnect button
+            document.querySelector("button[onclick='connectWebSocket()']").disabled = true;
+            document.querySelector("button[onclick='disconnectWebSocket()']").disabled = false;
+
+            ws.onopen = (event) => {
+                console.log('WebSocket connection opened successfully');
+                addMessage("Connected to WebSocket server.", "info");
+                // Refresh client and group lists after connecting
+                setTimeout(() => {
+                    refreshClients();
+                    refreshGroups();
+                }, 500);
+            };
+
+            ws.onmessage = (event) => {
+                console.log('WebSocket message received:', event);
+                const data = event.data;
+                console.log('Message data:', data);
+                
+                // Try to parse as JSON for client list updates
+                try {
+                    const jsonData = JSON.parse(data);
+                    console.log('Successfully parsed message as JSON:', jsonData);
+                    if (jsonData.type === "client_list") {
+                        console.log('Received client list update:', jsonData.clients);
+                        updateClientList(jsonData.clients);
+                        return;
+                    } else if (jsonData.type === "group_info") {
+                        console.log('Received group info update:', jsonData.groups);
+                        updateGroupList(jsonData.groups);
+                        return;
+                    }
+                } catch (e) {
+                    console.log('Message is not valid JSON, treating as regular message:', e);
+                    // Not JSON, treat as regular message
+                }
+                
+                // Check if this is an error message
+                if (data.startsWith("Error:")) {
+                    console.error('Received error message:', data);
+                    addMessage(data, "error");
+                    // Close the connection after receiving an error
+                    if (ws) {
+                        console.log('Closing WebSocket connection due to error');
+                        ws.close();
+                    }
+                } else if (data.startsWith("Connected as client")) {
+                    console.log('Connected as client:', data);
+                    addMessage(data, "success");
+                } else if (data.startsWith("Private message")) {
+                    console.log('Received private message:', data);
+                    addMessage(data, "private");
+                } else if (data.startsWith("Message sent to client")) {
+                    console.log('Message sent confirmation:', data);
+                    addMessage(data, "success");
+                } else if (data.startsWith("Failed to send message")) {
+                    console.error('Message sending failed:', data);
+                    addMessage(data, "error");
+                } else if (data.startsWith("Joined group:")) {
+                    console.log('Joined group:', data);
+                    addMessage(data, "success");
+                    // Refresh groups after joining
+                    setTimeout(refreshGroups, 500);
+                } else {
+                    console.log('Received regular message:', data);
+                    addMessage(`Received: ${data}`, "received");
+                }
+            };
+
+            ws.onclose = (event) => {
+                console.log('WebSocket connection closed:', event);
+                console.log('Close code:', event.code);
+                console.log('Close reason:', event.reason);
+                addMessage(`Disconnected from WebSocket server. Code: ${event.code}${event.reason ? ', Reason: ' + event.reason : ''}`, "info");
+                ws = null;
+                // Refresh client and group lists after disconnecting
+                setTimeout(() => {
+                    refreshClients();
+                    refreshGroups();
+                }, 500);
+                
+                // Enable Connect button and disable Disconnect button
+                document.querySelector("button[onclick='connectWebSocket()']").disabled = false;
+                document.querySelector("button[onclick='disconnectWebSocket()']").disabled = true;
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error occurred:', error);
+                addMessage(`WebSocket Error: ${error}`, "error");
+                ws = null;
+                
+                // Enable Connect button and disable Disconnect button
+                document.querySelector("button[onclick='connectWebSocket()']").disabled = false;
+                document.querySelector("button[onclick='disconnectWebSocket()']").disabled = true;
+            };
+        }
+        
+        function disconnectWebSocket() {
+            if (ws) {
+                ws.close();
+                ws = null;
+                
+                // Enable Connect button and disable Disconnect button
+                document.querySelector("button[onclick='connectWebSocket()']").disabled = false;
+                document.querySelector("button[onclick='disconnectWebSocket()']").disabled = true;
+            }
+        }
+
+        function sendMessage() {
+            console.log('Attempting to send message...');
+            if (!ws) {
+                console.error('WebSocket is null');
+                addMessage("Not connected to WebSocket server.", "error");
+                return;
+            }
+            
+            if (ws.readyState !== WebSocket.OPEN) {
+                console.error(`WebSocket is not open. Current state: ${ws.readyState}`);
+                addMessage(`Not connected to WebSocket server. State: ${ws.readyState}`, "error");
+                return;
+            }
+            
+            const messageInput = document.getElementById("messageInput");
+            const message = messageInput.value;
+            if (message) {
+                console.log(`Sending message: ${message}`);
+                try {
+                    ws.send(message);
+                    console.log('Message sent successfully');
+                    addMessage(`Sent: ${message}`, "sent");
+                    messageInput.value = "";
+                } catch (error) {
+                    console.error(`Error sending message: ${error.message}`);
+                    addMessage(`Failed to send message: ${error.message}`, "error");
+                }
+            } else {
+                console.log('No message to send (empty input)');
+            }
+        }
+        
+        function sendGroupCommand() {
+            console.log('Attempting to send group command...');
+            if (!ws) {
+                console.error('WebSocket is null');
+                addMessage("Not connected to WebSocket server.", "error");
+                return;
+            }
+            
+            if (ws.readyState !== WebSocket.OPEN) {
+                console.error(`WebSocket is not open. Current state: ${ws.readyState}`);
+                addMessage(`Not connected to WebSocket server. State: ${ws.readyState}`, "error");
+                return;
+            }
+            
+            const groupCommandInput = document.getElementById("groupCommandInput");
+            const command = groupCommandInput.value;
+            if (command) {
+                console.log(`Sending group command: ${command}`);
+                try {
+                    ws.send(command);
+                    console.log('Group command sent successfully');
+                    addMessage(`Sent group command: ${command}`, "sent");
+                    groupCommandInput.value = "";
+                } catch (error) {
+                    console.error(`Error sending group command: ${error.message}`);
+                    addMessage(`Failed to send group command: ${error.message}`, "error");
+                }
+            } else {
+                console.log('No group command to send (empty input)');
+            }
+        }
+        
+        function refreshClients() {
+            console.log('Refreshing client list...');
+            // Fetch client list from HTTP endpoint
+            const baseUrl = `${window.location.protocol}//${window.location.host}`;
+            fetch(`${baseUrl}/ws/clients`)
+                .then(response => {
+                    console.log('Client list response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Client list data received:', data);
+                    updateClientList(data.clients);
+                })
+                .catch(error => {
+                    console.error('Error fetching client list:', error);
+                });
+        }
+        
+        function refreshGroups() {
+            console.log('Refreshing group list...');
+            // Fetch group list from HTTP endpoint
+            const baseUrl = `${window.location.protocol}//${window.location.host}`;
+            fetch(`${baseUrl}/ws/groups`)
+                .then(response => {
+                    console.log('Group list response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Group list data received:', data);
+                    updateGroupList(data.groups);
+                })
+                .catch(error => {
+                    console.error('Error fetching group list:', error);
+                });
+        }
+        
+        function updateClientList(clients) {
+            console.log('Updating client list with:', clients);
+            const clientsDiv = document.getElementById("clients");
+            if (!clientsDiv) {
+                console.error('Client div element not found');
+                return;
+            }
+            
+            if (!clients || clients.length === 0) {
+                console.log('No clients connected');
+                clientsDiv.innerHTML = "No clients connected";
+                return;
+            }
+            
+            console.log(`Found ${clients.length} connected clients`);
+            let clientListHtml = "";
+            clients.forEach((client, index) => {
+                console.log(`Processing client ${index}:`, client);
+                if (client.client_id) {
+                    console.log(`Client has ID: ${client.client_id}`);
+                    const groupInfo = client.group ? ` (Group: ${client.group})` : " (No group)";
+                    clientListHtml += `<div class="client-list">Client #${client.client_id}${groupInfo} <button class="secondary" onclick="sendToClient(${client.client_id})">Send Message</button></div>`;
+                } else {
+                    console.log('Anonymous client (no ID)');
+                    const groupInfo = client.group ? ` (Group: ${client.group})` : " (No group)";
+                    clientListHtml += `<div class="client-list">Anonymous Client${groupInfo}</div>`;
+                }
+            });
+            clientsDiv.innerHTML = clientListHtml;
+            console.log('Client list updated successfully');
+        }
+        
+        function updateGroupList(groups) {
+            console.log('Updating group list with:', groups);
+            const groupsDiv = document.getElementById("groups");
+            if (!groupsDiv) {
+                console.error('Group div element not found');
+                return;
+            }
+            
+            if (!groups || groups.length === 0) {
+                console.log('No groups available');
+                groupsDiv.innerHTML = "No groups available";
+                return;
+            }
+            
+            console.log(`Found ${groups.length} groups`);
+            let groupListHtml = "";
+            groups.forEach((group, index) => {
+                console.log(`Processing group ${index}:`, group);
+                groupListHtml += `<div class="group-list">Group: ${group.name} (${group.member_count} member${group.member_count !== 1 ? 's' : ''}) <button class="secondary" onclick="showGroupMembers('${group.name}')">Show Members</button></div>`;
+            });
+            groupsDiv.innerHTML = groupListHtml;
+            console.log('Group list updated successfully');
+        }
+        
+        function sendToClient(clientId) {
+            console.log(`Preparing to send message to client #${clientId}`);
+            const message = prompt(`Enter message to send to client #${clientId}:`);
+            if (message) {
+                console.log(`Message to send: ${message}`);
+                const command = `/send_to ${clientId} ${message}`;
+                console.log(`Formatted command: ${command}`);
+                
+                if (!ws) {
+                    console.error('WebSocket is null');
+                    addMessage("Not connected to WebSocket server.", "error");
+                    return;
+                }
+                
+                if (ws.readyState === WebSocket.OPEN) {
+                    console.log('WebSocket is open, sending command');
+                    try {
+                        ws.send(command);
+                        console.log('Command sent successfully');
+                        addMessage(`Sent command: ${command}`, "sent");
+                    } catch (error) {
+                        console.error(`Error sending command: ${error.message}`);
+                        addMessage(`Failed to send command: ${error.message}`, "error");
+                    }
+                } else {
+                    console.error(`WebSocket is not open. Current state: ${ws.readyState}`);
+                    addMessage(`Not connected to WebSocket server. State: ${ws.readyState}`, "error");
+                }
+            } else {
+                console.log('No message entered or dialog cancelled');
+            }
+        }
+        
+        function showGroupMembers(groupName) {
+            console.log(`Showing members for group: ${groupName}`);
+            // Fetch group members from HTTP endpoint
+            const baseUrl = `${window.location.protocol}//${window.location.host}`;
+            fetch(`${baseUrl}/ws/groups/${groupName}`)
+                .then(response => {
+                    console.log('Group members response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Group members data received:', data);
+                    let membersList = `Members in group '${groupName}':\n`;
+                    if (data.members && data.members.length > 0) {
+                        data.members.forEach(member => {
+                            membersList += `- Client #${member.client_id}\n`;
+                        });
+                    } else {
+                        membersList += "No members in this group";
+                    }
+                    alert(membersList);
+                })
+                .catch(error => {
+                    console.error('Error fetching group members:', error);
+                    alert(`Error fetching group members: ${error.message}`);
+                });
+        }
+        
+        function addMessage(message, type) {
+            console.log(`Adding message to UI: ${message}, type: ${type}`);
+            const messagesDiv = document.getElementById("messages");
+            if (!messagesDiv) {
+                console.error('Messages div element not found');
+                return;
+            }
+            
+            try {
+                const messageElement = document.createElement("div");
+                messageElement.className = `message ${type}`;
+                messageElement.textContent = message;
+                messagesDiv.appendChild(messageElement);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                console.log('Message added successfully');
+            } catch (error) {
+                console.error(`Error adding message to UI: ${error.message}`);
+            }
+        }
+        
+        // Allow sending message with Enter key
+        document.getElementById("messageInput").addEventListener("keyup", function(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        });
+        
+        // Allow sending group command with Enter key
+        document.getElementById("groupCommandInput").addEventListener("keyup", function(event) {
+            if (event.key === "Enter") {
+                sendGroupCommand();
+            }
+        });
+        
+        // Refresh client and group lists every 5 seconds
+        setInterval(() => {
+            refreshClients();
+            refreshGroups();
+        }, 5000);
+        
+        // File upload functionality
+        // Handle single file upload with progress
+        document.getElementById('singleUploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('singleFile');
+            const descriptionInput = document.getElementById('fileDescription');
+            const progressContainer = document.getElementById('singleFileProgress');
+            const progressFill = document.getElementById('singleFileProgressFill');
+            const progressText = document.getElementById('singleFileProgressText');
+            const cancelButton = document.getElementById('cancelSingleUpload');
+            
+            if (!fileInput.files.length) {
+                showModal('errorModal', 'Please select a file to upload.');
+                return;
+            }
+            
+            // Show progress bar and cancel button
+            progressContainer.style.display = 'block';
+            progressFill.style.width = '0%';
+            progressText.textContent = '0%';
+            cancelButton.style.display = 'inline-block';
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            if (descriptionInput.value) {
+                formData.append('description', descriptionInput.value);
+            }
+            
+            const xhr = new XMLHttpRequest();
+            
+            // Store xhr reference for cancellation
+            window.currentSingleUpload = xhr;
+            
+            // Upload progress
+            xhr.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressFill.style.width = percentComplete + '%';
+                    progressText.textContent = Math.round(percentComplete) + '%';
+                }
+            });
+            
+            // Upload complete
+            xhr.addEventListener('load', function() {
+                try {
+                    // Hide cancel button
+                    cancelButton.style.display = 'none';
+                    
+                    if (xhr.status === 200) {
+                        const result = JSON.parse(xhr.responseText);
+                        showModal('successModal', `File uploaded successfully: ${result.original_filename}`);
+                        fileInput.value = '';
+                        descriptionInput.value = '';
+                    } else if (xhr.status === 413) {
+                        showModal('errorModal', 'Upload failed: File too large.');
+                    } else {
+                        const result = JSON.parse(xhr.responseText);
+                        showModal('errorModal', `Upload failed: ${result.detail || 'Unknown error'}`);
+                    }
+                } catch (e) {
+                    // Hide cancel button
+                    cancelButton.style.display = 'none';
+                    showModal('errorModal', 'Upload failed: Invalid response from server.');
+                } finally {
+                    progressContainer.style.display = 'none';
+                    refreshFileList();
+                }
+            });
+            
+            // Upload error
+            xhr.addEventListener('error', function() {
+                // Hide cancel button
+                cancelButton.style.display = 'none';
+                showModal('errorModal', 'Upload failed due to network error.');
+                progressContainer.style.display = 'none';
+            });
+            
+            // Handle timeout
+            xhr.timeout = 300000; // 5 minutes timeout
+            xhr.addEventListener('timeout', function() {
+                // Hide cancel button
+                cancelButton.style.display = 'none';
+                showModal('errorModal', 'Upload timed out.');
+                progressContainer.style.display = 'none';
+            });
+            
+            // Handle abort
+            xhr.addEventListener('abort', function() {
+                // Hide cancel button
+                cancelButton.style.display = 'none';
+                showModal('errorModal', 'Upload was cancelled.');
+                progressContainer.style.display = 'none';
+            });
+            
+            xhr.open('POST', '/api/upload');
+            xhr.send(formData);
+        });
+        
+        // Handle multiple file upload with progress
+        document.getElementById('multipleUploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('multipleFiles');
+            const descriptionInput = document.getElementById('multipleFileDescription');
+            const progressContainer = document.getElementById('multipleFileProgress');
+            const progressFill = document.getElementById('multipleFileProgressFill');
+            const progressText = document.getElementById('multipleFileProgressText');
+            const cancelButton = document.getElementById('cancelMultipleUpload');
+            
+            if (!fileInput.files.length) {
+                showModal('errorModal', 'Please select files to upload.');
+                return;
+            }
+            
+            // Show progress bar and cancel button
+            progressContainer.style.display = 'block';
+            progressFill.style.width = '0%';
+            progressText.textContent = '0%';
+            cancelButton.style.display = 'inline-block';
+            
+            const formData = new FormData();
+            for (let i = 0; i < fileInput.files.length; i++) {
+                formData.append('files', fileInput.files[i]);
+            }
+            if (descriptionInput.value) {
+                formData.append('description', descriptionInput.value);
+            }
+            
+            const xhr = new XMLHttpRequest();
+            
+            // Store xhr reference for cancellation
+            window.currentMultipleUpload = xhr;
+            
+            // Upload progress
+            xhr.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressFill.style.width = percentComplete + '%';
+                    progressText.textContent = Math.round(percentComplete) + '%';
+                }
+            });
+            
+            // Upload complete
+            xhr.addEventListener('load', function() {
+                try {
+                    // Hide cancel button
+                    cancelButton.style.display = 'none';
+                    
+                    if (xhr.status === 200) {
+                        const result = JSON.parse(xhr.responseText);
+                        showModal('successModal', `${result.files.length} files uploaded successfully`);
+                        fileInput.value = '';
+                        descriptionInput.value = '';
+                    } else if (xhr.status === 413) {
+                        showModal('errorModal', 'Upload failed: Files too large.');
+                    } else {
+                        const result = JSON.parse(xhr.responseText);
+                        showModal('errorModal', `Upload failed: ${result.detail || 'Unknown error'}`);
+                    }
+                } catch (e) {
+                    // Hide cancel button
+                    cancelButton.style.display = 'none';
+                    showModal('errorModal', 'Upload failed: Invalid response from server.');
+                } finally {
+                    progressContainer.style.display = 'none';
+                    refreshFileList();
+                }
+            });
+            
+            // Upload error
+            xhr.addEventListener('error', function() {
+                // Hide cancel button
+                cancelButton.style.display = 'none';
+                showModal('errorModal', 'Upload failed due to network error.');
+                progressContainer.style.display = 'none';
+            });
+            
+            // Handle timeout
+            xhr.timeout = 300000; // 5 minutes timeout
+            xhr.addEventListener('timeout', function() {
+                // Hide cancel button
+                cancelButton.style.display = 'none';
+                showModal('errorModal', 'Upload timed out.');
+                progressContainer.style.display = 'none';
+            });
+            
+            // Handle abort
+            xhr.addEventListener('abort', function() {
+                // Hide cancel button
+                cancelButton.style.display = 'none';
+                showModal('errorModal', 'Upload was cancelled.');
+                progressContainer.style.display = 'none';
+            });
+            
+            xhr.open('POST', '/api/upload/multiple');
+            xhr.send(formData);
+        });
+        
+        // Cancel single file upload
+        document.getElementById('cancelSingleUpload').addEventListener('click', function() {
+            if (window.currentSingleUpload) {
+                window.currentSingleUpload.abort();
+                delete window.currentSingleUpload;
+            }
+        });
+        
+        // Cancel multiple file upload
+        document.getElementById('cancelMultipleUpload').addEventListener('click', function() {
+            if (window.currentMultipleUpload) {
+                window.currentMultipleUpload.abort();
+                delete window.currentMultipleUpload;
+            }
+        });
+        
+        // Refresh file list
+        document.getElementById('refreshFiles').addEventListener('click', refreshFileList);
+        
+        // Load file list on page load
+        window.addEventListener('load', function() {
+            // Only refresh file list if we're on the file upload tab
+            if (document.getElementById('fileupload').classList.contains('active')) {
+                refreshFileList();
+            }
+        });
+        
+        async function refreshFileList() {
+            console.log('Refreshing file list...');
+            try {
+                console.log('Fetching file list from server');
+                const response = await fetch('/api/files');
+                console.log('File list response status:', response.status);
+                const result = await response.json();
+                console.log('File list data received:', result);
+                
+                const fileList = document.getElementById('fileList');
+                if (!fileList) {
+                    console.error('File list element not found');
+                    return;
+                }
+                
+                if (result.files && result.files.length > 0) {
+                    fileList.innerHTML = '';
+                    // Create a root container for the file tree
+                    const fileTreeContainer = document.createElement('div');
+                    fileTreeContainer.id = 'fileTree';
+                    fileList.appendChild(fileTreeContainer);
+                    
+                    // Render the file tree
+                    renderFileTree(result.files, fileTreeContainer, 0);
+                } else {
+                    fileList.innerHTML = '<p>No files uploaded yet.</p>';
+                }
+            } catch (error) {
+                console.error('Error loading file list:', error);
+                const fileList = document.getElementById('fileList');
+                fileList.innerHTML = `<p class="error">Error loading file list: ${error.message}</p>`;
+            }
+        }
+        
+        function renderFileTree(items, container, depth) {
+            items.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'file-item';
+                itemElement.style.marginLeft = `${depth * 20}px`;
+                
+                if (item.type === 'folder') {
+                    // Folder item
+                    const folderHeader = document.createElement('div');
+                    folderHeader.className = 'folder-header';
+                    folderHeader.innerHTML = `<strong>📁 ${item.name}</strong>`;
+                    folderHeader.style.cursor = 'pointer';
+                    folderHeader.style.fontWeight = 'bold';
+                    
+                    // Toggle folder contents
+                    folderHeader.addEventListener('click', function() {
+                        const contents = this.nextElementSibling;
+                        if (contents.style.display === 'none') {
+                            contents.style.display = 'block';
+                        } else {
+                            contents.style.display = 'none';
+                        }
+                    });
+                    
+                    const contentsContainer = document.createElement('div');
+                    contentsContainer.className = 'folder-contents';
+                    contentsContainer.style.marginLeft = '20px';
+                    
+                    itemElement.appendChild(folderHeader);
+                    itemElement.appendChild(contentsContainer);
+                    container.appendChild(itemElement);
+                    
+                    // Render folder contents
+                    if (item.contents && item.contents.length > 0) {
+                        renderFileTree(item.contents, contentsContainer, depth + 1);
+                    }
+                } else {
+                    // File item
+                    // File info
+                    const fileInfo = document.createElement('div');
+                    fileInfo.className = 'file-info';
+                    fileInfo.innerHTML = `<strong>📄 ${item.filename}</strong> (${formatFileSize(item.size)})`;
+                    itemElement.appendChild(fileInfo);
+                    
+                    // File path
+                    const filePath = document.createElement('div');
+                    filePath.className = 'file-info';
+                    filePath.textContent = `Path: ${item.path}`;
+                    itemElement.appendChild(filePath);
+                    
+                    // Actions
+                    const actions = document.createElement('div');
+                    actions.className = 'actions';
+                    
+                    // View button
+                    const viewButton = document.createElement('button');
+                    viewButton.className = 'secondary';
+                    viewButton.textContent = 'View';
+                    viewButton.addEventListener('click', function() {
+                        window.open(`/${item.path}`, '_blank');
+                    });
+                    
+                    // Download button
+                    const downloadButton = document.createElement('button');
+                    downloadButton.className = 'secondary';
+                    downloadButton.textContent = 'Download';
+                    downloadButton.addEventListener('click', function() {
+                        const link = document.createElement('a');
+                        link.href = `/${item.path}`;
+                        link.download = item.filename;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    });
+                    
+                    // Delete button
+                    const deleteButton = document.createElement('button');
+                    deleteButton.className = 'danger';
+                    deleteButton.textContent = 'Delete';
+                    deleteButton.addEventListener('click', function() {
+                        deleteFile(item.path);
+                    });
+                    
+                    actions.appendChild(viewButton);
+                    actions.appendChild(downloadButton);
+                    actions.appendChild(deleteButton);
+                    itemElement.appendChild(actions);
+                    
+                    container.appendChild(itemElement);
+                }
+            });
+        }
+        
+        async function deleteFile(filePath) {
+            console.log(`Attempting to delete file: ${filePath}`);
+            const fileName = filePath.split('/').pop();
+            if (!confirm(`Are you sure you want to delete ${fileName}?`)) {
+                console.log('File deletion cancelled by user');
+                return;
+            }
+            
+            try {
+                console.log('Proceeding with file deletion');
+                addMessage('Deleting file...', 'info');
+                // Use the new API endpoint that accepts full file path
+                const encodedPath = encodeURIComponent(filePath);
+                const url = `/api/files/path/${encodedPath}`;
+                console.log(`DELETE request to: ${url}`);
+                
+                const response = await fetch(url, {
+                    method: 'DELETE'
+                });
+                
+                console.log('Delete response status:', response.status);
+                const result = await response.json();
+                console.log('Delete response data:', result);
+                
+                if (response.ok) {
+                    console.log('File deleted successfully');
+                    addMessage(`File deleted successfully: ${fileName}`, 'success');
+                    refreshFileList();
+                } else {
+                    console.error('File deletion failed:', result);
+                    addMessage(`Delete failed: ${result.detail || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error during file deletion:', error);
+                addMessage(`Delete error: ${error.message}`, 'error');
+            }
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    </script>
+</body>
+</html>

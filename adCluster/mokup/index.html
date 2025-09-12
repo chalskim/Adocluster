@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 대시보드</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: #f5f7fa;
+        }
+
+        /* 좌측 메뉴 스타일 */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(180deg, #2c3e50, #1a2530);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            overflow-y: auto;
+            box-shadow: 3px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .logo span {
+            color: #3498db;
+        }
+
+        .menu {
+            padding: 15px 0;
+        }
+
+        .menu-item {
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .menu-item.active {
+            background-color: rgba(52, 152, 219, 0.2);
+            border-left: 4px solid #3498db;
+        }
+
+        .menu-item i {
+            margin-right: 12px;
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* 메인 콘텐츠 스타일 */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .header h2 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+            
+            .logo h1, .menu-item span {
+                display: none;
+            }
+            
+            .logo {
+                padding: 15px 5px;
+            }
+            
+            .menu-item {
+                justify-content: center;
+                padding: 15px 5px;
+            }
+            
+            .menu-item i {
+                margin-right: 0;
+                font-size: 1.3rem;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- 좌측 메뉴 -->
+    <div class="sidebar">
+        <div class="logo">
+            <h1>AD<span>Cluster</span></h1>
+        </div>
+        <div class="menu">
+            <div class="menu-item active">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>대시보드</span>
+            </div>
+            <div class="menu-item">
+                <i class="fas fa-project-diagram"></i>
+                <span>프로젝트 관리</span>
+            </div>
+            <div class="menu-item">
+                <i class="fas fa-search"></i>
+                <span>검색</span>
+            </div>
+            <div class="menu-item">
+                <i class="fas fa-file-export"></i>
+                <span>가져오기 / 내보내기</span>
+            </div>
+            <div class="menu-item">
+                <i class="fas fa-cog"></i>
+                <span>일반 설정</span>
+            </div>
+            <div class="menu-item">
+                <i class="fas fa-user-shield"></i>
+                <span>관리자 설정</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="main-content">
+        <iframe id="content-frame" src="" style="width:100%; height:100%; min-height:500px; border:none; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); padding: 0; margin-top: 20px;"></iframe>
+    </div>
+
+    <script>
+        // 페이지 로드 시 대시보드 페이지 기본 로드
+        window.onload = function() {
+            // 대시보드 메뉴가 기본 선택되어 있으므로 대시보드 페이지 로드
+            document.getElementById('content-frame').src = 'deshbord.html';
+        };
+        
+        // 메뉴 클릭 이벤트
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function() {
+                // 활성화된 메뉴 초기화
+                document.querySelectorAll('.menu-item').forEach(i => {
+                    i.classList.remove('active');
+                });
+                
+                // 클릭된 메뉴 활성화
+                this.classList.add('active');
+                
+                // 메뉴 텍스트 가져오기
+                const menuText = this.querySelector('span').textContent;
+                
+                // 헤더 제목 업데이트 - header가 없으므로 이 부분 제거
+                // document.querySelector('.header h2').textContent = menuText;
+                
+                // 대시보드 메뉴 클릭 시 deshbord.html 로드
+                if (menuText === '대시보드') {
+                    document.getElementById('content-frame').src = 'deshbord.html';
+                } else if (menuText === '프로젝트 관리') {
+                    document.getElementById('content-frame').src = 'project.html';
+                } else if (menuText === '검색') {
+                    document.getElementById('content-frame').src = 'search.html';
+                } else if (menuText === '가져오기 / 내보내기') {
+                    document.getElementById('content-frame').src = 'imexport.html';
+                } else if (menuText === '일반 설정') {
+                    document.getElementById('content-frame').src = 'gensetting.html';
+                } else if (menuText === '관리자 설정') {
+                    document.getElementById('content-frame').src = 'adminsetting.html';
+                } else {
+                    // 아직 구현되지 않은 메뉴 클릭 시 메시지 표시
+                    document.getElementById('content-frame').src = 'projectSetting.html';
+                    
+                    // projectSetting.html이 로드된 후 editer.html을 iframe으로 로드
+                    const contentFrame = document.getElementById('content-frame');
+                    contentFrame.onload = function() {
+                        // projectSetting.html이 완전히 로드된 후 editer.html을 iframe으로 로드
+                        setTimeout(function() {
+                            contentFrame.src = 'editer.html';
+                        }, 500);
+                    };
+                }
+            });
+        });
+    </script>
+</body>
+</html>

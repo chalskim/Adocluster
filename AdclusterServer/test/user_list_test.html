@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사용자 목록 테스트</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            border-left: 4px solid #3498db;
+        }
+        .error {
+            border-left: 4px solid #e74c3c;
+            color: #e74c3c;
+        }
+        .success {
+            border-left: 4px solid #2ecc71;
+        }
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .user-table th {
+            background-color: #3498db;
+            color: white;
+            text-align: left;
+            padding: 12px;
+        }
+        .user-table td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .user-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .user-table tr:hover {
+            background-color: #e9e9e9;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            background-color: #ecf0f1;
+            cursor: pointer;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: #3498db;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <h1>사용자 목록 테스트</h1>
+    
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" data-tab="login">로그인</div>
+            <div class="tab" data-tab="user-list">사용자 목록</div>
+        </div>
+        
+        <div class="tab-content active" id="login-tab">
+            <div class="form-group">
+                <label for="email">이메일:</label>
+                <input type="text" id="email" placeholder="이메일 주소 입력">
+            </div>
+            <div class="form-group">
+                <label for="password">비밀번호:</label>
+                <input type="password" id="password" placeholder="비밀번호 입력">
+            </div>
+            <button id="login-btn">로그인</button>
+            <div id="login-result" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="tab-content" id="user-list-tab">
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="full-permission" checked>
+                    전체 권한으로 사용자 목록 가져오기
+                </label>
+            </div>
+            <button id="get-users-btn" disabled>사용자 목록 가져오기</button>
+            <div id="user-list-loading" class="loading" style="display: none;">사용자 목록을 불러오는 중...</div>
+            <div id="user-list-result" class="result" style="display: none;"></div>
+            <table id="user-table" class="user-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>이메일</th>
+                        <th>역할</th>
+                        <th>생성일</th>
+                        <th>마지막 로그인</th>
+                    </tr>
+                </thead>
+                <tbody id="user-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        // 전역 변수
+        let accessToken = '';
+        const baseUrl = 'http://localhost:8000';
+        
+        // DOM 요소
+        const loginBtn = document.getElementById('login-btn');
+        const getUsersBtn = document.getElementById('get-users-btn');
+        const loginResult = document.getElementById('login-result');
+        const userListResult = document.getElementById('user-list-result');
+        const userTable = document.getElementById('user-table');
+        const userTableBody = document.getElementById('user-table-body');
+        const userListLoading = document.getElementById('user-list-loading');
+        const fullPermissionCheckbox = document.getElementById('full-permission');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        // 탭 전환 기능
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                
+                // 활성 탭 변경
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // 탭 내용 변경
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(`${tabId}-tab`).classList.add('active');
+            });
+        });
+        
+        // 로그인 기능
+        loginBtn.addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                loginResult.textContent = '이메일과 비밀번호를 모두 입력해주세요.';
+                loginResult.className = 'result error';
+                loginResult.style.display = 'block';
+                return;
+            }
+            
+            try {
+                loginResult.textContent = '로그인 중...';
+                loginResult.className = 'result';
+                loginResult.style.display = 'block';
+                
+                const response = await fetch(`${baseUrl}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: email,
+                        password: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    accessToken = data.access_token;
+                    loginResult.textContent = '로그인 성공! 이제 사용자 목록 탭에서 사용자 목록을 가져올 수 있습니다.';
+                    loginResult.className = 'result success';
+                    getUsersBtn.disabled = false;
+                    
+                    // 사용자 목록 탭으로 자동 전환
+                    setTimeout(() => {
+                        document.querySelector('.tab[data-tab="user-list"]').click();
+                    }, 1000);
+                } else {
+                    loginResult.textContent = `로그인 실패: ${data.detail || '알 수 없는 오류가 발생했습니다.'}`;
+                    loginResult.className = 'result error';
+                    getUsersBtn.disabled = true;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                loginResult.textContent = '로그인 중 오류가 발생했습니다.';
+                loginResult.className = 'result error';
+                getUsersBtn.disabled = true;
+            }
+        });
+        
+        // 사용자 목록 가져오기 기능
+        getUsersBtn.addEventListener('click', async () => {
+            if (!accessToken) {
+                userListResult.textContent = '먼저 로그인해야 합니다.';
+                userListResult.className = 'result error';
+                userListResult.style.display = 'block';
+                return;
+            }
+            
+            try {
+                // 로딩 표시
+                userListLoading.style.display = 'block';
+                userListResult.style.display = 'none';
+                userTable.style.display = 'none';
+                
+                // 전체 권한 파라미터 설정
+                const fullPermission = fullPermissionCheckbox.checked ? 1 : 0;
+                const url = `${baseUrl}/users?full_permission=${fullPermission}`;
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+                
+                const users = await response.json();
+                
+                // 로딩 숨기기
+                userListLoading.style.display = 'none';
+                
+                if (response.ok) {
+                    // 결과 표시
+                    userListResult.textContent = `총 ${users.length}명의 사용자를 가져왔습니다.`;
+                    userListResult.className = 'result success';
+                    userListResult.style.display = 'block';
+                    
+                    // 테이블 초기화
+                    userTableBody.innerHTML = '';
+                    
+                    // 사용자 데이터 테이블에 추가
+                    users.forEach(user => {
+                        const row = document.createElement('tr');
+                        
+                        // ID 열
+                        const idCell = document.createElement('td');
+                        idCell.textContent = user.uid || '-';
+                        row.appendChild(idCell);
+                        
+                        // 이메일 열
+                        const emailCell = document.createElement('td');
+                        emailCell.textContent = user.uemail || '-';
+                        row.appendChild(emailCell);
+                        
+                        // 역할 열
+                        const roleCell = document.createElement('td');
+                        roleCell.textContent = user.urole || '-';
+                        row.appendChild(roleCell);
+                        
+                        // 생성일 열
+                        const createdAtCell = document.createElement('td');
+                        createdAtCell.textContent = user.ucreate_at ? new Date(user.ucreate_at).toLocaleString() : '-';
+                        row.appendChild(createdAtCell);
+                        
+                        // 마지막 로그인 열
+                        const lastLoginCell = document.createElement('td');
+                        lastLoginCell.textContent = user.ulast_login ? new Date(user.ulast_login).toLocaleString() : '-';
+                        row.appendChild(lastLoginCell);
+                        
+                        userTableBody.appendChild(row);
+                    });
+                    
+                    // 테이블 표시
+                    userTable.style.display = 'table';
+                } else {
+                    userListResult.textContent = `사용자 목록 가져오기 실패: ${users.detail || '알 수 없는 오류가 발생했습니다.'}`;
+                    userListResult.className = 'result error';
+                    userListResult.style.display = 'block';
+                    userTable.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                userListLoading.style.display = 'none';
+                userListResult.textContent = '사용자 목록을 가져오는 중 오류가 발생했습니다.';
+                userListResult.className = 'result error';
+                userListResult.style.display = 'block';
+                userTable.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,346 @@
+{
+  "canvas": {
+    "version": "2.2.11",
+    "width": 2000,
+    "height": 2000,
+    "scrollTop": 0,
+    "scrollLeft": 0,
+    "zoomLevel": 1,
+    "show": {
+      "tableComment": true,
+      "columnComment": true,
+      "columnDataType": true,
+      "columnDefault": true,
+      "columnAutoIncrement": true,
+      "columnPrimaryKey": true,
+      "columnUnique": true,
+      "columnNotNull": true,
+      "relationship": true
+    },
+    "database": "PostgreSQL",
+    "databaseName": "Adcluster",
+    "canvasType": "ERD",
+    "language": "GraphQL",
+    "tableCase": "pascalCase",
+    "columnCase": "camelCase",
+    "highlightTheme": "VS2015",
+    "bracketType": "none",
+    "setting": {
+      "relationshipDataTypeSync": true,
+      "relationshipOptimization": false,
+      "columnOrder": [
+        "columnName",
+        "columnDataType",
+        "columnNotNull",
+        "columnUnique",
+        "columnAutoIncrement",
+        "columnDefault",
+        "columnComment"
+      ]
+    },
+    "pluginSerializationMap": {}
+  },
+  "table": {
+    "tables": [
+      {
+        "name": "users",
+        "comment": "",
+        "columns": [
+          {
+            "name": "uid",
+            "comment": "",
+            "dataType": "uuid",
+            "default": "uuid_generate_v4()",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": true,
+              "unique": false,
+              "notNull": true
+            }
+          },
+          {
+            "name": "uemail",
+            "comment": "",
+            "dataType": "VARCHAR(150)",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": true,
+              "notNull": true
+            }
+          },
+          {
+            "name": "upassword",
+            "comment": "",
+            "dataType": "VARCHAR(50)",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": false
+            }
+          },
+          {
+            "name": "urole",
+            "comment": "",
+            "dataType": "VARCHAR(50)",
+            "default": "'user'",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": false
+            }
+          },
+          {
+            "name": "uavatar",
+            "comment": "",
+            "dataType": "TEXT",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": false
+            }
+          },
+          {
+            "name": "ucreate_at",
+            "comment": "",
+            "dataType": "TIMESTAMPTZ",
+            "default": "CURRENT_TIMESTAMP",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": true
+            }
+          },
+          {
+            "name": "ulast_login",
+            "comment": "",
+            "dataType": "TIMESTAMPTZ",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": false
+            }
+          },
+          {
+            "name": "uupdated_at",
+            "comment": "",
+            "dataType": "TIMESTAMPTZ",
+            "default": "CURRENT_TIMESTAMP",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": false
+            }
+          }
+        ],
+        "indexes": [
+          {
+            "name": "idx_users_uemail",
+            "columns": [
+              "uemail"
+            ],
+            "isUnique": false
+          }
+        ]
+      },
+      {
+        "name": "projects",
+        "comment": "",
+        "columns": [
+          {
+            "name": "prjID",
+            "comment": "",
+            "dataType": "uuid",
+            "default": "uuid_generate_v4()",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": true,
+              "unique": false,
+              "notNull": true
+            }
+          },
+          {
+            "name": "crtID",
+            "comment": "",
+            "dataType": "uuid",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": true
+            }
+          },
+          {
+            "name": "title",
+            "comment": "",
+            "dataType": "VARCHAR(200)",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": true
+            }
+          },
+          {
+            "name": "description",
+            "comment": "",
+            "dataType": "TEXT",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": false
+            }
+          },
+          {
+            "name": "proTag",
+            "comment": "",
+            "dataType": "TEXT",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": false
+            }
+          },
+          {
+            "name": "proKey",
+            "comment": "",
+            "dataType": "TEXT",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": false
+            }
+          },
+          {
+            "name": "visibility",
+            "comment": "",
+            "dataType": "VARCHAR(50)",
+            "default": "'team'",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": true
+            }
+          },
+          {
+            "name": "status",
+            "comment": "",
+            "dataType": "VARCHAR(50)",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": false
+            }
+          },
+          {
+            "name": "start_date",
+            "comment": "",
+            "dataType": "DATE",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": false
+            }
+          },
+          {
+            "name": "end_date",
+            "comment": "",
+            "dataType": "DATE",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": false
+            }
+          },
+          {
+            "name": "created_at",
+            "comment": "",
+            "dataType": "TIMESTAMPTZ",
+            "default": "CURRENT_TIMESTAMP",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": false
+            }
+          },
+          {
+            "name": "update_at",
+            "comment": "",
+            "dataType": "TIMESTAMPTZ",
+            "default": "CURRENT_TIMESTAMP",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": false
+            }
+          }
+        ],
+        "indexes": [
+          {
+            "name": "idx_projects_crtid",
+            "columns": [
+              "crtID"
+            ],
+            "isUnique": false
+          },
+          {
+            "name": "idx_projects_title",
+            "columns": [
+              "title"
+            ],
+            "isUnique": false
+          }
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "name": "fk_projects_crtid",
+        "relationshipType": "ZeroN",
+        "source": {
+          "tableId": "users",
+          "columnIds": [
+            "uid"
+          ],
+          "isRequired": true,
+          "cardinality": "1"
+        },
+        "target": {
+          "tableId": "projects",
+          "columnIds": [
+            "crtID"
+          ],
+          "isRequired": true,
+          "cardinality": "n"
+        }
+      }
+    ]
+  }
+}
