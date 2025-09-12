@@ -1,0 +1,72 @@
+# Dependencies
+node_modules/
+venv/
+adcluster_env/
+adcluster_venv_new/
+adocluster_venv/
+fresh_venv/
+new_venv/
+venv/
+
+# Build outputs
+dist/
+build/
+.out/
+
+# Environment variables
+.env
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Log files
+*.log
+server.log
+
+# Database files
+*.db
+databases/
+db/
+
+# Uploads directory (might want to keep some files)
+uploads/
+
+# Test results
+test-results/
+playwright-report/
+
+# Backup files
+*.backup
+backups/
+dbBackup/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.pytest_cache/
+
+# Local development files
+*.local
+*.development
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Icon?
+*.synk
