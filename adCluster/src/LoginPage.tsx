@@ -1,6 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { addUserToLoginCollection, cleanupOldEntries } from './services/userLoginCollection';
+
+// Utility functions for cookie handling
+const setCookie = (name: string, value: string, days: number) => {
+  const expires = new Date();
+  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+};
+
+const getCookie = (name: string): string | null => {
+  const nameEQ = `${name}=`;
+  const ca = document.cookie.split(';');
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+  }
+  return null;
+};
+
+const deleteCookie = (name: string) => {
+  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+};
 
 // Define the type for import.meta.env
 interface ImportMetaEnv {
@@ -35,11 +57,35 @@ const LoginPage: React.FC = () => {
   const [formData, setFormData] = useState<LoginForm>({
     email: '',
     password: '',
-    rememberMe: false,
+    rememberMe: true, // Default to true for persistent session
   });
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Check for existing session on component mount
+  useEffect(() => {
+    const authToken = localStorage.getItem('authToken');
+    const rememberMe = localStorage.getItem('rememberMe');
+    
+    // Load saved credentials if "Remember Me" was previously selected
+    const savedEmail = getCookie('savedEmail');
+    const savedPassword = getCookie('savedPassword');
+    
+    if (savedEmail && savedPassword) {
+      setFormData(prev => ({
+        ...prev,
+        email: savedEmail,
+        password: savedPassword,
+        rememberMe: true
+      }));
+    }
+    
+    if (authToken && rememberMe === 'true') {
+      // Validate token expiration if needed
+      navigate('/');
+    }
+  }, [navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -158,11 +204,19 @@ const LoginPage: React.FC = () => {
         
         // 로그인 성공 처리
         localStorage.setItem('authToken', data.access_token);
+        localStorage.setItem('rememberMe', 'true'); // Always maintain session until logout
+        localStorage.setItem('loginTime', new Date().toISOString()); // Store login time
+        
+        // Save credentials to cookies if "Remember Me" is checked
         if (formData.rememberMe) {
-          localStorage.setItem('rememberMe', 'true');
+          setCookie('savedEmail', formData.email, 30); // Save for 30 days
+          setCookie('savedPassword', formData.password, 30); // Save for 30 days
         } else {
-          localStorage.removeItem('rememberMe');
+          // Remove saved credentials if "Remember Me" is unchecked
+          deleteCookie('savedEmail');
+          deleteCookie('savedPassword');
         }
+        
         navigate('/');
       } else {
         setError(data.message || '로그인에 실패했습니다.');
@@ -236,7 +290,7 @@ const LoginPage: React.FC = () => {
                 onChange={handleChange}
               />
               <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-900">
-                로그인 상태 유지
+                아이디/비밀번호 저장
               </label>
             </div>
 

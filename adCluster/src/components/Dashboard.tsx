@@ -14,6 +14,7 @@ interface ProjectCardProps {
   date: string;
   documents: string;
   collaborators: string[];
+  projectId?: string;
 }
 
 interface ActivityItemProps {
@@ -39,7 +40,7 @@ const KpiCard: React.FC<KpiCardProps> = ({ icon, value, label, color }) => (
   </div>
 );
 
-const ProjectCard: React.FC<ProjectCardProps> = ({ title, description, date, documents, collaborators }) => (
+const ProjectCard: React.FC<ProjectCardProps> = ({ title, description, date, documents, collaborators, projectId }) => (
   <div className="project-card border border-gray-200 rounded-lg p-5 transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-md">
     <h3 className="project-title text-lg font-semibold text-gray-800 mb-2">{title}</h3>
     <p className="project-desc text-gray-600 text-sm mb-4 leading-relaxed">{description}</p>
@@ -50,7 +51,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ title, description, date, doc
     <div className="collaborators flex items-center mb-4">
       {collaborators.map((initial, index) => (
         <div 
-          key={index} 
+          key={`collaborator-${initial}-${index}`} 
           className="avatar w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs mr-[-8px] border-2 border-white"
           style={{ zIndex: collaborators.length - index }}
         >
@@ -58,13 +59,30 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ title, description, date, doc
         </div>
       ))}
     </div>
-    <div className="project-actions flex justify-between">
-      <button className="action-btn px-3 py-1 rounded border border-gray-200 bg-white text-xs transition-all duration-300 hover:bg-gray-50">
-        <i className="fas fa-external-link-alt mr-1"></i> 바로가기
-      </button>
-      <button className="action-btn px-3 py-1 rounded border border-gray-200 bg-white text-xs transition-all duration-300 hover:bg-gray-50">
-        <i className="fas fa-ellipsis-h"></i>
-      </button>
+    <div className="project-actions">
+      <a 
+        href={`/editor?hideSidebar=false&projectId=${encodeURIComponent(projectId || '')}`}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (!projectId) {
+            console.error('Project ID is missing for quick open');
+            alert('프로젝트 ID를 찾지 못했습니다. 잠시 후 다시 시도해 주세요.');
+            return;
+          }
+          const url = `/editor?hideSidebar=false&projectId=${encodeURIComponent(projectId)}`;
+          const win = window.open(url, 'adcluster-editor');
+          if (win) {
+            win.focus();
+          } else {
+            // Pop-up blocked fallback
+            window.location.href = url;
+          }
+        }}
+        className="action-btn w-full px-3 py-2 rounded border border-gray-200 bg-white text-sm transition-all duration-300 hover:bg-gray-50 flex items-center justify-center"
+      >
+        <i className="fas fa-external-link-alt mr-2"></i> 바로가기
+      </a>
     </div>
   </div>
 );
@@ -186,11 +204,6 @@ const Dashboard: React.FC = () => {
           <h1 className="text-2xl font-semibold text-gray-800">대시보드</h1>
           <p className="text-gray-600">시스템 전체 현황을 확인할 수 있습니다</p>
         </div>
-        <div className="header-actions">
-          <button className="btn btn-primary bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded transition-all duration-300 flex items-center">
-            <i className="fas fa-plus mr-2"></i> 새 프로젝트
-          </button>
-        </div>
       </div>
 
       {/* KPI 대시보드 */}
@@ -231,20 +244,15 @@ const Dashboard: React.FC = () => {
             <>
               <div className="projects-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-5">
                 {/* Transform project data to match the existing UI structure */}
-                {currentProjects.map(project => ({
-                  title: project.title,
-                  description: project.description || '설명이 없습니다',
-                  date: project.created_at ? new Date(project.created_at).toLocaleDateString('ko-KR') : '날짜 정보 없음',
-                  documents: '문서 0개', // This would need to be fetched from a documents API
-                  collaborators: ['K', 'M', 'J', '+2'], // This would need to be fetched from a collaborators API
-                })).map((project, index) => (
+                {currentProjects.map((project, index) => (
                   <ProjectCard
-                    key={index}
+                    key={project.prjID ? project.prjID : `project-${index}-${project.title}`}
                     title={project.title}
-                    description={project.description}
-                    date={project.date}
-                    documents={project.documents}
-                    collaborators={project.collaborators}
+                    description={project.description || '설명이 없습니다'}
+                    date={project.created_at ? new Date(project.created_at).toLocaleDateString('ko-KR') : '날짜 정보 없음'}
+                    documents={'문서 0개'} // This would need to be fetched from a documents API
+                    collaborators={['K', 'M', 'J', '+2']} // This would need to be fetched from a collaborators API
+                    projectId={(() => { const rawId = (project as any).prjID ?? (project as any).prjid ?? (project as any).id; return typeof rawId === 'object' ? (rawId?.id ?? rawId?._id ?? '') : rawId; })()}
                   />
                 ))}
               </div>

@@ -118,6 +118,22 @@ const EditorPage: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<TreeNodeData | null>(null);
   const [documents, setDocuments] = useState(allDocumentDetails);
   const [currentDetails, setCurrentDetails] = useState<DocumentDetailsData | null>(null);
+  
+  // 좌측 패널 탭 가시성 상태
+  const [leftPanelVisibleTabs, setLeftPanelVisibleTabs] = useState({
+    project: true,
+    library: true,
+    references: true,
+    todos: true
+  });
+  
+  // 우측 패널 탭 가시성 상태
+  const [rightSidebarVisibleTabs, setRightSidebarVisibleTabs] = useState({
+    project: true,
+    referenceInfo: true,
+    tableOfContents: true,
+    collaboration: true
+  });
 
   // If we have a projectId but no project data, fetch it from the backend
   useEffect(() => {
@@ -397,21 +413,50 @@ const EditorPage: React.FC = () => {
     return <div>Loading...</div>;
   }
 
+  // 좌측 패널 전체 가시성 결정: 모든 탭이 숨김 상태이면 패널 자체를 숨김
+  const isLeftPanelCompletelyHidden = Object.values(leftPanelVisibleTabs).every(value => !value);
+  const shouldShowLeftPanelFinal = !hideSidebar && !isLeftPanelCompletelyHidden;
+  
+  // 우측 사이드바 전체 가시성 결정: 모든 탭이 숨김 상태이면 패널 자체를 숨김
+  const isRightSidebarCompletelyHidden = Object.values(rightSidebarVisibleTabs).every(value => !value);
+  const shouldShowRightSidebarFinal = !hideSidebar && !isRightSidebarCompletelyHidden;
+  
   return (
     <div className="main-container">
-      {shouldShowLeftPanel && <LeftPanel onNodeSelect={handleNodeSelect} />}
-      <div className="editor-container">
-        {shouldShowTopMenuBar && <TopMenuBar editor={editor} />}
-        <TiptapEditor 
-          editor={editor}
+      {shouldShowLeftPanelFinal && (
+        <LeftPanel 
+          onNodeSelect={handleNodeSelect} 
+          visibleTabs={leftPanelVisibleTabs}
         />
+      )}
+      <div className="editor-container flex flex-col">
+        {shouldShowTopMenuBar && (
+          <TopMenuBar 
+            editor={editor}
+            leftPanelVisibleTabs={leftPanelVisibleTabs}
+            rightSidebarVisibleTabs={rightSidebarVisibleTabs}
+            onLeftPanelVisibleTabsChange={setLeftPanelVisibleTabs}
+            onRightSidebarVisibleTabsChange={setRightSidebarVisibleTabs}
+          />
+        )}
+        <div className="flex-1 overflow-auto">
+          <TiptapEditor 
+            editor={editor}
+          />
+        </div>
         <StatusBar editor={editor} />
       </div>
-      {shouldShowRightSidebar && (
+      {shouldShowRightSidebarFinal && (
         <RightSidebar
           details={currentDetails}
           onAddReference={handleAddReference}
           onDeleteReference={handleDeleteReference}
+          visibleTabs={{
+            info: rightSidebarVisibleTabs.project,
+            references: rightSidebarVisibleTabs.referenceInfo,
+            toc: rightSidebarVisibleTabs.tableOfContents,
+            collaborate: rightSidebarVisibleTabs.collaboration,
+          }}
         />
       )}
     </div>

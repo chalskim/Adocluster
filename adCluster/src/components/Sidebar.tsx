@@ -31,11 +31,12 @@ const Sidebar: React.FC = () => {
     if (path.includes('dashboard')) setActiveItem('dashboard');
     else if (path.includes('projects')) setActiveItem('projects');
     else if (path.includes('search')) setActiveItem('search');
+    else if (path.includes('document-management')) setActiveItem('document-management');
+    else if (path.includes('message-management')) setActiveItem('message-management');
     else if (path.includes('import-export')) setActiveItem('import-export');
-    else if (path.includes('element-editor')) setActiveItem('element-editor');
+    // else if (path.includes('element-editor')) setActiveItem('element-editor'); // 제거
     else if (path.includes('general-settings')) setActiveItem('general-settings');
     else if (path.includes('admin-settings')) setActiveItem('admin-settings');
-    else if (path.includes('user-login-collection-test')) setActiveItem('user-login-collection-test');
     
     // Add event listener to detect changes in localStorage
     const handleStorageChange = (e: StorageEvent) => {
@@ -57,15 +58,17 @@ const Sidebar: React.FC = () => {
     { id: 'dashboard', icon: 'fas fa-tachometer-alt', label: '대시보드', path: '/dashboard' },
     { id: 'projects', icon: 'fas fa-project-diagram', label: '프로젝트 관리', path: '/projects' },
     { id: 'search', icon: 'fas fa-search', label: '검색', path: '/search' },
+    // 문서 관리 메뉴 추가
+    { id: 'document-management', icon: 'fas fa-folder-open', label: '문서 관리', path: '/document-management' },
+    { id: 'message-management', icon: 'fas fa-envelope', label: '메세지 관리', path: '/message-management' },
     { id: 'import-export', icon: 'fas fa-file-export', label: '가져오기 / 내보내기', path: '/import-export' },
-    { id: 'element-editor', icon: 'fas fa-edit', label: '요소 편집기', path: '/element-editor' },
+    // { id: 'element-editor', icon: 'fas fa-edit', label: '요소 편집기', path: '/element-editor' }, // 제거
     { id: 'general-settings', icon: 'fas fa-cog', label: '일반 설정', path: '/general-settings' },
   ];
   
   // 관리자 메뉴 아이템
   const adminMenuItems: MenuItem[] = [
     { id: 'admin-settings', icon: 'fas fa-user-shield', label: '관리자 설정', path: '/admin-settings' },
-    { id: 'user-login-collection-test', icon: 'fas fa-database', label: '로그인 컬렉션 테스트', path: '/user-login-collection-test' }
   ];
   
   // 관리자인 경우에만 관리자 설정 메뉴 추가

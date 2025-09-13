@@ -61,16 +61,19 @@ const Projects: React.FC = () => {
         const fetchedProjects = await fetchProjects(100); // Fetch more projects to enable pagination
         if (fetchedProjects) {
           // Transform API projects to UI projects
-          const transformedProjects = fetchedProjects.map((project: ApiProject) => ({
-            id: project.prjID,
-            title: project.title,
-            description: project.description || '설명이 없습니다',
-            status: 'in-progress' as const, // Default status, you might want to map this from project data
-            startDate: project.start_date ? new Date(project.start_date).toLocaleDateString('ko-KR') : '날짜 정보 없음',
-            documents: 0, // This would need to be fetched from a documents API
-            members: 1, // This would need to be fetched from a members API
-            lastUpdate: project.update_at ? new Date(project.update_at).toLocaleDateString('ko-KR') : '업데이트 정보 없음'
-          }));
+          const transformedProjects = fetchedProjects.map((project: ApiProject) => {
+            const rawId = (project as any).prjID || (project as any).prjid || (project as any).id;
+            return {
+              id: rawId ? String(rawId) : '',
+              title: project.title,
+              description: project.description || '설명이 없습니다',
+              status: 'in-progress' as const, // Default status, you might want to map this from project data
+              startDate: project.start_date ? new Date(project.start_date).toLocaleDateString('ko-KR') : '날짜 정보 없음',
+              documents: 0, // This would need to be fetched from a documents API
+              members: 1, // This would need to be fetched from a members API
+              lastUpdate: project.update_at ? new Date(project.update_at).toLocaleDateString('ko-KR') : '업데이트 정보 없음'
+            };
+          });
           setProjects(transformedProjects);
           
           // Set the first project as selected by default
@@ -213,18 +216,18 @@ const Projects: React.FC = () => {
     return (
       <div key={node.id} className="tree-item">
         <div 
-          className="tree-toggle flex items-center cursor-pointer py-2"
+          className="tree-toggle cursor-pointer py-2"
           style={{ paddingLeft: `${level * 20}px` }}
           onClick={() => hasChildren && toggleNode(node.id)}
         >
-          {hasChildren ? (
-            <div className={`toggle-icon w-5 text-center mr-2 transition-transform ${isExpanded ? 'rotate-90' : ''}`}>
-              ▶
-            </div>
-          ) : (
-            <div className="w-5 mr-2"></div>
-          )}
-          <div className="tree-content flex items-center flex-1">
+          <div className="tree-content flex items-center">
+            {hasChildren ? (
+              <div className={`toggle-icon w-5 text-center mr-2 transition-transform ${isExpanded ? 'rotate-90' : ''}`}>
+                ▶
+              </div>
+            ) : (
+              <div className="w-5 mr-2"></div>
+            )}
             <div className="tree-icon w-5 text-center mr-2">
               {node.type === 'folder' ? (
                 <i className="fas fa-folder"></i>
@@ -232,14 +235,14 @@ const Projects: React.FC = () => {
                 <i className="far fa-file-alt"></i>
               )}
             </div>
-            <div className="tree-text flex-1">{node.name}</div>
-            <div className="tree-meta text-sm text-gray-500">
+            <div className="tree-text">{node.name}</div>
+            <div className="tree-meta text-sm text-gray-500 ml-auto">
               {node.type === 'folder' && node.documentCount ? `${node.documentCount} 문서` : `수정: ${node.lastModified}`}
             </div>
           </div>
         </div>
         {hasChildren && isExpanded && (
-          <div className="tree-children ml-5">
+          <div className="tree-children">
             {node.children?.map(child => renderTreeNode(child, level + 1))}
           </div>
         )}
@@ -284,19 +287,19 @@ const Projects: React.FC = () => {
       {/* 메인 콘텐츠 */}
       <div className="main-content flex gap-5 mb-5">
         {/* 좌측: 프로젝트 목록 */}
-        <div className="left-panel flex-1 bg-white rounded-lg shadow-md p-5">
+        <div className="left-panel flex-1 bg-white rounded-lg shadow-md p-5" style={{ height: '760px' }}>
           <div className="panel-header flex justify-between items-center mb-5">
             <h2 className="text-xl font-semibold text-gray-800">프로젝트 목록</h2>
             <a href="#" className="view-all text-blue-500 text-sm hover:text-blue-600">전체 보기</a>
           </div>
           
           {loading ? (
-            <div className="text-center py-8">
+            <div key="loading" className="text-center py-8">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
               <p className="mt-2 text-gray-600">프로젝트를 불러오는 중...</p>
             </div>
           ) : projects.length === 0 ? (
-            <div className="text-center py-8">
+            <div key="no-projects" className="text-center py-8">
               <i className="fas fa-folder-open text-4xl text-gray-300 mb-4"></i>
               <p className="text-gray-600">생성된 프로젝트가 없습니다</p>
               <button 
@@ -307,36 +310,80 @@ const Projects: React.FC = () => {
               </button>
             </div>
           ) : (
-            <>
-              <div className="project-list flex flex-col gap-4">
+            <React.Fragment>
+              <div className="project-list flex flex-col gap-3">
                 {currentProjects.map(project => (
                   <div 
                     key={project.id} 
-                    className={`project-card border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow flex flex-col items-center text-center cursor-pointer ${selectedProject?.id === project.id ? 'ring-2 ring-blue-500' : ''}`}
+                    className={`project-card border border-gray-200 rounded-lg p-2.5 hover:shadow-md transition-shadow flex flex-col ${selectedProject?.id === project.id ? 'ring-2 ring-blue-500' : ''}`}
                     onClick={() => handleProjectSelect(project)}
                   >
-                    <div className="project-header flex justify-center items-center mb-3">
+                    <div className="project-header flex justify-center items-center mb-2">
                       <div className="project-title text-lg font-semibold text-gray-800">{project.title}</div>
-                      <div className={`status-badge px-3 py-1 rounded-full text-xs font-medium text-white ml-3 ${getStatusClass(project.status)}`}>
+                      <div className={`status-badge px-2 py-1 rounded-full text-xs font-medium text-white ml-2 ${getStatusClass(project.status)}`}>
                         {getStatusText(project.status)}
                       </div>
                     </div>
-                    <p className="project-desc text-gray-600 text-sm mb-4 leading-relaxed">{project.description}</p>
-                    <div className="project-meta flex flex-wrap justify-center gap-4 text-gray-500 text-sm mb-3">
-                      <div className="meta-item flex items-center gap-1">
-                        <i className="far fa-calendar"></i>
+                    <p className="project-desc text-gray-600 text-sm mb-3 leading-tight truncate">{project.description}</p>
+                    <div className="project-meta flex flex-wrap justify-center gap-3 text-gray-500 text-sm mb-2">
+                      <span className="meta-item flex items-center gap-1">
+                        <i className="far fa-calendar text-xs"></i>
                         <span>{project.startDate}</span>
-                      </div>
-                      <div className="meta-item flex items-center gap-1">
-                        <i className="far fa-file"></i>
+                      </span>
+                      <span className="meta-item flex items-center gap-1">
+                        <i className="far fa-file text-xs"></i>
                         <span>문서 {project.documents}개</span>
-                      </div>
-                      <div className="meta-item flex items-center gap-1">
-                        <i className="fas fa-users"></i>
+                      </span>
+                      <span className="meta-item flex items-center gap-1">
+                        <i className="fas fa-users text-xs"></i>
                         <span>멤버 {project.members}명</span>
+                      </span>
+                    </div>
+                    <div className="last-update text-xs text-gray-500 mb-2">마지막 업데이트: {project.lastUpdate}</div>
+                    <div className="card-footer mt-auto border-t border-gray-100 flex justify-between items-center">
+                      <a 
+                        href={`${window.location.origin}/editor?hideSidebar=false&projectId=${project.id}`}
+                        className="shortcut-link text-blue-500 text-sm hover:text-blue-700 flex items-center"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const id = project.id;
+                          if (!id) {
+                            console.error('프로젝트 ID가 없어 에디터를 열 수 없습니다.', project);
+                            alert('프로젝트 ID를 확인할 수 없습니다.');
+                            return;
+                          }
+                          const url = `${window.location.origin}/editor?hideSidebar=false&projectId=${id}`;
+                          const w = window.open(url, 'adcluster-editor');
+                          if (w) w.focus();
+                        }}
+                      >
+                        <i className="fas fa-external-link-alt mr-1 text-xs"></i>
+                        바로가기
+                      </a>
+                      <div className="actions flex gap-1">
+                        <button 
+                          className="edit-btn text-gray-500 hover:text-gray-700"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Add edit logic here when needed
+                            console.log(`Edit clicked for project ${project.id}`);
+                          }}
+                        >
+                          <i className="fas fa-edit text-sm"></i>
+                        </button>
+                        <button 
+                          className="delete-btn text-gray-500 hover:text-red-500"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Add delete logic here when needed
+                            console.log(`Delete clicked for project ${project.id}`);
+                          }}
+                        >
+                          <i className="fas fa-trash text-sm"></i>
+                        </button>
                       </div>
                     </div>
-                    <div className="last-update text-xs text-gray-500">마지막 업데이트: {project.lastUpdate}</div>
                   </div>
                 ))}
               </div>
@@ -357,7 +404,7 @@ const Projects: React.FC = () => {
                       const pageNumber = index + 1;
                       return (
                         <button
-                          key={pageNumber}
+                          key={`page-${pageNumber}`}
                           onClick={() => paginate(pageNumber)}
                           className={`w-10 h-10 rounded-full ${
                             currentPage === pageNumber
@@ -380,7 +427,7 @@ const Projects: React.FC = () => {
                   </nav>
                 </div>
               )}
-            </>
+            </React.Fragment>
           )}
         </div>
 
@@ -391,11 +438,15 @@ const Projects: React.FC = () => {
             <a href="#" className="view-all text-blue-500 text-sm hover:text-blue-600">전체 펼치기</a>
           </div>
           {selectedProject ? (
-            <ul className="tree-view list-none">
-              {treeData.map(node => renderTreeNode(node))}
+            <ul className="tree-view list-none" key="tree-view-container">
+              {treeData.map(node => (
+                <li key={`tree-node-${node.id}`}>
+                  {renderTreeNode(node)}
+                </li>
+              ))}
             </ul>
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-500" key="tree-placeholder">
               프로젝트를 선택하세요
             </div>
           )}
@@ -405,34 +456,39 @@ const Projects: React.FC = () => {
       {/* 하단 탭 컨테이너 */}
       <div className="tab-container bg-white rounded-lg shadow-md overflow-hidden">
         <div className="tabs flex border-b border-gray-200">
-          <div 
-            className={`tab px-6 py-4 cursor-pointer font-medium ${activeTab === 'info' ? 'text-blue-500 border-b-2 border-blue-500' : 'bg-gray-50 text-gray-600'}`}
-            onClick={() => setActiveTab('info')}
-          >
-            프로젝트 정보
-          </div>
-          <div 
-            className={`tab px-6 py-4 cursor-pointer font-medium ${activeTab === 'reference' ? 'text-blue-500 border-b-2 border-blue-500' : 'bg-gray-50 text-gray-600'}`}
-            onClick={() => setActiveTab('reference')}
-          >
-            참조
-          </div>
-          <div 
-            className={`tab px-6 py-4 cursor-pointer font-medium ${activeTab === 'history' ? 'text-blue-500 border-b-2 border-blue-500' : 'bg-gray-50 text-gray-600'}`}
-            onClick={() => setActiveTab('history')}
-          >
-            이력관리
-          </div>
+          <React.Fragment key="tabs-fragment">
+            <div 
+              key="info"
+              className={`tab px-6 py-4 cursor-pointer font-medium ${activeTab === 'info' ? 'text-blue-500 border-b-2 border-blue-500' : 'bg-gray-50 text-gray-600'}`}
+              onClick={() => setActiveTab('info')}
+            >
+              프로젝트 정보
+            </div>
+            <div 
+              key="reference"
+              className={`tab px-6 py-4 cursor-pointer font-medium ${activeTab === 'reference' ? 'text-blue-500 border-b-2 border-blue-500' : 'bg-gray-50 text-gray-600'}`}
+              onClick={() => setActiveTab('reference')}
+            >
+              참조
+            </div>
+            <div 
+              key="history"
+              className={`tab px-6 py-4 cursor-pointer font-medium ${activeTab === 'history' ? 'text-blue-500 border-b-2 border-blue-500' : 'bg-gray-50 text-gray-600'}`}
+              onClick={() => setActiveTab('history')}
+            >
+              이력관리
+            </div>
+          </React.Fragment>
         </div>
         
         <div className="tab-content p-5">
           {activeTab === 'info' && selectedProject && (
-            <div className="project-info-grid grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="info-item mb-4">
+            <div className="project-info-grid grid grid-cols-1 md:grid-cols-2 gap-5" key="info-tab-content">
+              <div key="title" className="info-item mb-4">
                 <div className="info-label font-semibold text-gray-800 mb-2">프로젝트 이름</div>
                 <div className="info-value text-gray-600">{selectedProject.title}</div>
               </div>
-              <div className="info-item mb-4">
+              <div key="status" className="info-item mb-4">
                 <div className="info-label font-semibold text-gray-800 mb-2">상태</div>
                 <div className="info-value">
                   <span className={`status-badge px-3 py-1 rounded-full text-xs font-medium text-white ${getStatusClass(selectedProject.status)}`}>
@@ -447,15 +503,18 @@ const Projects: React.FC = () => {
               <div className="info-item mb-4">
                 <div className="info-label font-semibold text-gray-800 mb-2">멤버</div>
                 <div className="members flex gap-2 mt-2">
-                  <div className="member-avatar w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold">
-                    M
-                  </div>
-                  <div className="member-avatar w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold">
-                    K
-                  </div>
-                  <div className="member-avatar w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold">
-                    J
-                  </div>
+                  {[
+                    { id: 1, initial: 'M' },
+                    { id: 2, initial: 'K' },
+                    { id: 3, initial: 'J' }
+                  ].map(member => (
+                    <div
+                      key={`member-${selectedProject.id}-${member.id}`}
+                      className="member-avatar w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold"
+                    >
+                      {member.initial}
+                    </div>
+                  ))}
                 </div>
               </div>
               <div className="info-item mb-4">
@@ -470,9 +529,9 @@ const Projects: React.FC = () => {
           )}
           
           {activeTab === 'reference' && (
-            <div className="reference-list grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="reference-list grid grid-cols-1 md:grid-cols-2 gap-4" key="reference-tab-content">
               {references.map(ref => (
-                <div key={ref.id} className="reference-card border border-gray-200 rounded-lg p-4">
+                <div key={`reference-${ref.id}`} className="reference-card border border-gray-200 rounded-lg p-4">
                   <div className="ref-title font-semibold text-gray-800 mb-2">{ref.title}</div>
                   <div className="ref-url text-blue-500 text-sm break-all">{ref.url}</div>
                 </div>
@@ -481,10 +540,10 @@ const Projects: React.FC = () => {
           )}
           
           {activeTab === 'history' && (
-            <div>
+            <div key="history-tab-content">
               <ul className="history-list list-none">
                 {history.map(item => (
-                  <li key={item.id} className="history-item py-4 border-b border-gray-100">
+                  <li key={`history-${item.id}`} className="history-item py-4 border-b border-gray-100">
                     <div className="history-header flex justify-between mb-2">
                       <div className="history-user font-semibold text-gray-800">{item.user}</div>
                       <div className="history-date text-sm text-gray-500">{item.date}</div>
@@ -514,7 +573,7 @@ const Projects: React.FC = () => {
                 </div>
                 <ul className="comment-list list-none">
                   {comments.map(comment => (
-                    <li key={comment.id} className="comment-item py-4 border-b border-gray-100">
+                    <li key={`comment-${comment.id}`} className="comment-item py-4 border-b border-gray-100">
                       <div className="comment-header flex justify-between mb-2">
                         <div className="comment-author font-semibold text-gray-800">{comment.author}</div>
                         <div className="comment-date text-sm text-gray-500">{comment.date}</div>

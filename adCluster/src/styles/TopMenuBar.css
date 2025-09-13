@@ -118,6 +118,12 @@
   border-color: #667eea;
 }
 
+.ribbon-button.partial-active {
+  background: linear-gradient(135deg, #a5b4fc, #c4b5fd);
+  color: white;
+  border-color: #a5b4fc;
+}
+
 .ribbon-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;

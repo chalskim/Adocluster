@@ -32,14 +32,16 @@ const ProjectNodelist: React.FC<ProjectNodelistProps> = ({ treeData, onNodeSelec
 
   const renderTree = (nodes: TreeNodeData[], level = 0) => {
     return (
-      <div className="tree-children" style={{ paddingLeft: level > 0 ? '20px' : '0' }}>
+      <div className="tree-children">
         {nodes.map(node => (
           <div key={node.id} className="tree-node">
             {node.type === 'folder' ? (
               <div className="tree-item" onClick={() => toggleNode(node.id)}>
-                <i className={`fas ${isExpanded(node.id) ? 'fa-chevron-down' : 'fa-chevron-right'}`}></i>
-                <i className="fas fa-folder-open" style={{ color: '#3b82f6' }}></i>
-                {node.name}
+                <div className="tree-toggle flex items-center">
+                  <i className={`fas ${isExpanded(node.id) ? 'fa-chevron-down' : 'fa-chevron-right'}`}></i>
+                  <i className="fas fa-folder-open" style={{ color: '#3b82f6', marginLeft: '8px', marginRight: '8px' }}></i>
+                  <span>{node.name}</span>
+                </div>
               </div>
             ) : (
               <div 
@@ -47,8 +49,10 @@ const ProjectNodelist: React.FC<ProjectNodelistProps> = ({ treeData, onNodeSelec
                 onClick={() => handleNodeClick(node)}
                 style={{ cursor: 'pointer' }}
               >
-                <i className="fas fa-file-alt" style={{ color: '#10b981' }}></i>
-                {node.name}
+                <div className="tree-toggle flex items-center">
+                  <i className="fas fa-file-alt" style={{ color: '#10b981', marginLeft: '24px', marginRight: '8px' }}></i>
+                  <span>{node.name}</span>
+                </div>
               </div>
             )}
             {node.children && isExpanded(node.id) && renderTree(node.children, level + 1)}

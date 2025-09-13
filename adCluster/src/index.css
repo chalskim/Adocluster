@@ -179,7 +179,7 @@ button:focus-visible {
 
 .tree-item {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     padding: 8px 12px;
     border-radius: 6px;
     cursor: pointer;
@@ -195,14 +195,54 @@ button:focus-visible {
     color: #1d4ed8;
 }
 
-.tree-item i {
-    margin-right: 8px;
+.tree-toggle {
+    display: flex;
+    align-items: center;
+}
+
+.tree-content {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.tree-icon {
     width: 16px;
+    text-align: center;
+    margin-right: 8px;
+}
+
+.tree-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tree-meta {
+    font-size: 12px;
+    color: #64748b;
+    margin-left: auto;
 }
 
 .tree-children {
-    margin-left: 24px;
-    margin-top: 2px;
+    margin-left: 20px;
+    margin-top: 4px;
+}
+
+/* Project NodeList Styles */
+#project-content .tree-node {
+    margin-bottom: 4px;
+}
+
+#project-content .tree-item {
+    padding: 6px 8px;
+    border-radius: 4px;
+}
+
+#project-content .tree-toggle {
+    display: flex;
+    align-items: center;
+    width: 100%;
 }
 
 /* 메인 에디터 */

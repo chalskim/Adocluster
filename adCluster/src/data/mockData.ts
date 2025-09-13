@@ -22,6 +22,7 @@ export interface DocumentDetailsData {
   author: string;
   progress: number;
   references: ReferenceItem[];
+  description?: string;
 }
 
 // 샘플 파일 트리 데이터
@@ -73,6 +74,7 @@ export const allDocumentDetails: Record<string, DocumentDetailsData> = {
     title: 'AI 기반 콘텐츠 제작 플랫폼 개발 연구',
     author: '김연구',
     progress: 60,
+    description: '이 프로젝트는 인공지능을 활용하여 고품질의 콘텐츠를 자동으로 생성하는 플랫폼을 개발하는 것을 목표로 합니다. 자연어 처리와 딥러닝 기술을 적용하여 창의적인 글쓰기를 지원합니다.',
     references: [
       {
         id: 'ref-1',
@@ -95,6 +97,7 @@ export const allDocumentDetails: Record<string, DocumentDetailsData> = {
     title: '데이터 시각화 도구 개발',
     author: '이데이터',
     progress: 30,
+    description: '복잡한 데이터 세트를 직관적이고 이해하기 쉬운 시각적 표현으로 변환하는 도구를 개발합니다. 다양한 차트와 그래프 유형을 지원하여 데이터 분석을 용이하게 합니다.',
     references: [
       {
         id: 'ref-3',

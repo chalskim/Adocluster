@@ -18,13 +18,13 @@ const TiptapEditor: React.FC<TiptapEditorProps> = ({ editor }) => {
   }
 
   return (
-    <div className="bg-gray-100 p-4 min-h-screen">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-          <div className="p-4">
+    <div className="bg-gray-100 p-4 flex-1 overflow-auto">
+      <div className="max-w-4xl mx-auto h-full flex flex-col">
+        <div className="bg-white shadow-lg rounded-lg overflow-hidden flex-1 flex flex-col">
+          <div className="p-4 flex-1">
             <EditorContent 
               editor={editor} 
-              className="tiptap-pagination-editor"
+              className="tiptap-pagination-editor h-full"
             />
           </div>
         </div>

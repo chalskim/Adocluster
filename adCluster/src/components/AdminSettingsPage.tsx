@@ -11,6 +11,14 @@ const getApiBaseUrl = () => {
   }
 };
 
+import {
+  getUserLoginCollection,
+  clearUserLoginCollection,
+  removeUserFromLoginCollection,
+  getUserByToken,
+  getUserLoginInfoById,
+} from '../services/userLoginCollection';
+
 interface User {
   uid: string;
   uemail: string;
@@ -21,6 +29,17 @@ interface User {
   uname?: string;
   uactive?: boolean;
   uisdel?: boolean;
+}
+
+interface UserLoginInfo {
+  id: string;
+  email: string;
+  name: string;
+  loginTime: string;
+  lastActive: string;
+  token: string;
+  role: string;
+  avatar?: string;
 }
 
 interface ProjectPermission {
@@ -243,6 +262,79 @@ const AdminSettingsPage: React.FC = () => {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
 
+  // Login Collection states
+  const [loginCollectionUsers, setLoginCollectionUsers] = useState<UserLoginInfo[]>([]);
+  const [loginCollectionCurrentUser, setLoginCollectionCurrentUser] = useState<UserLoginInfo | null>(null);
+  const [loginCollectionShowAll, setLoginCollectionShowAll] = useState(false);
+
+  useEffect(() => {
+    refreshLoginCollectionUserList();
+  }, [loginCollectionShowAll]);
+
+  const refreshLoginCollectionUserList = () => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      const currentUserFromToken = getUserByToken(token);
+      setLoginCollectionCurrentUser(currentUserFromToken || null);
+    }
+    
+    if (loginCollectionShowAll) {
+      const collection = getUserLoginCollection();
+      setLoginCollectionUsers(collection);
+    } else if (token) {
+      const currentUserFromToken = getUserByToken(token);
+      setLoginCollectionUsers(currentUserFromToken ? [currentUserFromToken] : []);
+    } else {
+      setLoginCollectionUsers([]);
+    }
+  };
+
+  const handleLoginCollectionClear = () => {
+    if (window.confirm('정말 모든 로그인 정보를 삭제하시겠습니까?')) {
+      clearUserLoginCollection();
+      refreshLoginCollectionUserList();
+    }
+  };
+
+  const handleLoginCollectionRemoveUser = (userId: string) => {
+    if (window.confirm('정말 이 사용자를 삭제하시겠습니까?')) {
+      removeUserFromLoginCollection(userId);
+      refreshLoginCollectionUserList();
+    }
+  };
+
+  const handleLoginCollectionForceLogout = (userId: string) => {
+    if (window.confirm('정말 이 사용자를 강제 로그아웃 하시겠습니까?')) {
+      removeUserFromLoginCollection(userId);
+      
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        const userFromToken = getUserByToken(token);
+        if (userFromToken && userFromToken.id === userId) {
+          localStorage.removeItem('authToken');
+          window.location.reload();
+        }
+      }
+      
+      refreshLoginCollectionUserList();
+    }
+  };
+
+  const handleLoginCollectionViewUserDetails = (userId: string) => {
+    const userDetails = getUserLoginInfoById(userId);
+    if (userDetails) {
+      alert(`사용자 상세 정보:\nID: ${userDetails.id}\n이름: ${userDetails.name}\n이메일: ${userDetails.email}\n역할: ${userDetails.role}\n로그인 시간: ${userDetails.loginTime}\n마지막 활동: ${userDetails.lastActive}`);
+    }
+  };
+
+  const formatLoginCollectionDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleString('ko-KR');
+  };
+
+  const toggleLoginCollectionViewMode = () => {
+    setLoginCollectionShowAll(!loginCollectionShowAll);
+  };
+
   // User action handlers
   const handleUserAction = async (userId: string, action: 'block' | 'unblock' | 'delete') => {
     const user = users.find(u => u.uid === userId);
@@ -392,7 +484,7 @@ const AdminSettingsPage: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* 사용자 관리 */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-5">
           <div className="flex items-center gap-3 mb-5">
             <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center">
               <i className="fas fa-user-friends"></i>
@@ -596,7 +688,7 @@ const AdminSettingsPage: React.FC = () => {
         </div>
 
         {/* 시스템 현황 */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-5">
           <div className="flex items-center gap-3 mb-5">
             <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center">
               <i className="fas fa-chart-bar"></i>
@@ -632,7 +724,7 @@ const AdminSettingsPage: React.FC = () => {
         </div>
 
         {/* AI 연동 설정 */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-5">
           <div className="flex items-center gap-3 mb-5">
             <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center">
               <i className="fas fa-robot"></i>
@@ -695,7 +787,7 @@ const AdminSettingsPage: React.FC = () => {
         </div>
 
         {/* 공지사항 등록 */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-5">
           <div className="flex items-center gap-3 mb-5">
             <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center">
               <i className="fas fa-bullhorn"></i>
@@ -764,7 +856,108 @@ const AdminSettingsPage: React.FC = () => {
           </button>
         </div>
       </div>
-    </div>
+
+      {/* 사용자 로그인 컬렉션 - 전체 너비 사용 */}
+      <div className="w-full bg-white rounded-lg shadow-sm p-6 mt-5">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center">
+            <i className="fas fa-users-cog"></i>
+          </div>
+          <div className="text-xl font-semibold text-gray-800">사용자 로그인 현황</div>
+        </div>
+        
+        <div className="mb-6 flex flex-wrap gap-4 items-center">
+          <button 
+            onClick={refreshLoginCollectionUserList}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            새로고침
+          </button>
+          <button 
+            onClick={toggleLoginCollectionViewMode}
+            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+          >
+            {loginCollectionShowAll ? '내 정보만 보기' : '모든 사용자 보기'}
+          </button>
+          {loginCollectionShowAll && (
+            <button 
+              onClick={handleLoginCollectionClear}
+              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            >
+              전체 삭제
+            </button>
+          )}
+        </div>
+
+        {loginCollectionUsers.length === 0 ? (
+          <div className="bg-gray-100 p-6 rounded-lg text-center">
+            <p className="text-gray-500">저장된 사용자 로그인 정보가 없습니다.</p>
+          </div>
+        ) : (
+          <div className="w-full overflow-x-auto">
+            <table className="w-full bg-white border border-gray-200">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="py-2 px-4 border-b text-left">이름</th>
+                  <th className="py-2 px-4 border-b text-left">이메일</th>
+                  <th className="py-2 px-4 border-b text-left">역할</th>
+                  <th className="py-2 px-4 border-b text-left">로그인 시간</th>
+                  <th className="py-2 px-4 border-b text-left">마지막 활동</th>
+                  <th className="py-2 px-4 border-b text-left">상태</th>
+                  <th className="py-2 px-4 border-b text-left">작업</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loginCollectionUsers.map(user => (
+                  <tr key={user.id} className={`hover:bg-gray-50 ${loginCollectionCurrentUser && loginCollectionCurrentUser.id === user.id ? 'bg-blue-50' : ''}`}>
+                    <td className="py-2 px-4 border-b">{user.name}</td>
+                    <td className="py-2 px-4 border-b">{user.email}</td>
+                    <td className="py-2 px-4 border-b">
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {user.role}
+                      </span>
+                    </td>
+                    <td className="py-2 px-4 border-b">{formatLoginCollectionDateTime(user.loginTime)}</td>
+                    <td className="py-2 px-4 border-b">{formatLoginCollectionDateTime(user.lastActive)}</td>
+                    <td className="py-2 px-4 border-b">
+                      {loginCollectionCurrentUser && loginCollectionCurrentUser.id === user.id ? (
+                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">현재 접속</span>
+                      ) : (
+                        <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">접속중</span>
+                      )}
+                    </td>
+                    <td className="py-2 px-4 border-b">
+                      <div className="flex flex-wrap gap-2">
+                        <button 
+                          onClick={() => handleLoginCollectionViewUserDetails(user.id)}
+                          className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
+                        >
+                          상세
+                        </button>
+                        <button 
+                          onClick={() => handleLoginCollectionRemoveUser(user.id)}
+                          className="px-2 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600"
+                        >
+                          삭제
+                        </button>
+                        <button 
+                          onClick={() => handleLoginCollectionForceLogout(user.id)}
+                          className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
+                        >
+                          강제 로그아웃
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+      </div>
   );
 };
 

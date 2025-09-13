@@ -12,10 +12,11 @@ import GeneralSettingsPage from './components/GeneralSettingsPage';
 import AdminSettingsPage from './components/AdminSettingsPage';
 import ElementEditorPage from './components/ElementEditorPage';
 import EditorPage from './components/EditorPage';
-import UserLoginCollectionTestPage from './components/UserLoginCollectionTestPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import useUserActivityTracker from './hooks/useUserActivityTracker';
 import './App.css';
+import DocumentMnagement from './components/DocumentMnagement';
+import MessageManagementPage from './components/MessageManagementPage';
 
 function App() {
   // Track user activity
@@ -38,11 +39,12 @@ function App() {
             <Route path="project-setting" element={<ProjectSetting />} />
             <Route path="search" element={<SearchPage />} />
             <Route path="import-export" element={<ImportExportPage />} />
+            <Route path="document-management" element={<DocumentMnagement />} />
+            <Route path="message-management" element={<MessageManagementPage />} />
             <Route path="general-settings" element={<GeneralSettingsPage />} />
             <Route path="admin-settings" element={<AdminSettingsPage />} />
             <Route path="element-editor" element={<ElementEditorPage />} />
             <Route path="editor" element={<EditorPage />} />
-            <Route path="user-login-collection-test" element={<UserLoginCollectionTestPage />} />
           </Route>
         </Routes>
       </div>
