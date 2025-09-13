@@ -9,7 +9,7 @@ CREATE TYPE content_block_type AS ENUM ('paragraph', 'heading', 'list', 'table',
 CREATE TYPE reference_type AS ENUM ('bibtex', 'doi', 'crossref');
 CREATE TYPE ai_job_type AS ENUM ('summarize', 'translate', 'image_gen', 'draft');
 CREATE TYPE job_status AS ENUM ('pending', 'running', 'success', 'failed');
-CREATE TYPE team_role AS ENUM ('owner', 'admin', 'member');
+CREATE TYPE team_role AS ENUM ('owner', 'admin', 'member', 'viewer');
 CREATE TYPE permission_role AS ENUM ('admin', 'editor', 'reviewer', 'reader');
 CREATE TYPE export_type AS ENUM ('pdf', 'epub', 'md');
 
@@ -21,7 +21,7 @@ CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) UNIQUE NOT NULL,
     name VARCHAR(255),
-    password_hash VARCHAR(255),
+    password_hash VARCHAR(255),    
     role VARCHAR(50),
     created_at TIMESTAMPTZ DEFAULT now(),
     last_login TIMESTAMPTZ

@@ -59,6 +59,41 @@ def create_sample_projects():
                 "visibility": "team",
                 "start_date": date.today() - timedelta(days=5),
                 "end_date": date.today() + timedelta(days=45)
+            },
+            {
+                "title": "AI 챗봇 개발 프로젝트",
+                "description": "고객 지원을 위한 인공지능 챗봇을 개발합니다. 자연어 처리와 머신러닝 기술을 활용합니다.",
+                "visibility": "team",
+                "start_date": date.today(),
+                "end_date": date.today() + timedelta(days=75)
+            },
+            {
+                "title": "클라우드 인프라 마이그레이션",
+                "description": "온프레미스 시스템을 AWS 클라우드로 마이그레이션합니다. 서버리스 아키텍처와 컨테이너화를 구현합니다.",
+                "visibility": "private",
+                "start_date": date.today() - timedelta(days=15),
+                "end_date": date.today() + timedelta(days=100)
+            },
+            {
+                "title": "보안 시스템 강화 프로젝트",
+                "description": "회사 전체 시스템의 보안을 강화합니다. 취약점 분석, 침투 테스트, 보안 정책 수립이 포함됩니다.",
+                "visibility": "company",
+                "start_date": date.today() - timedelta(days=20),
+                "end_date": date.today() + timedelta(days=60)
+            },
+            {
+                "title": "데이터 시각화 대시보드 개발",
+                "description": "비즈니스 인텔리전스 데이터를 시각화하는 대시보드를 개발합니다. D3.js와 React를 사용합니다.",
+                "visibility": "team",
+                "start_date": date.today(),
+                "end_date": date.today() + timedelta(days=45)
+            },
+            {
+                "title": "블록체인 기반 인증 시스템",
+                "description": "분산 원장 기술을 활용한 안전한 사용자 인증 시스템을 개발합니다. 이더리움 기반으로 구현합니다.",
+                "visibility": "private",
+                "start_date": date.today() - timedelta(days=5),
+                "end_date": date.today() + timedelta(days=120)
             }
         ]
         
