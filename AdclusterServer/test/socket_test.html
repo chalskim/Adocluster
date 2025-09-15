@@ -55,11 +55,41 @@
         .close:hover { color: black; }
         .success-modal { border-left: 5px solid #28a745; }
         .error-modal { border-left: 5px solid #dc3545; }
+        
+        /* Multi-group styles */
+        .group-actions {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+        .my-groups {
+            margin-top: 5px;
+            font-size: 0.9em;
+            color: #495057;
+        }
+        #loginStatus {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>FastAPI WebSocket and File Upload Test</h1>
+        
+        <!-- Login Section -->
+        <div class="section">
+            <h2>User Login</h2>
+            <div>
+                <input type="text" id="loginEmail" placeholder="Email" />
+                <input type="password" id="loginPassword" placeholder="Password" />
+                <button onclick="loginUser()">Login</button>
+                <button onclick="logoutUser()">Logout</button>
+                <div id="loginStatus"></div>
+            </div>
+        </div>
         
         <div class="tab">
             <button class="tablinks active" onclick="openTab(event, 'websocket')">WebSocket Test</button>
@@ -74,6 +104,7 @@
                     <input type="text" id="clientId" placeholder="Client ID (optional)" />
                     <input type="text" id="groupName" placeholder="Group Name (optional)" />
                     <button onclick="connectWebSocket()">Connect</button>
+                    <button onclick="connectWebSocketWithAuth()">Connect with Auth</button>
                     <button onclick="disconnectWebSocket()">Disconnect</button>
                     <button onclick="refreshClients()">Refresh Clients</button>
                     <button onclick="refreshGroups()">Refresh Groups</button>
@@ -85,6 +116,19 @@
                 <div>
                     <input type="text" id="groupCommandInput" placeholder="Group command (/join &lt;group&gt;, /group &lt;message&gt;, /groups, /group_members &lt;group&gt;)" class="command-input">
                     <button onclick="sendGroupCommand()">Send Group Command</button>
+                </div>
+                
+                <!-- Multi-group actions -->
+                <div class="group-actions">
+                    <h3>Multi-Group Management</h3>
+                    <div>
+                        <input type="text" id="newGroupName" placeholder="Enter group name to join" />
+                        <button onclick="joinGroup()">Join Group</button>
+                        <button onclick="leaveAllGroups()">Leave All Groups</button>
+                    </div>
+                    <div class="my-groups" id="myGroups">
+                        Your groups will appear here after joining
+                    </div>
                 </div>
             </div>
             
@@ -281,9 +325,10 @@
             const password = document.getElementById('dbPassword').value;
             const clientIdInput = document.getElementById('clientId').value;
             
-            // Validate client ID is an integer if provided
-            if (clientIdInput && !/^\d+$/.test(clientIdInput)) {
-                showDbStatus('Error: Invalid client_id. Must be an integer.', 'error');
+            // Validate client ID is provided (no longer restricted to integers)
+            // Client ID can be either numeric or string
+            if (clientIdInput && clientIdInput.trim() === '') {
+                showDbStatus('Error: client_id cannot be empty.', 'error');
                 return;
             }
             
@@ -323,23 +368,12 @@
                     };
                     
                     // Add client_id if provided
+                    // Client ID can be either numeric or string
                     if (clientIdInput) {
-                        try {
-                            // Ensure client_id is converted to integer
-                            const clientIdInt = parseInt(clientIdInput, 10);
-                            if (isNaN(clientIdInt)) {
-                                throw new Error('Client ID is not a valid number');
-                            }
-                            connectionData.client_id = clientIdInt;
-                            console.log('Adding client_id as integer:', clientIdInt, typeof clientIdInt);
-                            // Log the actual data being sent to verify type
-                            console.log('Connection data before stringify:', connectionData);
-                        } catch (e) {
-                            console.error('Error processing client ID:', e);
-                            showDbStatus('Error processing client ID: ' + e.message, 'error');
-                            dbSocket.close();
-                            return;
-                        }
+                        connectionData.client_id = clientIdInput;
+                        console.log('Adding client_id:', clientIdInput, typeof clientIdInput);
+                        // Log the actual data being sent to verify type
+                        console.log('Connection data before stringify:', connectionData);
                     }
                     
                     console.log('Sending connection request:', connectionData);
@@ -891,6 +925,65 @@
             document.getElementById(modalId).style.display = 'none';
         }
         
+        // User authentication functions
+        function loginUser() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                showLoginStatus('Please enter both email and password.', 'error');
+                return;
+            }
+            
+            // Create login data
+            const loginData = {
+                email: email,
+                password: password
+            };
+            
+            // Send login request
+            fetch('/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(loginData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.access_token) {
+                    // Store the token in localStorage
+                    localStorage.setItem('access_token', data.access_token);
+                    showLoginStatus(`Login successful! Token stored.`, 'success');
+                    document.getElementById('loginEmail').value = '';
+                    document.getElementById('loginPassword').value = '';
+                } else {
+                    showLoginStatus('Login failed: No access token received.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Login error:', error);
+                showLoginStatus(`Login failed: ${error.message}`, 'error');
+            });
+        }
+        
+        function logoutUser() {
+            // Remove the token from localStorage
+            localStorage.removeItem('access_token');
+            showLoginStatus('Logged out successfully.', 'info');
+        }
+        
+        function showLoginStatus(message, type) {
+            const statusElement = document.getElementById('loginStatus');
+            statusElement.textContent = message;
+            statusElement.className = type;
+        }
+        
         // Close modal when clicking outside of it
         window.onclick = function(event) {
             if (event.target.classList.contains('modal')) {
@@ -913,9 +1006,10 @@
             const groupName = document.getElementById("groupName").value;
             let url;
             
-            // Validate client ID is an integer if provided
-            if (clientIdInput && !/^\d+$/.test(clientIdInput)) {
-                addMessage("Error: Invalid client_id. Must be an integer.", "error");
+            // Validate client ID is provided (no longer restricted to integers)
+            // Client ID can be either numeric or string
+            if (clientIdInput && clientIdInput.trim() === '') {
+                addMessage("Error: client_id cannot be empty.", "error");
                 return;
             }
             
@@ -1005,6 +1099,46 @@
                     addMessage(data, "success");
                     // Refresh groups after joining
                     setTimeout(refreshGroups, 500);
+                    // Update my groups display
+                    setTimeout(getMyGroups, 500);
+                } else if (data.startsWith("Left group:")) {
+                    console.log('Left group:', data);
+                    addMessage(data, "success");
+                    // Refresh groups after leaving
+                    setTimeout(refreshGroups, 500);
+                    // Update my groups display
+                    setTimeout(getMyGroups, 500);
+                } else if (data.startsWith("Left all groups")) {
+                    console.log('Left all groups:', data);
+                    addMessage(data, "success");
+                    // Refresh groups after leaving all
+                    setTimeout(refreshGroups, 500);
+                    // Update my groups display
+                    setTimeout(getMyGroups, 500);
+                } else if (data.startsWith("Your groups:")) {
+                    console.log('Received my groups:', data);
+                    document.getElementById("myGroups").textContent = data;
+                } else if (data.startsWith("You are not in any groups")) {
+                    console.log('No groups:', data);
+                    document.getElementById("myGroups").textContent = "You are not in any groups";
+                } else if (data.startsWith("Message sent to groups:")) {
+                    console.log('Message sent to groups:', data);
+                    addMessage(data, "success");
+                } else if (data.startsWith("You are not in any groups. Use /join")) {
+                    console.log('Not in any groups:', data);
+                    addMessage(data, "info");
+                } else if (data.startsWith("Failed to join group:")) {
+                    console.error('Failed to join group:', data);
+                    addMessage(data, "error");
+                } else if (data.startsWith("Failed to leave group:")) {
+                    console.error('Failed to leave group:', data);
+                    addMessage(data, "error");
+                } else if (data.startsWith("Failed to leave all groups")) {
+                    console.error('Failed to leave all groups:', data);
+                    addMessage(data, "error");
+                } else if (data.startsWith("Group message from client")) {
+                    console.log('Received group message:', data);
+                    addMessage(data, "received");
                 } else {
                     console.log('Received regular message:', data);
                     addMessage(`Received: ${data}`, "received");
@@ -1026,6 +1160,9 @@
                 // Enable Connect button and disable Disconnect button
                 document.querySelector("button[onclick='connectWebSocket()']").disabled = false;
                 document.querySelector("button[onclick='disconnectWebSocket()']").disabled = true;
+                
+                // Clear my groups display
+                document.getElementById("myGroups").textContent = "Your groups will appear here after joining";
             };
 
             ws.onerror = (error) => {
@@ -1048,6 +1185,172 @@
                 document.querySelector("button[onclick='connectWebSocket()']").disabled = false;
                 document.querySelector("button[onclick='disconnectWebSocket()']").disabled = true;
             }
+        }
+
+        function connectWebSocketWithAuth() {
+            // Get JWT token from localStorage or other storage mechanism
+            const token = localStorage.getItem("access_token");
+            if (!token) {
+                addMessage("Error: No authentication token found. Please log in first.", "error");
+                return;
+            }
+            
+            // Use current host and port for WebSocket connection
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.hostname;
+            const port = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
+            
+            // Create URL with token parameter
+            const url = `${protocol}//${host}:${port}/ws/auth?token=${encodeURIComponent(token)}`;
+            
+            console.log(`Attempting to connect to authenticated WebSocket at: ${url}`);
+            try {
+                ws = new WebSocket(url);
+                console.log('Authenticated WebSocket instance created');
+            } catch (error) {
+                console.error(`Error creating WebSocket: ${error.message}`);
+                addMessage(`Failed to create WebSocket: ${error.message}`, "error");
+                return;
+            }
+            
+            // Disable Connect button and enable Disconnect button
+            document.querySelector("button[onclick='connectWebSocket()']").disabled = true;
+            document.querySelector("button[onclick='disconnectWebSocket()']").disabled = false;
+
+            ws.onopen = (event) => {
+                console.log('WebSocket connection opened successfully');
+                addMessage("Connected to authenticated WebSocket server.", "info");
+                // Refresh client and group lists after connecting
+                setTimeout(() => {
+                    refreshClients();
+                    refreshGroups();
+                }, 500);
+            };
+
+            ws.onmessage = (event) => {
+                console.log('WebSocket message received:', event);
+                const data = event.data;
+                console.log('Message data:', data);
+                
+                // Try to parse as JSON for client list updates
+                try {
+                    const jsonData = JSON.parse(data);
+                    console.log('Successfully parsed message as JSON:', jsonData);
+                    if (jsonData.type === "client_list") {
+                        console.log('Received client list update:', jsonData.clients);
+                        updateClientList(jsonData.clients);
+                        return;
+                    } else if (jsonData.type === "group_info") {
+                        console.log('Received group info update:', jsonData.groups);
+                        updateGroupList(jsonData.groups);
+                        return;
+                    }
+                } catch (e) {
+                    console.log('Message is not valid JSON, treating as regular message:', e);
+                    // Not JSON, treat as regular message
+                }
+                
+                // Check if this is an error message
+                if (data.startsWith("Error:")) {
+                    console.error('Received error message:', data);
+                    addMessage(data, "error");
+                    // Close the connection after receiving an error
+                    if (ws) {
+                        console.log('Closing WebSocket connection due to error');
+                        ws.close();
+                    }
+                } else if (data.startsWith("Connected as authenticated user:")) {
+                    console.log('Connected as authenticated user:', data);
+                    addMessage(data, "success");
+                } else if (data.startsWith("Private message")) {
+                    console.log('Received private message:', data);
+                    addMessage(data, "private");
+                } else if (data.startsWith("Message sent to client")) {
+                    console.log('Message sent confirmation:', data);
+                    addMessage(data, "success");
+                } else if (data.startsWith("Failed to send message")) {
+                    console.error('Message sending failed:', data);
+                    addMessage(data, "error");
+                } else if (data.startsWith("Joined group:")) {
+                    console.log('Joined group:', data);
+                    addMessage(data, "success");
+                    // Refresh groups after joining
+                    setTimeout(refreshGroups, 500);
+                    // Update my groups display
+                    setTimeout(getMyGroups, 500);
+                } else if (data.startsWith("Left group:")) {
+                    console.log('Left group:', data);
+                    addMessage(data, "success");
+                    // Refresh groups after leaving
+                    setTimeout(refreshGroups, 500);
+                    // Update my groups display
+                    setTimeout(getMyGroups, 500);
+                } else if (data.startsWith("Left all groups")) {
+                    console.log('Left all groups:', data);
+                    addMessage(data, "success");
+                    // Refresh groups after leaving all
+                    setTimeout(refreshGroups, 500);
+                    // Update my groups display
+                    setTimeout(getMyGroups, 500);
+                } else if (data.startsWith("Your groups:")) {
+                    console.log('Received my groups:', data);
+                    document.getElementById("myGroups").textContent = data;
+                } else if (data.startsWith("You are not in any groups")) {
+                    console.log('No groups:', data);
+                    document.getElementById("myGroups").textContent = "You are not in any groups";
+                } else if (data.startsWith("Message sent to groups:")) {
+                    console.log('Message sent to groups:', data);
+                    addMessage(data, "success");
+                } else if (data.startsWith("You are not in any groups. Use /join")) {
+                    console.log('Not in any groups:', data);
+                    addMessage(data, "info");
+                } else if (data.startsWith("Failed to join group:")) {
+                    console.error('Failed to join group:', data);
+                    addMessage(data, "error");
+                } else if (data.startsWith("Failed to leave group:")) {
+                    console.error('Failed to leave group:', data);
+                    addMessage(data, "error");
+                } else if (data.startsWith("Failed to leave all groups")) {
+                    console.error('Failed to leave all groups:', data);
+                    addMessage(data, "error");
+                } else if (data.startsWith("Group message from client")) {
+                    console.log('Received group message:', data);
+                    addMessage(data, "received");
+                } else {
+                    console.log('Received regular message:', data);
+                    addMessage(`Received: ${data}`, "received");
+                }
+            };
+
+            ws.onclose = (event) => {
+                console.log('WebSocket connection closed:', event);
+                console.log('Close code:', event.code);
+                console.log('Close reason:', event.reason);
+                addMessage(`Disconnected from WebSocket server. Code: ${event.code}${event.reason ? ', Reason: ' + event.reason : ''}`, "info");
+                ws = null;
+                // Refresh client and group lists after disconnecting
+                setTimeout(() => {
+                    refreshClients();
+                    refreshGroups();
+                }, 500);
+                
+                // Enable Connect button and disable Disconnect button
+                document.querySelector("button[onclick='connectWebSocket()']").disabled = false;
+                document.querySelector("button[onclick='disconnectWebSocket()']").disabled = true;
+                
+                // Clear my groups display
+                document.getElementById("myGroups").textContent = "Your groups will appear here after joining";
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error occurred:', error);
+                addMessage(`WebSocket Error: ${error}`, "error");
+                ws = null;
+                
+                // Enable Connect button and disable Disconnect button
+                document.querySelector("button[onclick='connectWebSocket()']").disabled = false;
+                document.querySelector("button[onclick='disconnectWebSocket()']").disabled = true;
+            };
         }
 
         function sendMessage() {
@@ -1114,6 +1417,147 @@
             }
         }
         
+        // Multi-group functions
+        function joinGroup() {
+            console.log('Attempting to join group...');
+            if (!ws) {
+                console.error('WebSocket is null');
+                addMessage("Not connected to WebSocket server.", "error");
+                return;
+            }
+            
+            if (ws.readyState !== WebSocket.OPEN) {
+                console.error(`WebSocket is not open. Current state: ${ws.readyState}`);
+                addMessage(`Not connected to WebSocket server. State: ${ws.readyState}`, "error");
+                return;
+            }
+            
+            const newGroupNameInput = document.getElementById("newGroupName");
+            const groupName = newGroupNameInput.value;
+            if (groupName) {
+                console.log(`Joining group: ${groupName}`);
+                const command = `/join ${groupName}`;
+                try {
+                    ws.send(command);
+                    console.log('Join group command sent successfully');
+                    addMessage(`Sent join group command: ${command}`, "sent");
+                    newGroupNameInput.value = "";
+                } catch (error) {
+                    console.error(`Error sending join group command: ${error.message}`);
+                    addMessage(`Failed to send join group command: ${error.message}`, "error");
+                }
+            } else {
+                console.log('No group name to join (empty input)');
+                addMessage("Please enter a group name to join", "error");
+            }
+        }
+        
+        function leaveAllGroups() {
+            console.log('Attempting to leave all groups...');
+            if (!ws) {
+                console.error('WebSocket is null');
+                addMessage("Not connected to WebSocket server.", "error");
+                return;
+            }
+            
+            if (ws.readyState !== WebSocket.OPEN) {
+                console.error(`WebSocket is not open. Current state: ${ws.readyState}`);
+                addMessage(`Not connected to WebSocket server. State: ${ws.readyState}`, "error");
+                return;
+            }
+            
+            const command = "/leave_all";
+            try {
+                ws.send(command);
+                console.log('Leave all groups command sent successfully');
+                addMessage(`Sent leave all groups command: ${command}`, "sent");
+            } catch (error) {
+                console.error(`Error sending leave all groups command: ${error.message}`);
+                addMessage(`Failed to send leave all groups command: ${error.message}`, "error");
+            }
+        }
+        
+        function getMyGroups() {
+            console.log('Requesting my groups...');
+            if (!ws) {
+                console.error('WebSocket is null');
+                return;
+            }
+            
+            if (ws.readyState !== WebSocket.OPEN) {
+                console.error(`WebSocket is not open. Current state: ${ws.readyState}`);
+                return;
+            }
+            
+            const command = "/my_groups";
+            try {
+                ws.send(command);
+                console.log('My groups command sent successfully');
+            } catch (error) {
+                console.error(`Error sending my groups command: ${error.message}`);
+            }
+        }
+        
+        // Add a function to leave a specific group
+        function leaveGroup(groupName) {
+            console.log(`Attempting to leave group: ${groupName}`);
+            if (!ws) {
+                console.error('WebSocket is null');
+                addMessage("Not connected to WebSocket server.", "error");
+                return;
+            }
+            
+            if (ws.readyState !== WebSocket.OPEN) {
+                console.error(`WebSocket is not open. Current state: ${ws.readyState}`);
+                addMessage(`Not connected to WebSocket server. State: ${ws.readyState}`, "error");
+                return;
+            }
+            
+            const command = `/leave ${groupName}`;
+            try {
+                ws.send(command);
+                console.log('Leave group command sent successfully');
+                addMessage(`Sent leave group command: ${command}`, "sent");
+            } catch (error) {
+                console.error(`Error sending leave group command: ${error.message}`);
+                addMessage(`Failed to send leave group command: ${error.message}`, "error");
+            }
+        }
+        
+        // Add a function to send a message to a specific group
+        function sendToGroup(groupName) {
+            console.log(`Preparing to send message to group: ${groupName}`);
+            const message = prompt(`Enter message to send to group '${groupName}':`);
+            if (message) {
+                console.log(`Message to send: ${message}`);
+                const command = `/group ${message}`;
+                console.log(`Formatted command: ${command}`);
+                
+                if (!ws) {
+                    console.error('WebSocket is null');
+                    addMessage("Not connected to WebSocket server.", "error");
+                    return;
+                }
+                
+                if (ws.readyState === WebSocket.OPEN) {
+                    console.log('WebSocket is open, sending command');
+                    try {
+                        ws.send(command);
+                        console.log('Command sent successfully');
+                        addMessage(`Sent command: ${command}`, "sent");
+                    } catch (error) {
+                        console.error(`Error sending command: ${error.message}`);
+                        addMessage(`Failed to send command: ${error.message}`, "error");
+                    }
+                } else {
+                    console.error(`WebSocket is not open. Current state: ${ws.readyState}`);
+                    addMessage(`Not connected to WebSocket server. State: ${ws.readyState}`, "error");
+                }
+            } else {
+                console.log('No message entered or dialog cancelled');
+            }
+        }
+        
         function refreshClients() {
             console.log('Refreshing client list...');
             // Fetch client list from HTTP endpoint
@@ -1168,14 +1612,53 @@
             let clientListHtml = "";
             clients.forEach((client, index) => {
                 console.log(`Processing client ${index}:`, client);
+                
+                // Build comprehensive client information string
+                let clientInfo = "";
+                
+                // Add connection ID
+                if (client.connection_id) {
+                    clientInfo += `Connection: ${client.connection_id.substring(0, 8)}... `;
+                }
+                
+                // Add client ID information
                 if (client.client_id) {
                     console.log(`Client has ID: ${client.client_id}`);
-                    const groupInfo = client.group ? ` (Group: ${client.group})` : " (No group)";
-                    clientListHtml += `<div class="client-list">Client #${client.client_id}${groupInfo} <button class="secondary" onclick="sendToClient(${client.client_id})">Send Message</button></div>`;
+                    clientInfo += `Client #${client.client_id}`;
                 } else {
                     console.log('Anonymous client (no ID)');
-                    const groupInfo = client.group ? ` (Group: ${client.group})` : " (No group)";
-                    clientListHtml += `<div class="client-list">Anonymous Client${groupInfo}</div>`;
+                    clientInfo += "Anonymous Client";
+                }
+                
+                // Add original client ID if different from client_id
+                if (client.original_client_id && client.original_client_id !== client.client_id) {
+                    clientInfo += ` (Original: ${client.original_client_id})`;
+                }
+                
+                // Add user information if available
+                if (client.user) {
+                    clientInfo += ` [${client.user.username} (${client.user.email})]`;
+                }
+                
+                // Add ID mapping information if available
+                if (client.id_mapping) {
+                    if (client.id_mapping.string_id) {
+                        clientInfo += ` [Mapped: ${client.id_mapping.string_id} → ${client.id_mapping.numeric_id}]`;
+                    } else if (client.id_mapping.numeric_id) {
+                        clientInfo += ` [ID: ${client.id_mapping.numeric_id}]`;
+                    }
+                }
+                
+                // Add group information
+                const groupInfo = client.groups && client.groups.length > 0 
+                    ? ` (Groups: ${client.groups.join(', ')})` 
+                    : " (No groups)";
+                
+                // Create client list item
+                if (client.client_id) {
+                    clientListHtml += `<div class="client-list">${clientInfo}${groupInfo} <button class="secondary" onclick="sendToClient(${client.client_id})">Send Message</button></div>`;
+                } else {
+                    clientListHtml += `<div class="client-list">${clientInfo}${groupInfo}</div>`;
                 }
             });
             clientsDiv.innerHTML = clientListHtml;
@@ -1200,7 +1683,7 @@
             let groupListHtml = "";
             groups.forEach((group, index) => {
                 console.log(`Processing group ${index}:`, group);
-                groupListHtml += `<div class="group-list">Group: ${group.name} (${group.member_count} member${group.member_count !== 1 ? 's' : ''}) <button class="secondary" onclick="showGroupMembers('${group.name}')">Show Members</button></div>`;
+                groupListHtml += `<div class="group-list">Group: ${group.name} (${group.member_count} member${group.member_count !== 1 ? 's' : ''}) <button class="secondary" onclick="showGroupMembers('${group.name}')">Show Members</button> <button class="secondary" onclick="sendToGroup('${group.name}')">Send Message</button> <button class="danger" onclick="leaveGroup('${group.name}')">Leave Group</button></div>`;
             });
             groupsDiv.innerHTML = groupListHtml;
             console.log('Group list updated successfully');
@@ -1297,6 +1780,13 @@
         document.getElementById("groupCommandInput").addEventListener("keyup", function(event) {
             if (event.key === "Enter") {
                 sendGroupCommand();
+            }
+        });
+        
+        // Allow joining group with Enter key
+        document.getElementById("newGroupName").addEventListener("keyup", function(event) {
+            if (event.key === "Enter") {
+                joinGroup();
             }
         });
         

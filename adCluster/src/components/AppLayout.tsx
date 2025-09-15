@@ -3,6 +3,7 @@ import Sidebar from './Sidebar';
 import UserLoginCollectionViewer from './UserLoginCollectionViewer';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { fetchCurrentUser } from '../services/api';
+import { useWebSocket } from '../contexts/WebSocketContext';
 
 interface User {
   uid: string;
@@ -20,6 +21,7 @@ interface User {
 const AppLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { disconnect } = useWebSocket(); // Get disconnect function from WebSocket context
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -118,6 +120,9 @@ const AppLayout: React.FC = () => {
   }, [navigate]);
 
   const handleLogout = () => {
+    // Disconnect WebSocket connection
+    disconnect();
+    
     // Remove the authentication token from localStorage
     localStorage.removeItem('authToken');
     // Remove user role from localStorage

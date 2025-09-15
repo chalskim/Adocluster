@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { TreeNodeData } from '../../data/mockData';
+import { TreeNodeData, FileNodeData, ReferenceItem } from '../../data/mockData';
 import TodoList from './TodoList';
 import ProjectNodelist from './ProjectNodelist';
+import FileNode from './FileNode';
+import ReferenceManager from './ReferenceManager';
 
 interface LeftPanelProps {
   onNodeSelect?: (node: TreeNodeData) => void;
@@ -10,6 +12,7 @@ interface LeftPanelProps {
     library?: boolean;
     references?: boolean;
     tasks?: boolean;
+    // Removed data tab visibility
   };
 }
 
@@ -23,6 +26,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({ onNodeSelect, visibleTabs = {} })
     library: visibleTabs.library !== undefined ? visibleTabs.library : true,
     references: visibleTabs.references !== undefined ? visibleTabs.references : true,
     tasks: visibleTabs.tasks !== undefined ? visibleTabs.tasks : true,
+    // Removed data tab
   };
 
   // 샘플 파일 트리 데이터
@@ -73,9 +77,62 @@ const LeftPanel: React.FC<LeftPanelProps> = ({ onNodeSelect, visibleTabs = {} })
     },
   ];
 
+  // Sample file explorer data (similar to editer project)
+  const fileExplorerData: FileNodeData[] = [
+    {
+      id: 'folder-docs',
+      name: '문서',
+      type: 'folder',
+      fileType: 'description', 
+      children: [
+        { id: 'file-1', name: '제목 없는 문서.docx', type: 'file', fileType: 'docx' },
+        { id: 'file-2', name: '초록.md', type: 'file', fileType: 'md' },
+        { id: 'file-3', name: '결론.docx', type: 'file', fileType: 'docx' },
+      ],
+    },
+    { id: 'folder-images', name: '그림', type: 'folder', fileType: 'image' },
+    { id: 'folder-tables', name: '표', type: 'folder' , fileType: 'table_chart' },
+    { id: 'data-websites', name: '웹사이트', type: 'folder', fileType: 'link' },
+    { id: 'data-equations', name: '수식', type: 'folder', fileType: 'calculate' },
+    { id: 'data-videos', name: '동영상', type: 'folder', fileType: 'videocam' },
+    { id: 'data-audios', name: '음성', type: 'folder', fileType: 'mic' },
+    { id: 'data-code', name: '코드 스니펫', type: 'folder', fileType: 'code' },
+    { id: 'data-quotes', name: '인용/발췌', type: 'folder', fileType: 'format_quote' },
+  ];
+
   const handleAddNode = () => {
     console.log('Add node clicked');
     // Implement add node functionality here
+  };
+
+  // Sample references data
+  const sampleReferences: ReferenceItem[] = [
+    {
+      id: 'ref-1',
+      author: 'Smith, J.',
+      year: 2020,
+      title: 'AI in Content Creation',
+      publication: 'Journal of AI Research, 15(3), 123-145',
+    },
+    {
+      id: 'ref-2',
+      author: 'Johnson, A.',
+      year: 2019,
+      title: 'Collaborative Writing Platforms',
+      publication: 'Tech Writing Review, 8(2), 67-89',
+    },
+    {
+      id: 'ref-3',
+      author: 'Brown, T.',
+      year: 2021,
+      title: 'Modern Data Visualization Techniques',
+      publication: 'Visualization Quarterly, 12(1), 45-67',
+    },
+  ];
+
+  const handleCiteReference = (reference: ReferenceItem) => {
+    console.log('Cite reference:', reference);
+    // Implement citation functionality here
   };
 
   return (
@@ -91,7 +148,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({ onNodeSelect, visibleTabs = {} })
           {tabVisibility.library && (
             <button className={`tab-button ${activeTab === 'library' ? 'active' : ''}`} onClick={() => setActiveTab('library')}>
               <i className="fas fa-upload"></i>
-              <span>라이브러리</span>
+              <span>참고자료</span>
             </button>
           )}
           {tabVisibility.references && (
@@ -119,14 +176,23 @@ const LeftPanel: React.FC<LeftPanelProps> = ({ onNodeSelect, visibleTabs = {} })
         )}
         {activeTab === 'library' && tabVisibility.library && (
           <div id="library-content" className="tab-content">
-            <div className="section-title">라이브러리</div>
-            <p>라이브러리 기능은 추후 구현 예정입니다.</p>
+            <div className="search-bar-container">
+              <span className="material-symbols-outlined search-icon">search</span>
+              <input type="text" placeholder="검색..." className="search-input" />
+            </div>
+            <div className="file-explorer-container">
+              {fileExplorerData.map(node => (
+                <FileNode key={node.id} node={node} />
+              ))}
+            </div>
           </div>
         )}
         {activeTab === 'references' && tabVisibility.references && (
           <div id="references-content" className="tab-content">
-            <div className="section-title">참고문헌</div>
-            <p>참고문헌 기능은 추후 구현 예정입니다.</p>
+            <ReferenceManager 
+              references={sampleReferences} 
+              onCiteReference={handleCiteReference} 
+            />
           </div>
         )}
         {activeTab === 'tasks' && tabVisibility.tasks && (

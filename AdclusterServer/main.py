@@ -62,7 +62,7 @@ app.include_router(todos_router)
 logger.debug("--- main.py: API routers included ---")
 
 @app.get("/health-check")
-async def health_check():
+async def health_check_endpoint():
     """서버 상태 확인을 위한 엔드포인트"""
     return {"status": "ok", "message": "서버가 정상적으로 실행 중입니다."}
 
@@ -85,6 +85,14 @@ logger.debug("--- main.py: Mounting /uploads static files ---")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 logger.debug("--- main.py: /uploads static files mounted ---")
 
+# Mount the test directory to serve socket_test.html
+logger.debug("--- main.py: Mounting /test static files ---")
+if os.path.exists("test"):
+    app.mount("/test", StaticFiles(directory="test"), name="test")
+    logger.debug("--- main.py: /test static files mounted ---")
+else:
+    logger.debug("--- main.py: /test directory not found ---")
+
 # Finally, mount the root static files as a fallback for everything else.
 # This ensures API routes and specific static mounts are tried first.
 logger.debug("--- main.py: Mounting root static files as fallback ---")
@@ -99,5 +107,21 @@ if __name__ == "__main__":
         else:
             logger.debug(f"--- main.py: '{directory}' directory already exists ---")
     
+    # Create test directory if it doesn't exist
+    if not os.path.exists("test"):
+        os.makedirs("test")
+        logger.debug("--- main.py: 'test' directory created ---")
+    else:
+        logger.debug("--- main.py: 'test' directory already exists ---")
+    
+    # Copy socket_test.html to test directory if it exists in the root
+    socket_test_path = "socket_test.html"
+    test_socket_test_path = "test/socket_test.html"
+    if os.path.exists(socket_test_path) and not os.path.exists(test_socket_test_path):
+        import shutil
+        shutil.copy(socket_test_path, test_socket_test_path)
+        logger.debug("--- main.py: socket_test.html copied to test directory ---")
+    
     logger.info("--- main.py: Starting Uvicorn server ---")
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, log_level="info")
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True, log_level="info")

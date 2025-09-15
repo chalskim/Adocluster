@@ -8,6 +8,16 @@ export interface TreeNodeData {
   content?: string;
 }
 
+export interface FileNodeData {
+  id: string;
+  name: string;
+  type: 'folder' | 'file';
+  fileType?: 'docx' | 'md' | 'image' | 'table'| 'link' |
+   'calculate' | 'videocam'|'mic' | 'code' | 'format_quote' |'description' |
+   'table_chart';
+  children?: FileNodeData[];
+}
+
 export interface ReferenceItem {
   id: string;
   author: string;

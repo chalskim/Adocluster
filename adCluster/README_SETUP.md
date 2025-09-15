@@ -9,6 +9,7 @@
 - [아이맥(iMac) 환경 설정](#아이맥imac-환경-설정)
 - [애플리케이션 실행 확인](#애플리케이션-실행-확인)
 - [백엔드 서버 환경 설정](#백엔드-서버-환경-설정)
+- [아이콘 시스템](#아이콘-시스템)
 - [문제 해결](#문제-해결)
 
 ## 공통 요구사항
@@ -194,46 +195,68 @@ SECRET_KEY=your_secret_key
 
 ### 2. 백엔드 서버 실행
 
-```bash
+```
 # 프로젝트 루트 디렉토리에서 상위 폴더로 이동 후 AdclusterServer로 이동
 cd ../AdclusterServer
 
-# 필요한 패키지 설치 (처음 실행 시)
+# 가상 환경 생성 및 활성화
+python3 -m venv venv
+source venv/bin/activate  # macOS/Linux
+# 또는
+# venv\Scripts\activate  # Windows
+
+# 의존성 설치
 pip install -r requirements.txt
+
+# 데이터베이스 마이그레이션 (필요한 경우)
+# python init_db.py
 
 # 서버 실행
 python main.py
 ```
 
-백엔드 서버가 성공적으로 실행되면 http://localhost:8000 에서 접속할 수 있습니다.
+## 아이콘 시스템
 
-### 3. 데이터베이스 설정
+프로젝트는 Material Symbols 아이콘을 사용하며, 로컬 SVG 파일과 CDN 기반 폰트 두 가지 방식을 지원합니다.
 
-백엔드 서버는 PostgreSQL 데이터베이스를 사용합니다. 데이터베이스가 설정되어 있지 않은 경우 다음 단계를 따르세요:
+### 로컬 아이콘 사용
 
-1. PostgreSQL이 설치되어 있는지 확인합니다.
-2. 데이터베이스와 사용자를 생성합니다:
+로컬 아이콘은 `img/icon/material-symbols/` 디렉토리에 저장되어 있으며, 다음과 같은 방식으로 사용합니다:
 
-```bash
-# PostgreSQL 접속
-psql -U postgres
+```jsx
+import Icon from './components/editeComponents/Icon';
 
-# 데이터베이스 생성
-CREATE DATABASE adcluster_db;
-
-# 사용자 생성 및 권한 부여
-CREATE USER adcluster WITH PASSWORD 'your_password';
-GRANT ALL PRIVILEGES ON DATABASE adcluster_db TO adcluster;
-
-# PostgreSQL 종료
-\q
+// 로컬 SVG 아이콘 사용
+<Icon name="folder" className="my-icon" />
+<Icon name="description" style={{ width: '24px', height: '24px' }} />
 ```
 
-3. 백엔드 서버 디렉토리에서 데이터베이스 초기화 스크립트를 실행합니다:
+사용 가능한 로컬 아이콘:
+- folder
+- folder_open
+- expand_more
+- chevron_right
+- draft
+- description
+- image
+- table_chart
+- link
+- calculate
+- videocam
+- mic
+- code
+- format_quote
 
-```bash
-python init_db.py
-```
+### CDN 기반 아이콘
+
+로컬에 없는 아이콘은 자동으로 CDN 기반 Material Symbols 폰트를 사용합니다.
+
+### 새 아이콘 추가
+
+새 아이콘을 추가하려면:
+1. [Google Fonts Material Icons](https://fonts.google.com/icons)에서 원하는 아이콘을 선택
+2. 해당 SVG 파일을 `img/icon/material-symbols/` 디렉토리에 저장
+3. `Icon.tsx` 파일의 `LOCAL_ICONS` 맵에 새 아이콘 추가
 
 ## 문제 해결
 

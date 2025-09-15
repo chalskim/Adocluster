@@ -262,13 +262,13 @@ const ProjectSetting: React.FC = () => {
               
               <div className="form-group mb-5">
                 <label className="form-label block mb-2 font-semibold text-gray-800">
-                  프로젝트 이름 <span className="text-red-500">*</span>
+                  프로젝트 제목 <span className="text-red-500">*</span>
                 </label>
                 <input 
                   type="text" 
                   className="form-control w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
                   name="projectName" 
-                  placeholder="프로젝트 이름을 입력하세요" 
+                  placeholder="프로젝트 제목을 입력하세요" 
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
                   required

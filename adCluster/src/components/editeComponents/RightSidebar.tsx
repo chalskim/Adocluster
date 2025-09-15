@@ -7,61 +7,31 @@ interface RightSidebarProps {
   details: DocumentDetailsData | null;
   onAddReference: (projectId: string) => void;
   onDeleteReference: (projectId: string, referenceId: string) => void;
-  visibleTabs?: {
-    info?: boolean;
-    references?: boolean;
-    toc?: boolean;
-    collaborate?: boolean;
-  };
 }
 
-const RightSidebar: React.FC<RightSidebarProps> = ({ 
-  details, 
-  onAddReference, 
-  onDeleteReference,
-  visibleTabs = {}
-}) => {
+const RightSidebar: React.FC<RightSidebarProps> = ({ details, onAddReference, onDeleteReference }) => {
   const [activeTab, setActiveTab] = useState('info');
-
-  // 기본적으로 모든 탭 표시
-  const defaultVisibleTabs = {
-    info: true,
-    references: true,
-    toc: true,
-    collaborate: true,
-  };
-
-  // props로 전달된 가시성 설정과 기본값 병합
-  const tabVisibility = { ...defaultVisibleTabs, ...visibleTabs };
 
   if (!details) {
     return (
       <div className="right-sidebar">
         <div className="right-tabs">
-          {tabVisibility.info && (
-            <button className={`right-tab ${activeTab === 'info' ? 'active' : ''}`} onClick={() => setActiveTab('info')}>
-              <i className="fas fa-info-circle"></i>
-              <span>프로젝트</span>
-            </button>
-          )}
-          {tabVisibility.references && (
-            <button className={`right-tab ${activeTab === 'references' ? 'active' : ''}`} onClick={() => setActiveTab('references')}>
-              <i className="fas fa-book"></i>
-              <span>참조정보</span>
-            </button>
-          )}
-          {tabVisibility.toc && (
-            <button className={`right-tab ${activeTab === 'toc' ? 'active' : ''}`} onClick={() => setActiveTab('toc')}>
-              <i className="fas fa-list"></i>
-              <span>목차</span>
-            </button>
-          )}
-          {tabVisibility.collaborate && (
-            <button className={`right-tab ${activeTab === 'collaborate' ? 'active' : ''}`} onClick={() => setActiveTab('collaborate')}>
-              <i className="fas fa-users"></i>
-              <span>협업</span>
-            </button>
-          )}
+          <button className={`right-tab ${activeTab === 'info' ? 'active' : ''}`} onClick={() => setActiveTab('info')}>
+            <i className="fas fa-info-circle"></i>
+            <span>프로젝트</span>
+          </button>
+          <button className={`right-tab ${activeTab === 'references' ? 'active' : ''}`} onClick={() => setActiveTab('references')}>
+            <i className="fas fa-book"></i>
+            <span>참조정보</span>
+          </button>
+          <button className={`right-tab ${activeTab === 'toc' ? 'active' : ''}`} onClick={() => setActiveTab('toc')}>
+            <i className="fas fa-list"></i>
+            <span>목차</span>
+          </button>
+          <button className={`right-tab ${activeTab === 'collaborate' ? 'active' : ''}`} onClick={() => setActiveTab('collaborate')}>
+            <i className="fas fa-users"></i>
+            <span>협업</span>
+          </button>
         </div>
         <div className="right-content">
           <div className="placeholder-message">
@@ -93,34 +63,26 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   return (
     <div className="right-sidebar">
       <div className="right-tabs">
-        {tabVisibility.info && (
-          <button className={`right-tab ${activeTab === 'info' ? 'active' : ''}`} onClick={() => setActiveTab('info')}>
-            <i className="fas fa-info-circle"></i>
-            <span>프로젝트</span>
-          </button>
-        )}
-        {tabVisibility.references && (
-          <button className={`right-tab ${activeTab === 'references' ? 'active' : ''}`} onClick={() => setActiveTab('references')}>
-            <i className="fas fa-book"></i>
-            <span>참조정보</span>
-          </button>
-        )}
-        {tabVisibility.toc && (
-          <button className={`right-tab ${activeTab === 'toc' ? 'active' : ''}`} onClick={() => setActiveTab('toc')}>
-            <i className="fas fa-list"></i>
-            <span>목차</span>
-          </button>
-        )}
-        {tabVisibility.collaborate && (
-          <button className={`right-tab ${activeTab === 'collaborate' ? 'active' : ''}`} onClick={() => setActiveTab('collaborate')}>
-            <i className="fas fa-users"></i>
-            <span>협업</span>
-          </button>
-        )}
+        <button className={`right-tab ${activeTab === 'info' ? 'active' : ''}`} onClick={() => setActiveTab('info')}>
+          <i className="fas fa-info-circle"></i>
+          <span>프로젝트</span>
+        </button>
+        <button className={`right-tab ${activeTab === 'references' ? 'active' : ''}`} onClick={() => setActiveTab('references')}>
+          <i className="fas fa-book"></i>
+          <span>참조정보</span>
+        </button>
+        <button className={`right-tab ${activeTab === 'toc' ? 'active' : ''}`} onClick={() => setActiveTab('toc')}>
+          <i className="fas fa-list"></i>
+          <span>목차</span>
+        </button>
+        <button className={`right-tab ${activeTab === 'collaborate' ? 'active' : ''}`} onClick={() => setActiveTab('collaborate')}>
+          <i className="fas fa-users"></i>
+          <span>참가자</span>
+        </button>
       </div>
 
       <div className="right-content">
-        {activeTab === 'info' && tabVisibility.info && (
+        {activeTab === 'info' && (
           <div id="info-content" className="right-tab-content">
             <div className="section-title">프로젝트 정보</div>
             <div className="info-card">
@@ -149,7 +111,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
           </div>
         )}
 
-        {activeTab === 'references' && tabVisibility.references && (
+        {activeTab === 'references' && (
           <div id="references-content" className="right-tab-content">
             <div className="section-title">
               참고문헌
@@ -180,7 +142,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
           </div>
         )}
 
-        {activeTab === 'toc' && tabVisibility.toc && (
+        {activeTab === 'toc' && (
           <div id="toc-content" className="right-tab-content">
             <div className="section-title">목차</div>
             <div className="toc-list">
@@ -199,7 +161,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
           </div>
         )}
 
-        {activeTab === 'collaborate' && tabVisibility.collaborate && (
+        {activeTab === 'collaborate' && (
           <div id="collaborate-content" className="right-tab-content">
             <div className="section-title">협업</div>
             <div className="collaborate-info">

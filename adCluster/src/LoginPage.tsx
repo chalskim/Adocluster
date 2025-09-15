@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { addUserToLoginCollection, cleanupOldEntries } from './services/userLoginCollection';
+import { useWebSocket } from './contexts/WebSocketContext';
 
 // Utility functions for cookie handling
 const setCookie = (name: string, value: string, days: number) => {
@@ -54,6 +55,7 @@ interface UserInfo {
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const { disconnect } = useWebSocket(); // Get disconnect function from WebSocket context
   const [formData, setFormData] = useState<LoginForm>({
     email: '',
     password: '',
