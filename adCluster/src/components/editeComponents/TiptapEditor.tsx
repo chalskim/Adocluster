@@ -4,13 +4,18 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import { PaginationPlus } from 'tiptap-pagination-plus';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import EditorSettingsPanel from '../EditorSettingsPanel';
+import { useEditorSettings } from '../../hooks/useEditorSettings';
 
 interface TiptapEditorProps {
   editor: any;
 }
 
 const TiptapEditor: React.FC<TiptapEditorProps> = ({ editor }) => {
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { settings, loading } = useEditorSettings();
+
   if (!editor) {
     return <div className="border rounded-md p-4 bg-gray-50">
       <div className="text-gray-500">에디터 로딩 중...</div>
@@ -79,33 +84,54 @@ const TiptapEditor: React.FC<TiptapEditorProps> = ({ editor }) => {
         `}</style>
         
         {/* 페이지 제어 버튼 */}
-        <div className="mt-4 flex gap-2">
-          {/* <button 
-            onClick={() => editor.commands.addPage?.()}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            새 페이지 추가
-          </button>
+        <div className="mt-4 flex gap-2 justify-between">
+          <div className="flex gap-2">
+            {/* <button 
+              onClick={() => editor.commands.addPage?.()}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              새 페이지 추가
+            </button>
+            <button 
+              onClick={() => editor.commands.editHeader?.()}
+              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            >
+              헤더 편집
+            </button>
+            <button 
+              onClick={() => editor.commands.editFooter?.()}
+              className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+            >
+              푸터 편집
+            </button>
+            <button 
+              onClick={() => editor.commands.editContent?.()}
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+            >
+              콘텐츠 편집
+            </button> */}
+          </div>
+          
+          {/* 설정 버튼 */}
           <button 
-            onClick={() => editor.commands.editHeader?.()}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            onClick={() => setIsSettingsOpen(true)}
+            className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 flex items-center gap-2 transition-colors"
+            title="에디터 설정"
           >
-            헤더 편집
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            설정
           </button>
-          <button 
-            onClick={() => editor.commands.editFooter?.()}
-            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
-          >
-            푸터 편집
-          </button>
-          <button 
-            onClick={() => editor.commands.editContent?.()}
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-          >
-            콘텐츠 편집
-          </button> */}
         </div>
       </div>
+      
+      {/* 설정 패널 */}
+      <EditorSettingsPanel 
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
     </div>
   );
 };

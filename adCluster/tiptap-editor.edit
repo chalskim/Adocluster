@@ -1,0 +1,322 @@
+{
+  "editor": {
+    "name": "Tiptap Editor Settings",
+    "version": "1.0.0",
+    "description": "Tiptap 에디터의 모든 설정값을 관리하는 파일입니다."
+  },
+  "typography": {
+    "fontFamily": "Noto Sans KR, sans-serif",
+    "fontSize": "16px",
+    "lineHeight": 1.7,
+    "letterSpacing": "0px",
+    "wordSpacing": "0px",
+    "textAlign": "left",
+    "textIndent": "0px"
+  },
+  "spacing": {
+    "paragraphSpacing": "1em",
+    "marginTop": "0px",
+    "marginBottom": "0px",
+    "marginLeft": "0px",
+    "marginRight": "0px",
+    "paddingTop": "0px",
+    "paddingBottom": "40px",
+    "paddingLeft": "40px",
+    "paddingRight": "40px"
+  },
+  "colors": {
+    "textColor": "#1f2937",
+    "backgroundColor": "#ffffff",
+    "selectionColor": "#60a5fa",
+    "linkColor": "#3b82f6",
+    "highlightColor": "#fef08a",
+    "borderColor": "#e5e7eb"
+  },
+  "theme": {
+    "mode": "light",
+    "darkMode": {
+      "textColor": "#f9fafb",
+      "backgroundColor": "#111827",
+      "selectionColor": "#60a5fa",
+      "linkColor": "#93c5fd",
+      "highlightColor": "#fbbf24",
+      "borderColor": "#374151"
+    }
+  },
+  "page": {
+    "width": "21cm",
+    "height": "29.7cm",
+    "orientation": "portrait",
+    "margins": {
+      "top": "2.5cm",
+      "bottom": "2.5cm",
+      "left": "2cm",
+      "right": "2cm"
+    },
+    "background": "#ffffff",
+    "shadow": true,
+    "border": false
+  },
+  "header": {
+    "enabled": true,
+    "height": "1.5cm",
+    "fontSize": "12px",
+    "fontWeight": "normal",
+    "textAlign": "center",
+    "borderBottom": true,
+    "padding": "10px"
+  },
+  "footer": {
+    "enabled": true,
+    "height": "1.5cm",
+    "fontSize": "12px",
+    "fontWeight": "normal",
+    "textAlign": "center",
+    "borderTop": true,
+    "padding": "10px",
+    "showPageNumber": true
+  },
+  "formatting": {
+    "bold": {
+      "enabled": true,
+      "fontWeight": "700"
+    },
+    "italic": {
+      "enabled": true,
+      "fontStyle": "italic"
+    },
+    "underline": {
+      "enabled": true,
+      "textDecoration": "underline"
+    },
+    "strikethrough": {
+      "enabled": true,
+      "textDecoration": "line-through"
+    },
+    "superscript": {
+      "enabled": true,
+      "verticalAlign": "super",
+      "fontSize": "0.8em"
+    },
+    "subscript": {
+      "enabled": true,
+      "verticalAlign": "sub",
+      "fontSize": "0.8em"
+    }
+  },
+  "headings": {
+    "h1": {
+      "fontSize": "2em",
+      "fontWeight": "700",
+      "lineHeight": 1.2,
+      "marginTop": "1.5em",
+      "marginBottom": "0.5em",
+      "color": "inherit"
+    },
+    "h2": {
+      "fontSize": "1.5em",
+      "fontWeight": "600",
+      "lineHeight": 1.3,
+      "marginTop": "1.2em",
+      "marginBottom": "0.4em",
+      "color": "inherit"
+    },
+    "h3": {
+      "fontSize": "1.25em",
+      "fontWeight": "600",
+      "lineHeight": 1.4,
+      "marginTop": "1em",
+      "marginBottom": "0.3em",
+      "color": "inherit"
+    },
+    "h4": {
+      "fontSize": "1.1em",
+      "fontWeight": "500",
+      "lineHeight": 1.5,
+      "marginTop": "0.8em",
+      "marginBottom": "0.2em",
+      "color": "inherit"
+    },
+    "h5": {
+      "fontSize": "1em",
+      "fontWeight": "500",
+      "lineHeight": 1.6,
+      "marginTop": "0.6em",
+      "marginBottom": "0.2em",
+      "color": "inherit"
+    },
+    "h6": {
+      "fontSize": "0.9em",
+      "fontWeight": "500",
+      "lineHeight": 1.6,
+      "marginTop": "0.5em",
+      "marginBottom": "0.1em",
+      "color": "inherit"
+    }
+  },
+  "lists": {
+    "bulletList": {
+      "enabled": true,
+      "marginLeft": "1.5em",
+      "listStyleType": "disc",
+      "lineHeight": 1.6
+    },
+    "orderedList": {
+      "enabled": true,
+      "marginLeft": "1.5em",
+      "listStyleType": "decimal",
+      "lineHeight": 1.6
+    },
+    "taskList": {
+      "enabled": true,
+      "marginLeft": "1.5em",
+      "checkboxSize": "16px",
+      "lineHeight": 1.6
+    }
+  },
+  "tables": {
+    "enabled": true,
+    "borderCollapse": "collapse",
+    "borderWidth": "1px",
+    "borderColor": "#e5e7eb",
+    "cellPadding": "8px",
+    "headerBackground": "#f9fafb",
+    "headerFontWeight": "600",
+    "stripedRows": false
+  },
+  "blockquote": {
+    "enabled": true,
+    "borderLeft": "4px solid #e5e7eb",
+    "paddingLeft": "1em",
+    "marginLeft": "0",
+    "fontStyle": "italic",
+    "color": "#6b7280",
+    "backgroundColor": "transparent"
+  },
+  "codeBlock": {
+    "enabled": true,
+    "fontFamily": "'Courier New', monospace",
+    "fontSize": "14px",
+    "backgroundColor": "#f3f4f6",
+    "padding": "1em",
+    "borderRadius": "4px",
+    "border": "1px solid #e5e7eb",
+    "lineHeight": 1.4
+  },
+  "links": {
+    "enabled": true,
+    "color": "#3b82f6",
+    "textDecoration": "underline",
+    "hoverColor": "#1d4ed8",
+    "openInNewTab": false
+  },
+  "images": {
+    "enabled": true,
+    "maxWidth": "100%",
+    "height": "auto",
+    "borderRadius": "4px",
+    "shadow": false,
+    "alignment": "left",
+    "caption": {
+      "enabled": true,
+      "fontSize": "14px",
+      "color": "#6b7280",
+      "textAlign": "center",
+      "marginTop": "8px"
+    }
+  },
+  "extensions": {
+    "placeholder": {
+      "enabled": true,
+      "text": "여기에 내용을 입력하세요...",
+      "color": "#9ca3af"
+    },
+    "characterCount": {
+      "enabled": true,
+      "limit": null,
+      "showCount": true
+    },
+    "wordCount": {
+      "enabled": true,
+      "showCount": true
+    },
+    "readingTime": {
+      "enabled": true,
+      "wordsPerMinute": 200
+    },
+    "autoSave": {
+      "enabled": true,
+      "interval": 30000,
+      "showIndicator": true
+    },
+    "spellCheck": {
+      "enabled": true,
+      "language": "ko-KR"
+    }
+  },
+  "shortcuts": {
+    "bold": "Ctrl+B",
+    "italic": "Ctrl+I",
+    "underline": "Ctrl+U",
+    "undo": "Ctrl+Z",
+    "redo": "Ctrl+Y",
+    "save": "Ctrl+S",
+    "selectAll": "Ctrl+A",
+    "copy": "Ctrl+C",
+    "paste": "Ctrl+V",
+    "cut": "Ctrl+X",
+    "find": "Ctrl+F",
+    "replace": "Ctrl+H"
+  },
+  "performance": {
+    "debounceDelay": 300,
+    "maxHistoryDepth": 100,
+    "lazyLoading": true,
+    "virtualScrolling": false
+  },
+  "accessibility": {
+    "ariaLabels": true,
+    "keyboardNavigation": true,
+    "screenReaderSupport": true,
+    "highContrast": false,
+    "focusIndicator": true
+  },
+  "export": {
+    "pdf": {
+      "enabled": true,
+      "format": "A4",
+      "orientation": "portrait",
+      "margins": "default",
+      "includeStyles": true
+    },
+    "html": {
+      "enabled": true,
+      "includeStyles": true,
+      "minify": false
+    },
+    "markdown": {
+      "enabled": true,
+      "flavor": "github"
+    },
+    "docx": {
+      "enabled": false,
+      "template": null
+    }
+  },
+  "collaboration": {
+    "enabled": false,
+    "realTime": false,
+    "showCursors": true,
+    "showNames": true,
+    "conflictResolution": "last-write-wins"
+  },
+  "metadata": {
+    "createdAt": null,
+    "updatedAt": null,
+    "author": null,
+    "version": "1.0.0",
+    "tags": [],
+    "category": null,
+    "language": "ko-KR"
+  }
+}
