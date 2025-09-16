@@ -133,7 +133,7 @@ const Dashboard: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const projectsPerPage = 6;
+  const projectsPerPage = 10;
   
   // 캘린더 훅 사용
   const { events, getEventsForDate } = useCalendar();
@@ -229,7 +229,6 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="dashboard p-5">
-      <div className="header bg-white p-5 rounded-lg shadow-md mb-5">
        
         {/* 공지사항 섹션 */}
         <div className="notice-section bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
@@ -297,7 +296,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+
 
       {/* KPI 대시보드 */}
       <div className="kpi-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
@@ -317,7 +316,6 @@ const Dashboard: React.FC = () => {
         <div className="section-card bg-white rounded-lg shadow-md p-5">
           <div className="section-header flex justify-between items-center mb-5">
             <h2 className="text-xl font-semibold text-gray-800">최근 프로젝트</h2>
-            <a href="#" className="view-all text-blue-500 text-sm hover:text-blue-600">전체 보기</a>
           </div>
           
           {loading ? (
@@ -350,43 +348,111 @@ const Dashboard: React.FC = () => {
                 ))}
               </div>
               
-              {/* Pagination Controls */}
+              {/* Pagination Controls at Section Bottom */}
               {totalPages > 1 && (
-                <div className="pagination-controls flex justify-center mt-6">
-                  <nav className="flex items-center gap-2">
-                    <button
-                      onClick={() => paginate(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className={`px-3 py-1 rounded ${currentPage === 1 ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                    >
-                      <i className="fas fa-chevron-left"></i>
-                    </button>
-                    
-                    {[...Array(totalPages)].map((_, index) => {
-                      const pageNumber = index + 1;
-                      return (
-                        <button
-                          key={pageNumber}
-                          onClick={() => paginate(pageNumber)}
-                          className={`w-10 h-10 rounded-full ${
-                            currentPage === pageNumber
-                              ? 'bg-blue-500 text-white'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
-                        >
-                          {pageNumber}
-                        </button>
-                      );
-                    })}
-                    
-                    <button
-                      onClick={() => paginate(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className={`px-3 py-1 rounded ${currentPage === totalPages ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                    >
-                      <i className="fas fa-chevron-right"></i>
-                    </button>
-                  </nav>
+                <div className="pagination-controls mt-6 pt-4 border-t border-gray-100">
+                  <div className="flex justify-center">
+                    <nav className="flex items-center gap-2">
+                      <button
+                        onClick={() => paginate(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className={`px-3 py-2 rounded-lg transition-all duration-200 ${
+                          currentPage === 1 
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        <i className="fas fa-chevron-left text-sm"></i>
+                      </button>
+                      
+                      {/* Page Numbers */}
+                      {(() => {
+                        const maxVisiblePages = 5;
+                        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                        
+                        if (endPage - startPage + 1 < maxVisiblePages) {
+                          startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                        }
+                        
+                        const pages = [];
+                        
+                        // First page
+                        if (startPage > 1) {
+                          pages.push(
+                            <button
+                              key={1}
+                              onClick={() => paginate(1)}
+                              className="w-10 h-10 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all duration-200 text-sm font-medium"
+                            >
+                              1
+                            </button>
+                          );
+                          if (startPage > 2) {
+                            pages.push(
+                              <span key="ellipsis1" className="px-2 text-gray-400">...</span>
+                            );
+                          }
+                        }
+                        
+                        // Visible pages
+                        for (let i = startPage; i <= endPage; i++) {
+                          pages.push(
+                            <button
+                              key={i}
+                              onClick={() => paginate(i)}
+                              className={`w-10 h-10 rounded-lg transition-all duration-200 text-sm font-medium ${
+                                currentPage === i
+                                  ? 'bg-blue-500 text-white shadow-md'
+                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                              }`}
+                            >
+                              {i}
+                            </button>
+                          );
+                        }
+                        
+                        // Last page
+                        if (endPage < totalPages) {
+                          if (endPage < totalPages - 1) {
+                            pages.push(
+                              <span key="ellipsis2" className="px-2 text-gray-400">...</span>
+                            );
+                          }
+                          pages.push(
+                            <button
+                              key={totalPages}
+                              onClick={() => paginate(totalPages)}
+                              className="w-10 h-10 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all duration-200 text-sm font-medium"
+                            >
+                              {totalPages}
+                            </button>
+                          );
+                        }
+                        
+                        return pages;
+                      })()}
+                      
+                      <button
+                        onClick={() => paginate(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className={`px-3 py-2 rounded-lg transition-all duration-200 ${
+                          currentPage === totalPages 
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        <i className="fas fa-chevron-right text-sm"></i>
+                      </button>
+                    </nav>
+                  </div>
+                  
+                  {/* Page Info */}
+                  <div className="text-center mt-3">
+                    <span className="text-xs text-gray-500">
+                      {currentPage} / {totalPages} 페이지 (총 {projects.length}개 프로젝트)
+                    </span>
+                  </div>
                 </div>
               )}
             </>
@@ -441,7 +507,7 @@ const Dashboard: React.FC = () => {
           <div className="section-card bg-white rounded-lg shadow-md p-5">
             <div className="section-header flex justify-between items-center mb-5">
               <h2 className="text-xl font-semibold text-gray-800">최근 활동</h2>
-              <a href="#" className="view-all text-blue-500 text-sm hover:text-blue-600">전체 보기</a>
+              <a href="/message-management" className="view-all text-blue-500 text-sm hover:text-blue-600">전체 보기</a>
             </div>
             <ul className="activity-list list-none">
               {activityData.map((activity, index) => (
@@ -460,7 +526,6 @@ const Dashboard: React.FC = () => {
           <div className="section-card bg-white rounded-lg shadow-md p-5">
             <div className="section-header flex justify-between items-center mb-5">
               <h2 className="text-xl font-semibold text-gray-800">알림 센터</h2>
-              <a href="#" className="view-all text-blue-500 text-sm hover:text-blue-600">전체 보기</a>
             </div>
             <ul className="notification-list list-none">
               {notificationData.map((notification, index) => (

@@ -116,7 +116,10 @@ export const fetchAllUsers = async (skip = 0, limit = 10) => {
   try {
     const response = await fetch(`${getApiBaseUrl()}/users?skip=${skip}&limit=${limit}`, {
       method: 'GET',
-      headers: getAuthHeaders(),
+      headers: {
+        'Content-Type': 'application/json',
+        // 임시로 인증 헤더 제거 - 테스트용
+      },
     });
 
     if (!response.ok) {
@@ -161,7 +164,10 @@ export const fetchProjects = async (limit = 4): Promise<Project[] | null> => {
   try {
     const response = await fetch(`${getApiBaseUrl()}/api/projects/?limit=${limit}`, {
       method: 'GET',
-      headers: getAuthHeaders(),
+      headers: {
+        'Content-Type': 'application/json',
+        // 임시로 인증 헤더 제거 - 테스트용
+      },
     });
 
     if (!response.ok) {
