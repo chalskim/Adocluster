@@ -229,10 +229,73 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="dashboard p-5">
-      <div className="header bg-white p-5 rounded-lg shadow-md mb-5 flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-800">대시보드</h1>
-          <p className="text-gray-600">시스템 전체 현황을 확인할 수 있습니다</p>
+      <div className="header bg-white p-5 rounded-lg shadow-md mb-5">
+       
+        {/* 공지사항 섹션 */}
+        <div className="notice-section bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <i className="fas fa-bullhorn text-blue-500 text-lg mt-1"></i>
+            </div>
+            <div className="ml-3 flex-1">
+              <h3 className="text-sm font-semibold text-blue-800 mb-2"> 공지사항 </h3>
+              <div className="space-y-2">
+                <div className="notice-item bg-white bg-opacity-60 rounded-lg p-3 border border-blue-100">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-800 font-medium mb-1">
+                        🔧 시스템 정기 점검 안내
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        2024년 1월 15일 오전 2:00 ~ 4:00 (약 2시간)
+                      </p>
+                    </div>
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      중요
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="notice-item bg-white bg-opacity-60 rounded-lg p-3 border border-blue-100">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-800 font-medium mb-1">
+                        ✨ 새로운 캘린더 기능이 추가되었습니다
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        일정 관리와 팀 협업이 더욱 편리해졌습니다
+                      </p>
+                    </div>
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      신규
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="notice-item bg-white bg-opacity-60 rounded-lg p-3 border border-blue-100">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-800 font-medium mb-1">
+                        📊 월간 사용량 리포트 발송
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        매월 첫째 주에 프로젝트 활동 리포트를 이메일로 발송합니다
+                      </p>
+                    </div>
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      정보
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-3 pt-2 border-t border-blue-200">
+                <button className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200">
+                  전체 공지사항 보기 →
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
