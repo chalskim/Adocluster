@@ -35,6 +35,7 @@ const Sidebar: React.FC = () => {
     else if (path.includes('data-management')) setActiveItem('data-management');
     else if (path.includes('references-management')) setActiveItem('references-management');
     else if (path.includes('message-management')) setActiveItem('message-management');
+    else if (path.includes('calendar-management')) setActiveItem('calendar-management');
     else if (path.includes('import-export')) setActiveItem('import-export');
     // else if (path.includes('element-editor')) setActiveItem('element-editor'); // 제거
     else if (path.includes('general-settings')) setActiveItem('general-settings');
@@ -65,6 +66,7 @@ const Sidebar: React.FC = () => {
     { id: 'data-management', icon: 'fas fa-database', label: '자료관리', path: '/data-management' },
     { id: 'references-management', icon: 'fas fa-book', label: '참고문헌 관리', path: '/references-management' },
     { id: 'message-management', icon: 'fas fa-envelope', label: '메세지 관리', path: '/message-management' },
+    { id: 'calendar-management', icon: 'fas fa-calendar-alt', label: '일정 관리', path: '/calendar-management' },
     { id: 'import-export', icon: 'fas fa-file-export', label: '가져오기 / 내보내기', path: '/import-export' },
     // { id: 'element-editor', icon: 'fas fa-edit', label: '요소 편집기', path: '/element-editor' }, // 제거
     { id: 'general-settings', icon: 'fas fa-cog', label: '일반 설정', path: '/general-settings' },

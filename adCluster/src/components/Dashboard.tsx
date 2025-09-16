@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchProjects, Project } from '../services/api';
+import { useCalendar } from '../hooks/useCalendar';
 
 interface KpiCardProps {
   icon: string;
@@ -28,6 +29,14 @@ interface NotificationItemProps {
   text: string;
   time: string;
   unread: boolean;
+}
+
+interface TodayEventItemProps {
+  title: string;
+  time: string;
+  category: string;
+  color: string;
+  isAllDay: boolean;
 }
 
 const KpiCard: React.FC<KpiCardProps> = ({ icon, value, label, color }) => (
@@ -106,11 +115,32 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ text, time, unread 
   </li>
 );
 
+const TodayEventItem: React.FC<TodayEventItemProps> = ({ title, time, category, color, isAllDay }) => (
+  <li className="today-event-item flex items-center py-3 border-b border-gray-100 last:border-b-0">
+    <div className={`event-indicator w-3 h-3 rounded-full ${color} mr-3 flex-shrink-0`}></div>
+    <div className="event-content flex-1">
+      <div className="event-title text-gray-800 font-medium mb-1">{title}</div>
+      <div className="event-meta flex items-center text-gray-500 text-sm">
+        <span className="event-time">{isAllDay ? '종일' : time}</span>
+        <span className="mx-2">•</span>
+        <span className="event-category">{category}</span>
+      </div>
+    </div>
+  </li>
+);
+
 const Dashboard: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const projectsPerPage = 10;
+  const projectsPerPage = 6;
+  
+  // 캘린더 훅 사용
+  const { events, getEventsForDate } = useCalendar();
+  
+  // 오늘 날짜 가져오기
+  const today = new Date();
+  const todayEvents = getEventsForDate(today);10;
 
   const kpiData = [
     { icon: 'fas fa-folder', value: '24', label: '활성 프로젝트', color: 'bg-blue-500' },
@@ -302,6 +332,48 @@ const Dashboard: React.FC = () => {
 
         {/* 최근 활동 및 알림 센터 */}
         <div className="section-grid grid grid-cols-1 gap-5">
+          {/* 오늘 일정 */}
+          <div className="section-card bg-white rounded-lg shadow-md p-5">
+            <div className="section-header flex justify-between items-center mb-5">
+              <h2 className="text-xl font-semibold text-gray-800">오늘 일정</h2>
+              <a href="/calendar-management" className="view-all text-blue-500 text-sm hover:text-blue-600">전체 보기</a>
+            </div>
+            {todayEvents.length > 0 ? (
+              <ul className="today-events-list list-none">
+                {todayEvents.slice(0, 4).map((event, index) => {
+                  const categoryColors: { [key: string]: string } = {
+                    work: 'bg-blue-500',
+                    personal: 'bg-green-500',
+                    meeting: 'bg-yellow-500',
+                    health: 'bg-red-500',
+                    education: 'bg-purple-500',
+                    other: 'bg-gray-500'
+                  };
+                  
+                  const timeString = event.isAllDay === false && event.startTime && event.endTime 
+                    ? `${event.startTime} - ${event.endTime}`
+                    : event.startTime || '';
+                  
+                  return (
+                    <TodayEventItem
+                      key={event.id}
+                      title={event.title}
+                      time={timeString}
+                      category={event.category}
+                      color={categoryColors[event.category] || 'bg-gray-500'}
+                      isAllDay={event.isAllDay === true}
+                    />
+                  );
+                })}
+              </ul>
+            ) : (
+              <div className="no-events text-center py-8 text-gray-500">
+                <i className="fas fa-calendar-alt text-4xl mb-3 opacity-50"></i>
+                <p>오늘 예정된 일정이 없습니다.</p>
+              </div>
+            )}
+          </div>
+          
           {/* 최근 활동 */}
           <div className="section-card bg-white rounded-lg shadow-md p-5">
             <div className="section-header flex justify-between items-center mb-5">

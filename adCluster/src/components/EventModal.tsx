@@ -1,0 +1,515 @@
+import React, { useState, useEffect } from 'react';
+import { CalendarEvent, CATEGORY_COLORS } from '../hooks/useCalendar';
+
+interface EventModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (eventData: Omit<CalendarEvent, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  onUpdate: (eventId: string, updates: Partial<CalendarEvent>) => void;
+  onDelete: (eventId: string) => void;
+  event?: CalendarEvent | null;
+  selectedDate?: Date;
+}
+
+const EventModal: React.FC<EventModalProps> = ({
+  isOpen,
+  onClose,
+  onSave,
+  onUpdate,
+  onDelete,
+  event,
+  selectedDate
+}) => {
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    startDate: '',
+    endDate: '',
+    startTime: '',
+    endTime: '',
+    isAllDay: false,
+    category: 'work' as CalendarEvent['category'],
+    priority: 'medium' as CalendarEvent['priority'],
+    location: '',
+    attendees: [] as string[],
+    reminders: [] as number[]
+  });
+
+  const [attendeeInput, setAttendeeInput] = useState('');
+  const [reminderInput, setReminderInput] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // 모달이 열릴 때 폼 데이터 초기화
+  useEffect(() => {
+    if (isOpen) {
+      if (event) {
+        // 기존 이벤트 수정
+        setFormData({
+          title: event.title,
+          description: event.description || '',
+          startDate: event.startDate.toISOString().split('T')[0],
+          endDate: event.endDate.toISOString().split('T')[0],
+          startTime: event.startTime || '',
+          endTime: event.endTime || '',
+          isAllDay: event.isAllDay,
+          category: event.category,
+          priority: event.priority,
+          location: event.location || '',
+          attendees: event.attendees || [],
+          reminders: event.reminders || []
+        });
+      } else {
+        // 새 이벤트 생성
+        const defaultDate = selectedDate || new Date();
+        const dateString = defaultDate.toISOString().split('T')[0];
+        setFormData({
+          title: '',
+          description: '',
+          startDate: dateString,
+          endDate: dateString,
+          startTime: '',
+          endTime: '',
+          isAllDay: false,
+          category: 'work',
+          priority: 'medium',
+          location: '',
+          attendees: [],
+          reminders: []
+        });
+      }
+      setErrors({});
+    }
+  }, [isOpen, event, selectedDate]);
+
+  // 폼 데이터 변경 핸들러
+  const handleInputChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // 에러 클리어
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  // 참석자 추가
+  const addAttendee = () => {
+    if (attendeeInput.trim() && !formData.attendees.includes(attendeeInput.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        attendees: [...prev.attendees, attendeeInput.trim()]
+      }));
+      setAttendeeInput('');
+    }
+  };
+
+  // 참석자 제거
+  const removeAttendee = (attendee: string) => {
+    setFormData(prev => ({
+      ...prev,
+      attendees: prev.attendees.filter(a => a !== attendee)
+    }));
+  };
+
+  // 알림 추가
+  const addReminder = () => {
+    const minutes = parseInt(reminderInput);
+    if (!isNaN(minutes) && minutes > 0 && !formData.reminders.includes(minutes)) {
+      setFormData(prev => ({
+        ...prev,
+        reminders: [...prev.reminders, minutes].sort((a, b) => a - b)
+      }));
+      setReminderInput('');
+    }
+  };
+
+  // 알림 제거
+  const removeReminder = (minutes: number) => {
+    setFormData(prev => ({
+      ...prev,
+      reminders: prev.reminders.filter(r => r !== minutes)
+    }));
+  };
+
+  // 폼 유효성 검사
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.title.trim()) {
+      newErrors.title = '제목을 입력해주세요.';
+    }
+
+    if (!formData.startDate) {
+      newErrors.startDate = '시작 날짜를 선택해주세요.';
+    }
+
+    if (!formData.endDate) {
+      newErrors.endDate = '종료 날짜를 선택해주세요.';
+    }
+
+    if (formData.startDate && formData.endDate) {
+      const startDate = new Date(formData.startDate);
+      const endDate = new Date(formData.endDate);
+      if (startDate > endDate) {
+        newErrors.endDate = '종료 날짜는 시작 날짜보다 늦어야 합니다.';
+      }
+    }
+
+    if (!formData.isAllDay) {
+      if (!formData.startTime) {
+        newErrors.startTime = '시작 시간을 입력해주세요.';
+      }
+      if (!formData.endTime) {
+        newErrors.endTime = '종료 시간을 입력해주세요.';
+      }
+      if (formData.startTime && formData.endTime && formData.startDate === formData.endDate) {
+        if (formData.startTime >= formData.endTime) {
+          newErrors.endTime = '종료 시간은 시작 시간보다 늦어야 합니다.';
+        }
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // 저장 핸들러
+  const handleSave = () => {
+    if (!validateForm()) return;
+
+    const eventData = {
+      title: formData.title.trim(),
+      description: formData.description.trim(),
+      startDate: new Date(formData.startDate),
+      endDate: new Date(formData.endDate),
+      startTime: formData.isAllDay ? undefined : formData.startTime,
+      endTime: formData.isAllDay ? undefined : formData.endTime,
+      isAllDay: formData.isAllDay,
+      category: formData.category,
+      priority: formData.priority,
+      color: CATEGORY_COLORS[formData.category],
+      location: formData.location.trim(),
+      attendees: formData.attendees,
+      reminders: formData.reminders
+    };
+
+    if (event) {
+      onUpdate(event.id, eventData);
+    } else {
+      onSave(eventData);
+    }
+    onClose();
+  };
+
+  // 삭제 핸들러
+  const handleDelete = () => {
+    if (event && window.confirm('정말로 이 일정을 삭제하시겠습니까?')) {
+      onDelete(event.id);
+      onClose();
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        {/* 모달 헤더 */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-800">
+            {event ? '일정 수정' : '새 일정 추가'}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <i className="fas fa-times text-xl"></i>
+          </button>
+        </div>
+
+        {/* 모달 내용 */}
+        <div className="p-6 space-y-6">
+          {/* 제목 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              제목 *
+            </label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) => handleInputChange('title', e.target.value)}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.title ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="일정 제목을 입력하세요"
+            />
+            {errors.title && (
+              <p className="mt-1 text-sm text-red-600">{errors.title}</p>
+            )}
+          </div>
+
+          {/* 설명 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              설명
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="일정에 대한 설명을 입력하세요"
+            />
+          </div>
+
+          {/* 날짜 및 시간 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                시작 날짜 *
+              </label>
+              <input
+                type="date"
+                value={formData.startDate}
+                onChange={(e) => handleInputChange('startDate', e.target.value)}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.startDate ? 'border-red-500' : 'border-gray-300'
+                }`}
+              />
+              {errors.startDate && (
+                <p className="mt-1 text-sm text-red-600">{errors.startDate}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                종료 날짜 *
+              </label>
+              <input
+                type="date"
+                value={formData.endDate}
+                onChange={(e) => handleInputChange('endDate', e.target.value)}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.endDate ? 'border-red-500' : 'border-gray-300'
+                }`}
+              />
+              {errors.endDate && (
+                <p className="mt-1 text-sm text-red-600">{errors.endDate}</p>
+              )}
+            </div>
+          </div>
+
+          {/* 종일 체크박스 */}
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="isAllDay"
+              checked={formData.isAllDay}
+              onChange={(e) => handleInputChange('isAllDay', e.target.checked)}
+              className="mr-2"
+            />
+            <label htmlFor="isAllDay" className="text-sm text-gray-700">
+              종일
+            </label>
+          </div>
+
+          {/* 시간 (종일이 아닐 때만 표시) */}
+          {!formData.isAllDay && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  시작 시간 *
+                </label>
+                <input
+                  type="time"
+                  value={formData.startTime}
+                  onChange={(e) => handleInputChange('startTime', e.target.value)}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.startTime ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                />
+                {errors.startTime && (
+                  <p className="mt-1 text-sm text-red-600">{errors.startTime}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  종료 시간 *
+                </label>
+                <input
+                  type="time"
+                  value={formData.endTime}
+                  onChange={(e) => handleInputChange('endTime', e.target.value)}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.endTime ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                />
+                {errors.endTime && (
+                  <p className="mt-1 text-sm text-red-600">{errors.endTime}</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 카테고리 및 우선순위 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                카테고리
+              </label>
+              <select
+                value={formData.category}
+                onChange={(e) => handleInputChange('category', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="work">업무</option>
+                <option value="personal">개인</option>
+                <option value="meeting">회의</option>
+                <option value="deadline">마감일</option>
+                <option value="other">기타</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                우선순위
+              </label>
+              <select
+                value={formData.priority}
+                onChange={(e) => handleInputChange('priority', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="low">낮음</option>
+                <option value="medium">보통</option>
+                <option value="high">높음</option>
+              </select>
+            </div>
+          </div>
+
+          {/* 장소 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              장소
+            </label>
+            <input
+              type="text"
+              value={formData.location}
+              onChange={(e) => handleInputChange('location', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="장소를 입력하세요"
+            />
+          </div>
+
+          {/* 참석자 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              참석자
+            </label>
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={attendeeInput}
+                onChange={(e) => setAttendeeInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && addAttendee()}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="참석자 이름을 입력하세요"
+              />
+              <button
+                type="button"
+                onClick={addAttendee}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+              >
+                추가
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {formData.attendees.map((attendee, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-sm"
+                >
+                  {attendee}
+                  <button
+                    type="button"
+                    onClick={() => removeAttendee(attendee)}
+                    className="text-gray-500 hover:text-red-500"
+                  >
+                    <i className="fas fa-times text-xs"></i>
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* 알림 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              알림 (분 단위)
+            </label>
+            <div className="flex gap-2 mb-2">
+              <input
+                type="number"
+                value={reminderInput}
+                onChange={(e) => setReminderInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && addReminder()}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="알림 시간(분)을 입력하세요"
+                min="1"
+              />
+              <button
+                type="button"
+                onClick={addReminder}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+              >
+                추가
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {formData.reminders.map((minutes, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-sm"
+                >
+                  {minutes}분 전
+                  <button
+                    type="button"
+                    onClick={() => removeReminder(minutes)}
+                    className="text-gray-500 hover:text-red-500"
+                  >
+                    <i className="fas fa-times text-xs"></i>
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* 모달 푸터 */}
+        <div className="flex items-center justify-between p-6 border-t border-gray-200">
+          <div>
+            {event && (
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+              >
+                삭제
+              </button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+            >
+              취소
+            </button>
+            <button
+              onClick={handleSave}
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+            >
+              {event ? '수정' : '저장'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default EventModal;

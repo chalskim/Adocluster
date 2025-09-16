@@ -19,6 +19,7 @@ import DocumentMnagement from './components/DocumentMnagement';
 import MessageManagementPage from './components/MessageManagementPage';
 import DataManagementPage from './components/DataManagementPage';
 import ReferencesManagementPage from './components/ReferencesManagementPage';
+import CalendarManagementPage from './components/CalendarManagementPage';
 import { WebSocketProvider } from './contexts/WebSocketContext';
 import { fetchCurrentUser } from './services/api';
 import WebSocketTest from './components/WebSocketTest';
@@ -50,6 +51,7 @@ function App() {
               <Route path="data-management" element={<DataManagementPage />} />
               <Route path="references-management" element={<ReferencesManagementPage />} />
               <Route path="message-management" element={<MessageManagementPage />} />
+              <Route path="calendar-management" element={<CalendarManagementPage />} />
               <Route path="general-settings" element={<GeneralSettingsPage />} />
               <Route path="admin-settings" element={<AdminSettingsPage />} />
               <Route path="element-editor" element={<ElementEditorPage />} />
