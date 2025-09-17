@@ -135,8 +135,8 @@ const AdminSettingsPage: React.FC = () => {
   // Project permission data
   const [selectedProject, setSelectedProject] = useState<string>('데이터 분석 대시보드');
   const projects = [
-    '웹사이트 리디자인 프로젝트',
-    '모바일 앱 개발 프로젝트',
+    '웹사이트 리디자인 연구 프로젝트',
+    '모바일 앱 개발 연구 프로젝트',
     '데이터 분석 대시보드',
     '마케팅 전략 문서'
   ];
@@ -144,7 +144,7 @@ const AdminSettingsPage: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<string>('');
   const [projectUsers, setProjectUsers] = useState<string[]>([]);
   
-  // 프로젝트 사용자 목록 가져오기
+  // 연구 프로젝트 사용자 목록 가져오기
   useEffect(() => {
     const fetchProjectUsers = async () => {
       try {
@@ -389,8 +389,8 @@ const AdminSettingsPage: React.FC = () => {
         alert(message);
       }
     } catch (error: any) {
-      console.error(`사용자 ${action} 작업 중 오류 발생:`, error);
-      alert(`작업 중 오류가 발생했습니다: ${error.response?.data?.detail || error.message}`);
+      console.error(`사용자 ${action} 연구 활동 중 오류 발생:`, error);
+      alert(`연구 활동 중 오류가 발생했습니다: ${error.response?.data?.detail || error.message}`);
     }
   };
 
@@ -441,7 +441,7 @@ const AdminSettingsPage: React.FC = () => {
 
   // Save handlers
   const handleProjectPermissionSave = () => {
-    alert('프로젝트별 권한 설정이 저장되었습니다.');
+    alert('연구 프로젝트별 권한 설정이 저장되었습니다.');
   };
 
   const handleAiSettingsSave = () => {
@@ -538,7 +538,7 @@ const AdminSettingsPage: React.FC = () => {
                     <th className="text-left p-3 font-semibold text-gray-700 border-b-2 border-gray-200">이메일</th>
                     <th className="text-left p-3 font-semibold text-gray-700 border-b-2 border-gray-200">전체 권한</th>
                     <th className="text-left p-3 font-semibold text-gray-700 border-b-2 border-gray-200">상태</th>
-                    <th className="text-left p-3 font-semibold text-gray-700 border-b-2 border-gray-200">작업</th>
+                    <th className="text-left p-3 font-semibold text-gray-700 border-b-2 border-gray-200">연구 활동</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -904,7 +904,7 @@ const AdminSettingsPage: React.FC = () => {
                   <th className="py-2 px-4 border-b text-left">로그인 시간</th>
                   <th className="py-2 px-4 border-b text-left">마지막 활동</th>
                   <th className="py-2 px-4 border-b text-left">상태</th>
-                  <th className="py-2 px-4 border-b text-left">작업</th>
+                  <th className="py-2 px-4 border-b text-left">연구 활동</th>
                 </tr>
               </thead>
               <tbody>

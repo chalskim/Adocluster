@@ -11,7 +11,7 @@ interface MessageItem {
 const MessageManagementPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'inbox' | 'sent' | 'archived'>('inbox');
   const [messages, setMessages] = useState<MessageItem[]>([
-    { id: 1, title: '프로젝트 회의 일정 조율', sender: '박매니저', time: '10분 전', read: false },
+    { id: 1, title: '연구 프로젝트 회의 일정 조율', sender: '박매니저', time: '10분 전', read: false },
     { id: 2, title: '디자인 시안 확인 요청', sender: '이디자인', time: '1시간 전', read: true },
     { id: 3, title: 'API 변경사항 안내', sender: '최분석', time: '어제', read: false },
   ]);
@@ -28,9 +28,9 @@ const MessageManagementPage: React.FC = () => {
   type MockUser = { id: string; name: string; role: string };
 
   const mockProjects: MockProject[] = [
-    { id: 'p1', name: 'Alpha 프로젝트' },
-    { id: 'p2', name: 'Beta 프로젝트' },
-    { id: 'p3', name: 'Gamma 프로젝트' },
+    { id: 'p1', name: 'Alpha 연구 프로젝트' },
+    { id: 'p2', name: 'Beta 연구 프로젝트' },
+    { id: 'p3', name: 'Gamma 연구 프로젝트' },
   ];
 
   const mockUsers: MockUser[] = [
@@ -111,7 +111,7 @@ const MessageManagementPage: React.FC = () => {
                       : 'bg-white text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  프로젝트
+                  연구 프로젝트
                 </button>
                 <button
                   type="button"
@@ -138,20 +138,20 @@ const MessageManagementPage: React.FC = () => {
               {sendMode === 'project' && (
                 <div className="grid gap-3 md:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">프로젝트 선택</label>
+                    <label className="block text-sm font-medium text-gray-700">연구 프로젝트 선택</label>
                     <select
                       value={selectedProject}
                       onChange={(e) => setSelectedProject(e.target.value)}
                       className="mt-1 w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="">프로젝트 선택</option>
+                      <option value="">연구 프로젝트 선택</option>
                       {mockProjects.map((p) => (
                         <option key={p.id} value={p.id}>{p.name}</option>
                       ))}
                     </select>
                   </div>
                   <div className="text-sm text-gray-500 self-end">
-                    프로젝트 전체 정보를 불러와 선택하는 기능은 추후 구현됩니다.
+                    연구 프로젝트 전체 정보를 불러와 선택하는 기능은 추후 구현됩니다.
                   </div>
                 </div>
               )}

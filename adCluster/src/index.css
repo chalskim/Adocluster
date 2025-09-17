@@ -111,12 +111,18 @@ button:focus-visible {
     height: 100vh;
 }
 .left-panel {
-    width: 320px;
     background: white;
     border-right: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
     transition: width 0.3s ease;
+}
+
+/* 데스크톱에서만 고정 너비 적용 (에디터 페이지용) */
+@media (min-width: 1024px) {
+    .editor-body .left-panel {
+        width: 320px;
+    }
 }
 
 .left-tabs {
@@ -398,11 +404,17 @@ button:focus-visible {
 
 /* 우측 패널 */
 .right-panel {
-    width: 320px;
     background: white;
     border-left: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
+}
+
+/* 데스크톱에서만 고정 너비 적용 (에디터 페이지용) */
+@media (min-width: 1024px) {
+    .editor-body .right-panel {
+        width: 320px;
+    }
 }
 
 .right-tabs {
@@ -1362,66 +1374,4 @@ button:focus-visible {
 .data-management-page .info-panel .info-label {
     font-weight: 500;
     color: #4b5563;
-}
-
-/* References Management Page Styles */
-.references-management-page {
-    width: 100%;
-    height: calc(100vh - 64px);
-}
-
-.references-management-page .section-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 12px;
-}
-
-.references-management-page input[type="text"],
-.references-management-page select {
-    padding: 8px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 14px;
-    transition: border-color 0.2s;
-}
-
-.references-management-page input[type="text"]:focus,
-.references-management-page select:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.references-management-page .ref-card {
-    transition: all 0.2s;
-}
-
-.references-management-page .ref-card:hover {
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.references-management-page .ref-author {
-    font-weight: 600;
-    color: #1f2937;
-}
-
-.references-management-page .ref-title {
-    color: #374151;
-}
-
-/* Button Styles */
-.references-management-page button {
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    border: none;
-}
-
-.references-management-page button:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
 }

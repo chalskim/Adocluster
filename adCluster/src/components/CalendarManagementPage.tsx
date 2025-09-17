@@ -66,7 +66,7 @@ const CalendarManagementPage: React.FC = () => {
     setSelectedDate(date);
   }, []);
 
-  // 날짜 더블클릭 핸들러 (새 일정 추가)
+  // 날짜 더블클릭 핸들러 (새 연구 일정 추가)
   const handleDateDoubleClick = useCallback((date: Date) => {
     openModal(undefined, date);
   }, [openModal]);
@@ -182,7 +182,7 @@ const CalendarManagementPage: React.FC = () => {
       <div className="bg-white shadow-sm border-b border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">일정 관리</h1>
+            <h1 className="text-2xl font-bold text-gray-800">연구 일정 관리</h1>
             <p className="text-gray-600 mt-1">{formatCurrentDate()}</p>
           </div>
           <button
@@ -190,7 +190,7 @@ const CalendarManagementPage: React.FC = () => {
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
           >
             <i className="fas fa-plus"></i>
-            새 일정 추가
+            새 연구 일정 추가
           </button>
         </div>
 
@@ -202,7 +202,7 @@ const CalendarManagementPage: React.FC = () => {
                 <i className="fas fa-calendar text-white"></i>
               </div>
               <div>
-                <p className="text-sm text-gray-600">전체 일정</p>
+                <p className="text-sm text-gray-600">전체 연구 일정</p>
                 <p className="text-xl font-semibold text-gray-800">{statistics.total}</p>
               </div>
             </div>
@@ -213,7 +213,7 @@ const CalendarManagementPage: React.FC = () => {
                 <i className="fas fa-clock text-white"></i>
               </div>
               <div>
-                <p className="text-sm text-gray-600">오늘 일정</p>
+                <p className="text-sm text-gray-600">오늘 연구 일정</p>
                 <p className="text-xl font-semibold text-gray-800">{statistics.today}</p>
               </div>
             </div>
@@ -224,7 +224,7 @@ const CalendarManagementPage: React.FC = () => {
                 <i className="fas fa-arrow-right text-white"></i>
               </div>
               <div>
-                <p className="text-sm text-gray-600">예정된 일정</p>
+                <p className="text-sm text-gray-600">예정된 연구 일정</p>
                 <p className="text-xl font-semibold text-gray-800">{statistics.upcoming}</p>
               </div>
             </div>
@@ -279,7 +279,7 @@ const CalendarManagementPage: React.FC = () => {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="일정 검색..."
+                placeholder="연구 일정 검색..."
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
               />
               <i className="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
@@ -326,7 +326,7 @@ const CalendarManagementPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 선택한 날짜의 일정 목록 */}
+        {/* 선택한 날짜의 연구 일정 목록 */}
         <div className="w-96">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full">
             <div className="p-4 border-b border-gray-200">
@@ -337,7 +337,7 @@ const CalendarManagementPage: React.FC = () => {
                       month: 'long',
                       day: 'numeric',
                       weekday: 'short'
-                    })} 일정
+                    })} 연구 일정
                   </>
                 ) : (
                   '날짜를 선택하세요'
@@ -348,7 +348,7 @@ const CalendarManagementPage: React.FC = () => {
                   onClick={() => handleDateDoubleClick(selectedDate)}
                   className="mt-2 w-full px-3 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors"
                 >
-                  새 일정 추가
+                  새 연구 일정 추가
                 </button>
               )}
             </div>
@@ -366,10 +366,10 @@ const CalendarManagementPage: React.FC = () => {
                       matches = matches && searchMatch;
                     }
                     if (filterCategory !== 'all') {
-                      matches = matches && Boolean(event.category === filterCategory);
+                      matches = matches && (event.category === filterCategory);
                     }
                     if (filterPriority !== 'all') {
-                      matches = matches && Boolean(event.priority === filterPriority);
+                      matches = matches && (event.priority === filterPriority);
                     }
                     return matches;
                   });
@@ -434,7 +434,7 @@ const CalendarManagementPage: React.FC = () => {
                   ) : (
                     <div className="text-center text-gray-500 py-8">
                       <i className="fas fa-calendar-times text-3xl mb-3"></i>
-                      <p>이 날짜에는 일정이 없습니다.</p>
+                      <p>이 날짜에는 연구 일정이 없습니다.</p>
                     </div>
                   );
                 })()
@@ -442,7 +442,7 @@ const CalendarManagementPage: React.FC = () => {
                 <div className="text-center text-gray-500 py-8">
                   <i className="fas fa-calendar-alt text-3xl mb-3"></i>
                   <p>달력에서 날짜를 클릭하여</p>
-                  <p>해당 날짜의 일정을 확인하세요.</p>
+                  <p>해당 날짜의 연구 일정을 확인하세요.</p>
                 </div>
               )}
             </div>

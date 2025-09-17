@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
-// 일정 이벤트 타입 정의
+// 연구 일정 이벤트 타입 정의
 export interface CalendarEvent {
   id: string;
   title: string;

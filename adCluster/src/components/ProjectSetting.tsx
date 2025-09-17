@@ -247,28 +247,28 @@ const ProjectSetting: React.FC = () => {
     <div className="project-setting bg-gray-100 p-5 min-h-screen">
       <div className="modal-content bg-white rounded-lg w-full max-w-6xl mx-auto">
         <div className="modal-header p-5 border-b border-gray-200 flex justify-between items-center">
-          <div className="modal-title text-xl font-semibold text-gray-800">새 프로젝트 생성</div>
+          <div className="modal-title text-xl font-semibold text-gray-800">새 연구 프로젝트 생성</div>
         </div>
         <div className="modal-body p-6">
           <form id="projectForm" onSubmit={handleSubmit}>
-            {/* 프로젝트 기본 정보 */}
+            {/* 연구 프로젝트 기본 정보 */}
             <div className="section mb-8">
               <div className="section-header flex items-center gap-3 mb-5 pb-3 border-b-2 border-blue-500">
                 <div className="section-icon w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm">
                   <i className="fas fa-info-circle"></i>
                 </div>
-                <div className="section-title text-lg font-semibold text-gray-800">프로젝트 기본 정보</div>
+                <div className="section-title text-lg font-semibold text-gray-800">연구 프로젝트 기본 정보</div>
               </div>
               
               <div className="form-group mb-5">
                 <label className="form-label block mb-2 font-semibold text-gray-800">
-                  프로젝트 제목 <span className="text-red-500">*</span>
+                  연구 프로젝트 제목 <span className="text-red-500">*</span>
                 </label>
                 <input 
                   type="text" 
                   className="form-control w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
                   name="projectName" 
-                  placeholder="프로젝트 제목을 입력하세요" 
+                  placeholder="연구 프로젝트 제목을 입력하세요" 
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
                   required
@@ -277,11 +277,11 @@ const ProjectSetting: React.FC = () => {
               </div>
               
               <div className="form-group mb-5">
-                <label className="form-label block mb-2 font-semibold text-gray-800">프로젝트 설명</label>
+                <label className="form-label block mb-2 font-semibold text-gray-800">연구 프로젝트 설명</label>
                 <textarea 
                   className="form-control w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition-colors min-h-[100px] resize-y"
                   name="projectDescription" 
-                  placeholder="프로젝트의 목적과 범위를 간단히 설명해주세요"
+                  placeholder="연구 프로젝트의 목적과 범위를 간단히 설명해주세요"
                   value={projectDescription}
                   onChange={(e) => setProjectDescription(e.target.value)}
                   disabled={loading}
@@ -486,7 +486,7 @@ const ProjectSetting: React.FC = () => {
                 <div className="section-icon w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm">
                   <i className="fas fa-cog"></i>
                 </div>
-                <div className="section-title text-lg font-semibold text-gray-800">프로젝트 설정</div>
+                <div className="section-title text-lg font-semibold text-gray-800">연구 프로젝트 설정</div>
                 <div className="ml-auto">
                   <i className={`fas ${isProjectSettingsCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'}`}></i>
                 </div>

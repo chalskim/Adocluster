@@ -15,3 +15,32 @@
 .App-header p {
   font-size: 1.2em;
 }
+
+/* 사이드바 반응형 스타일 */
+@media (max-width: 1023px) {
+  .sidebar {
+    width: 4rem !important; /* 64px = 16 * 4 */
+  }
+  
+  .sidebar .logo h1 {
+    display: none !important;
+  }
+  
+  .sidebar .menu-item span {
+    display: none !important;
+  }
+  
+  .sidebar .menu-item {
+    justify-content: center !important;
+  }
+  
+  .sidebar .menu-item i {
+    margin-right: 0 !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .sidebar {
+    width: 16rem !important; /* 256px = 64 * 4 */
+  }
+}

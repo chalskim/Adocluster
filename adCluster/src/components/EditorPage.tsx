@@ -172,7 +172,7 @@ const EditorPage: React.FC = () => {
     } catch (error) {
       console.error('Error fetching project data:', error);
       // Show user-friendly error message
-      alert('프로젝트 데이터를 가져오는 중 오류가 발생했습니다. 콘솔에서 자세한 정보를 확인하세요.');
+      alert('연구 프로젝트 데이터를 가져오는 중 오류가 발생했습니다. 콘솔에서 자세한 정보를 확인하세요.');
     }
   };
 

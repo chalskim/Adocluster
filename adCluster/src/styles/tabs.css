@@ -1,0 +1,283 @@
+/* 연구 프로젝트 하단 탭 네비게이션 스타일 */
+.bottom-tabs-container {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 16px;
+  padding: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.bottom-tabs-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4);
+  opacity: 0.6;
+}
+
+.bottom-tab {
+  position: relative;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  min-height: 44px;
+  overflow: hidden;
+}
+
+.bottom-tab::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  border-radius: 2px 2px 0 0;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(-50%);
+}
+
+.bottom-tab:hover {
+  background: rgba(59, 130, 246, 0.08);
+  color: #3b82f6;
+  transform: translateY(-1px);
+}
+
+.bottom-tab:hover::before {
+  width: 30%;
+  opacity: 0.5;
+}
+
+.bottom-tab.active {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  transform: translateY(-2px);
+}
+
+.bottom-tab.active::before {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.8);
+  opacity: 1;
+}
+
+.bottom-tab .tab-icon {
+  font-size: 16px;
+  transition: transform 0.3s ease;
+}
+
+.bottom-tab:hover .tab-icon {
+  transform: scale(1.1);
+}
+
+.bottom-tab.active .tab-icon {
+  transform: scale(1.15);
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.5));
+}
+
+.bottom-tab .notification-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+/* 탭 콘텐츠 영역 */
+.tab-content {
+  background: white;
+  border-radius: 12px;
+  margin-top: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  min-height: 400px;
+  position: relative;
+  overflow: hidden;
+}
+
+.tab-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+}
+
+/* 리뷰/피드백 탭 전용 스타일 */
+.review-summary {
+  position: relative;
+  overflow: hidden;
+}
+
+.review-summary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+  border-radius: 8px;
+}
+
+.stat-card {
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.review-card, .feedback-card {
+  transition: all 0.2s ease;
+  border-left: 4px solid transparent;
+}
+
+.review-card:hover {
+  border-left-color: #3b82f6;
+  transform: translateX(4px);
+}
+
+.feedback-card:hover {
+  border-left-color: #8b5cf6;
+  transform: translateX(4px);
+}
+
+.star {
+  transition: transform 0.1s ease;
+}
+
+.star:hover {
+  transform: scale(1.2);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .bottom-tabs-container {
+    padding: 6px;
+    border-radius: 12px;
+  }
+  
+  .bottom-tab {
+    padding: 10px 12px;
+    font-size: 13px;
+    min-height: 40px;
+  }
+  
+  .bottom-tab .tab-icon {
+    font-size: 14px;
+  }
+  
+  .notification-badge {
+    width: 16px;
+    height: 16px;
+    font-size: 9px;
+    top: 4px;
+    right: 4px;
+  }
+  
+  .tab-content {
+    margin-top: 12px;
+    border-radius: 8px;
+  }
+  
+  .review-summary .grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .stat-card {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .bottom-tab {
+    padding: 8px 10px;
+    font-size: 12px;
+    gap: 6px;
+  }
+  
+  .bottom-tab .tab-icon {
+    font-size: 13px;
+  }
+  
+  .review-card, .feedback-card {
+    padding: 16px;
+  }
+  
+  .feedback-form {
+    padding: 16px;
+  }
+}
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+  .bottom-tabs-container {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  }
+  
+  .bottom-tab {
+    color: #94a3b8;
+  }
+  
+  .bottom-tab:hover {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+  }
+  
+  .tab-content {
+    background: #1e293b;
+    color: #e2e8f0;
+  }
+  
+  .review-card, .feedback-card {
+    background: #334155;
+    border-color: #475569;
+    color: #e2e8f0;
+  }
+  
+  .stat-card {
+    background: #334155;
+    color: #e2e8f0;
+  }
+}

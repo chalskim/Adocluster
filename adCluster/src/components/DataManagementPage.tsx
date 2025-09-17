@@ -149,7 +149,7 @@ const DataManagementPage: React.FC = () => {
           {/* Action Form */}
           <form onSubmit={handleSubmit} className="mb-4">
             <div className="mb-3">
-              <label className="block text-sm font-medium mb-1">작업 선택</label>
+              <label className="block text-sm font-medium mb-1">연구 활동 선택</label>
               <div className="flex gap-2 mb-2">
                 <button
                   type="button"

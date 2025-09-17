@@ -18,7 +18,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ details, onAddReference, on
         <div className="right-tabs">
           <button className={`right-tab ${activeTab === 'info' ? 'active' : ''}`} onClick={() => setActiveTab('info')}>
             <i className="fas fa-info-circle"></i>
-            <span>프로젝트</span>
+            <span>연구 프로젝트</span>
           </button>
           <button className={`right-tab ${activeTab === 'references' ? 'active' : ''}`} onClick={() => setActiveTab('references')}>
             <i className="fas fa-book"></i>
@@ -35,7 +35,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ details, onAddReference, on
         </div>
         <div className="right-content">
           <div className="placeholder-message">
-            <p>프로젝트를 선택해주세요.</p>
+            <p>연구 프로젝트를 선택해주세요.</p>
           </div>
         </div>
       </div>
@@ -65,7 +65,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ details, onAddReference, on
       <div className="right-tabs">
         <button className={`right-tab ${activeTab === 'info' ? 'active' : ''}`} onClick={() => setActiveTab('info')}>
           <i className="fas fa-info-circle"></i>
-          <span>프로젝트</span>
+          <span>연구 프로젝트</span>
         </button>
         <button className={`right-tab ${activeTab === 'references' ? 'active' : ''}`} onClick={() => setActiveTab('references')}>
           <i className="fas fa-book"></i>
@@ -84,7 +84,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ details, onAddReference, on
       <div className="right-content">
         {activeTab === 'info' && (
           <div id="info-content" className="right-tab-content">
-            <div className="section-title">프로젝트 정보</div>
+            <div className="section-title">연구 프로젝트 정보</div>
             <div className="info-card">
               <div className="info-label">제목</div>
               <div className="info-value">{details.title}</div>
@@ -105,7 +105,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ details, onAddReference, on
               <div className="info-value">{details.author}</div>
             </div>
             <div className="info-card">
-              <div className="info-label">프로젝트 일정</div>
+              <div className="info-label">연구 프로젝트 일정</div>
               <div className="info-value">{details.start_date} ~ {details.end_date} </div>
             </div>
           </div>

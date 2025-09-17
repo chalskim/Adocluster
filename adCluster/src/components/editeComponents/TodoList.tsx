@@ -6,6 +6,9 @@ interface TodoItemData {
   text: string;
   time: string;
   completed: boolean;
+  priority: 'high' | 'medium' | 'low';
+  category: string;
+  progress: number; // 0-100
 }
 
 const API_BASE_URL = 'http://localhost:8000/api';
@@ -13,8 +16,12 @@ const API_BASE_URL = 'http://localhost:8000/api';
 const TodoList: React.FC = () => {
   const [tasks, setTasks] = useState<TodoItemData[]>([]);
   const [newTaskText, setNewTaskText] = useState('');
+  const [newTaskPriority, setNewTaskPriority] = useState<'high' | 'medium' | 'low'>('medium');
+  const [newTaskCategory, setNewTaskCategory] = useState('일반');
   const [loading, setLoading] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [filterPriority, setFilterPriority] = useState<'all' | 'high' | 'medium' | 'low'>('all');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
 
   // 인증된 요청을 위한 헤더 생성
   const getAuthHeaders = () => {
@@ -36,7 +43,7 @@ const TodoList: React.FC = () => {
     return null;
   };
 
-  // 서버에서 할일 목록 불러오기
+  // 서버에서 연구 활동 목록 불러오기
   useEffect(() => {
     // Get current user ID
     const userId = getCurrentUserId();
@@ -57,11 +64,14 @@ const TodoList: React.FC = () => {
           id: todo.id,
           text: todo.text,
           time: new Date(todo.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: true }),
-          completed: todo.completed
+          completed: todo.completed,
+          priority: todo.priority || 'medium',
+          category: todo.category || '일반',
+          progress: todo.progress || 0
         })));
       }
     } catch (error) {
-      console.error('할일 목록을 불러오는 중 오류 발생:', error);
+      console.error('연구 활동 목록을 불러오는 중 오류 발생:', error);
     } finally {
       setLoading(false);
     }
@@ -77,7 +87,10 @@ const TodoList: React.FC = () => {
         headers: getAuthHeaders(),
         body: JSON.stringify({
           text: newTaskText.trim(),
-          completed: false
+          completed: false,
+          priority: newTaskPriority,
+          category: newTaskCategory,
+          progress: 0
         }),
       });
 
@@ -87,12 +100,17 @@ const TodoList: React.FC = () => {
           id: newTodo.id,
           text: newTodo.text,
           time: new Date(newTodo.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: true }),
-          completed: newTodo.completed
+          completed: newTodo.completed,
+          priority: newTodo.priority || newTaskPriority,
+          category: newTodo.category || newTaskCategory,
+          progress: newTodo.progress || 0
         }]);
         setNewTaskText('');
+        setNewTaskPriority('medium');
+        setNewTaskCategory('일반');
       }
     } catch (error) {
-      console.error('할일 추가 중 오류 발생:', error);
+      console.error('연구 활동 추가 중 오류 발생:', error);
     }
   };
 
@@ -114,7 +132,7 @@ const TodoList: React.FC = () => {
       const remainingTasks = tasks.filter(task => !task.completed);
       setTasks(remainingTasks);
     } catch (error) {
-      console.error('완료된 할일 삭제 중 오류 발생:', error);
+      console.error('완료된 연구 활동 삭제 중 오류 발생:', error);
     }
   };
   
@@ -128,7 +146,10 @@ const TodoList: React.FC = () => {
         headers: getAuthHeaders(),
         body: JSON.stringify({
           text: task.text,
-          completed: !task.completed
+          completed: !task.completed,
+          priority: task.priority,
+          category: task.category,
+          progress: task.progress
         }),
       });
 
@@ -138,17 +159,37 @@ const TodoList: React.FC = () => {
         ));
       }
     } catch (error) {
-      console.error('할일 상태 변경 중 오류 발생:', error);
+      console.error('연구 활동 상태 변경 중 오류 발생:', error);
     }
   };
 
-  const incompleteTasks = tasks.filter(task => !task.completed).length;
+  // 필터링된 작업 목록
+  const filteredTasks = tasks.filter(task => {
+    const priorityMatch = filterPriority === 'all' || task.priority === filterPriority;
+    const categoryMatch = filterCategory === 'all' || task.category === filterCategory;
+    return priorityMatch && categoryMatch;
+  });
+
+  // 우선순위별 색상 반환
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return '#ef4444';
+      case 'medium': return '#f59e0b';
+      case 'low': return '#10b981';
+      default: return '#6b7280';
+    }
+  };
+
+  // 카테고리 목록 추출
+  const categories = Array.from(new Set(tasks.map(task => task.category)));
+
+  const incompleteTasks = filteredTasks.filter(task => !task.completed).length;
 
   return (
     <div className="todo-panel" style={{ padding: '16px', height: '100%', display: 'flex', flexDirection: 'column' }}>
       <header className="todo-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>
-          할일 목록 ({loading ? '로딩중...' : `${incompleteTasks}개 남음`})
+          연구 활동 목록 ({loading ? '로딩중...' : `${incompleteTasks}개 남음`})
         </h3>
         <button 
           className="btn-icon" 
@@ -168,13 +209,39 @@ const TodoList: React.FC = () => {
         </button>
       </header>
 
+      {/* 필터 섹션 */}
+      <div style={{ marginBottom: '16px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <select 
+          value={filterPriority} 
+          onChange={(e) => setFilterPriority(e.target.value as 'all' | 'high' | 'medium' | 'low')}
+          style={{ padding: '4px 8px', fontSize: '12px', borderRadius: '4px', border: '1px solid #d1d5db' }}
+        >
+          <option value="all">모든 우선순위</option>
+          <option value="high">높음</option>
+          <option value="medium">보통</option>
+          <option value="low">낮음</option>
+        </select>
+        <select 
+          value={filterCategory} 
+          onChange={(e) => setFilterCategory(e.target.value)}
+          style={{ padding: '4px 8px', fontSize: '12px', borderRadius: '4px', border: '1px solid #d1d5db' }}
+        >
+          <option value="all">모든 카테고리</option>
+          {categories.map(category => (
+            <option key={category} value={category}>{category}</option>
+          ))}
+        </select>
+      </div>
+
       <section className="todo-list" style={{ flex: 1, overflowY: 'auto' }}>
         {loading ? (
-          <p style={{ textAlign: 'center', color: '#64748b', marginTop: '20px' }}>할일 목록을 불러오는 중...</p>
-        ) : tasks.length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#64748b', marginTop: '20px' }}>할일이 없습니다</p>
+          <p style={{ textAlign: 'center', color: '#64748b', marginTop: '20px' }}>연구 활동 목록을 불러오는 중...</p>
+        ) : filteredTasks.length === 0 ? (
+          <p style={{ textAlign: 'center', color: '#64748b', marginTop: '20px' }}>
+            {tasks.length === 0 ? '연구 활동이 없습니다' : '필터 조건에 맞는 연구 활동이 없습니다'}
+          </p>
         ) : (
-          tasks.map(task => (
+          filteredTasks.map(task => (
             <div key={task.id} style={{ 
               display: 'flex', 
               alignItems: 'flex-start', 
@@ -190,18 +257,60 @@ const TodoList: React.FC = () => {
                 style={{ marginRight: '8px', marginTop: '2px' }}
               />
               <div style={{ flex: 1 }}>
-                <p style={{ 
-                  margin: 0, 
-                  fontSize: '14px',
-                  textDecoration: task.completed ? 'line-through' : 'none'
-                }}>
-                  {task.text}
-                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <p style={{ 
+                    margin: 0, 
+                    fontSize: '14px',
+                    textDecoration: task.completed ? 'line-through' : 'none',
+                    flex: 1
+                  }}>
+                    {task.text}
+                  </p>
+                  <span style={{
+                    fontSize: '10px',
+                    padding: '2px 6px',
+                    borderRadius: '12px',
+                    backgroundColor: getPriorityColor(task.priority),
+                    color: 'white',
+                    fontWeight: 'bold'
+                  }}>
+                    {task.priority === 'high' ? '높음' : task.priority === 'medium' ? '보통' : '낮음'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <span style={{
+                    fontSize: '11px',
+                    padding: '1px 4px',
+                    borderRadius: '4px',
+                    backgroundColor: '#f3f4f6',
+                    color: '#374151'
+                  }}>
+                    {task.category}
+                  </span>
+                  <span style={{ fontSize: '12px', color: '#6b7280' }}>
+                    진행률: {task.progress}%
+                  </span>
+                </div>
+                <div style={{ marginBottom: '4px' }}>
+                  <div style={{
+                    width: '100%',
+                    height: '4px',
+                    backgroundColor: '#e5e7eb',
+                    borderRadius: '2px',
+                    overflow: 'hidden'
+                  }}>
+                    <div style={{
+                      width: `${task.progress}%`,
+                      height: '100%',
+                      backgroundColor: getPriorityColor(task.priority),
+                      transition: 'width 0.3s ease'
+                    }} />
+                  </div>
+                </div>
                 <p style={{ 
                   margin: 0, 
                   fontSize: '12px', 
-                  color: '#6b7280',
-                  marginTop: '2px'
+                  color: '#6b7280'
                 }}>
                   {task.time}
                 </p>
@@ -214,7 +323,7 @@ const TodoList: React.FC = () => {
       <form onSubmit={handleAddTask} style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
         <input 
           type="text" 
-          placeholder="새 할 일 추가..."
+          placeholder="새 연구 활동 추가..."
           value={newTaskText}
           onChange={(e) => setNewTaskText(e.target.value)}
           disabled={loading}

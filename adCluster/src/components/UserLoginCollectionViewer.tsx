@@ -88,7 +88,7 @@ const UserLoginCollectionViewer: React.FC = () => {
       const data = await response.json();
       setProjects(data);
     } catch (error) {
-      console.error('프로젝트 목록 조회 실패:', error);
+      console.error('연구 프로젝트 목록 조회 실패:', error);
       setProjects([]); // 오류 시 빈 배열로 설정
     }
   };
@@ -112,7 +112,7 @@ const UserLoginCollectionViewer: React.FC = () => {
       case 'company':
         return '회사 전체 메시지';
       case 'project':
-        return selectedProject ? `${selectedProject.title} 프로젝트` : '프로젝트 선택';
+        return selectedProject ? `${selectedProject.title} 연구 프로젝트` : '연구 프로젝트 선택';
       case 'individual':
         return selectedUsers.length > 0 
           ? selectedUsers.length === 1 
@@ -280,7 +280,7 @@ const UserLoginCollectionViewer: React.FC = () => {
             fontWeight: messageType === 'project' ? 'bold' : 'normal'
           }}
         >
-          프로젝트
+          연구 프로젝트
         </button>
         <button
           onClick={() => setMessageType('individual')}
@@ -299,7 +299,7 @@ const UserLoginCollectionViewer: React.FC = () => {
         </button>
       </div>
 
-      {/* 프로젝트/사용자 선택 영역 */}
+      {/* 연구 프로젝트/사용자 선택 영역 */}
       {messageType === 'project' && (
         <div style={{
           padding: '12px 16px',
@@ -320,7 +320,7 @@ const UserLoginCollectionViewer: React.FC = () => {
               fontSize: '14px'
             }}
           >
-            <option value="">프로젝트를 선택하세요</option>
+            <option value="">연구 프로젝트를 선택하세요</option>
             {projects.map(project => (
               <option key={project.prjid} value={project.prjid}>
                 {project.title}

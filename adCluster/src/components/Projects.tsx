@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchProjects, Project as ApiProject } from '../services/api';
+import '../styles/tabs.css';
 
 interface Project {
   id: string; // Changed from number to string to match API
@@ -44,7 +45,7 @@ interface Comment {
 
 const Projects: React.FC = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'reference' | 'history' | 'review'>('info');
   const [expandedNodes, setExpandedNodes] = useState<Set<number>>(new Set([1, 2, 3]));
   const [comment, setComment] = useState('');
   const [projects, setProjects] = useState<Project[]>([]);
@@ -150,9 +151,9 @@ const Projects: React.FC = () => {
     }
     
     return [
-      { id: 1, title: `${selectedProject.title} 프로젝트 가이드`, url: '#' },
+      { id: 1, title: `${selectedProject.title} 연구 프로젝트 가이드`, url: '#' },
       { id: 2, title: '공통 스타일 가이드', url: '#' },
-      { id: 3, title: '내부 문서: 프로젝트 설정', url: '#' },
+      { id: 3, title: '내부 문서: 연구 프로젝트 설정', url: '#' },
       { id: 4, title: 'UI 컴포넌트 라이브러리', url: '#' }
     ];
   };
@@ -164,8 +165,8 @@ const Projects: React.FC = () => {
     }
     
     return [
-      { id: 1, user: '시스템', date: selectedProject.startDate, action: `"${selectedProject.title}" 프로젝트 생성` },
-      { id: 2, user: '관리자', date: selectedProject.lastUpdate, action: '프로젝트 설정 업데이트' },
+      { id: 1, user: '시스템', date: selectedProject.startDate, action: `"${selectedProject.title}" 연구 프로젝트 생성` },
+      { id: 2, user: '관리자', date: selectedProject.lastUpdate, action: '연구 프로젝트 설정 업데이트' },
       { id: 3, user: '시스템', date: selectedProject.lastUpdate, action: '문서 구조 초기화' },
       { id: 4, user: '관리자', date: selectedProject.lastUpdate, action: '멤버 추가' }
     ];
@@ -259,54 +260,58 @@ const Projects: React.FC = () => {
   };
 
   return (
-    <div className="projects-page bg-gray-100 p-5">
-      {/* 프로젝트 생성 버튼 */}
-      <div className="mb-5 text-right">
+    <div className="projects-page bg-gray-100 px-1 py-2 sm:p-5">
+      {/* 페이지 제목과 프로젝트 생성 버튼 */}
+      <div className="mb-3 sm:mb-5 flex justify-between items-center">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">연구 프로젝트 관리</h1>
         <button 
-          className="create-project-btn px-5 py-3 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors"
+          className="create-project-btn px-3 py-2 sm:px-5 sm:py-3 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors text-sm sm:text-base"
           onClick={() => navigate('/project-setting')}
         >
-          <i className="fas fa-plus mr-2"></i> 프로젝트 생성
+          <i className="fas fa-plus mr-1 sm:mr-2"></i> 
+          <span className="hidden sm:inline">연구 프로젝트 생성</span>
+          <span className="sm:hidden">프로젝트 생성</span>
         </button>
       </div>
 
       {/* 검색창 */}
-      <div className="search-container bg-white p-5 rounded-lg shadow-md mb-5">
+      <div className="search-container bg-white p-2 sm:p-5 rounded-lg shadow-md mb-3 sm:mb-5">
         <div className="search-box flex gap-2">
           <input 
             type="text" 
-            className="search-input flex-1 px-4 py-3 border border-gray-300 rounded-lg"
-            placeholder="프로젝트, 주제, 문서 제목 검색..."
+            className="search-input flex-1 px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base"
+            placeholder="연구 프로젝트, 주제, 문서 제목 검색..."
           />
-          <button className="search-btn px-5 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-            <i className="fas fa-search mr-2"></i> 검색
+          <button className="search-btn px-3 py-2 sm:px-5 sm:py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm sm:text-base">
+            <i className="fas fa-search mr-1 sm:mr-2"></i> 
+            <span className="hidden sm:inline">검색</span>
           </button>
         </div>
       </div>
 
       {/* 메인 콘텐츠 */}
-      <div className="main-content flex gap-5 mb-5">
-        {/* 좌측: 프로젝트 목록 */}
-        <div className="left-panel flex-1 bg-white rounded-lg shadow-md p-5" style={{ height: '760px' }}>
-          <div className="panel-header flex justify-between items-center mb-5">
-            <h2 className="text-xl font-semibold text-gray-800">프로젝트 목록</h2>
-            <a href="#" className="view-all text-blue-500 text-sm hover:text-blue-600">전체 보기</a>
+      <div className="main-content flex flex-col lg:flex-row gap-2 sm:gap-5 mb-3 sm:mb-5">
+        {/* 좌측: 연구 프로젝트 목록 */}
+        <div className="projects-left-panel w-full lg:w-1/2 bg-white rounded-lg shadow-md p-2 sm:p-5 lg:h-[760px] overflow-y-auto">
+          <div className="panel-header flex justify-between items-center mb-3 sm:mb-5">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800">연구 프로젝트 목록</h2>
+            <a href="#" className="view-all text-blue-500 text-xs sm:text-sm hover:text-blue-600">전체 보기</a>
           </div>
           
           {loading ? (
             <div key="loading" className="text-center py-8">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-              <p className="mt-2 text-gray-600">프로젝트를 불러오는 중...</p>
+              <p className="mt-2 text-gray-600">연구 프로젝트를 불러오는 중...</p>
             </div>
           ) : projects.length === 0 ? (
             <div key="no-projects" className="text-center py-8">
               <i className="fas fa-folder-open text-4xl text-gray-300 mb-4"></i>
-              <p className="text-gray-600">생성된 프로젝트가 없습니다</p>
+              <p className="text-gray-600">생성된 연구 프로젝트가 없습니다</p>
               <button 
                 className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                 onClick={() => navigate('/project-setting')}
               >
-                새 프로젝트 만들기
+                새 연구 프로젝트 만들기
               </button>
             </div>
           ) : (
@@ -315,42 +320,45 @@ const Projects: React.FC = () => {
                 {currentProjects.map(project => (
                   <div 
                     key={project.id} 
-                    className={`project-card border border-gray-200 rounded-lg p-2.5 hover:shadow-md transition-shadow flex flex-col ${selectedProject?.id === project.id ? 'ring-2 ring-blue-500' : ''}`}
+                    className={`project-card border border-gray-200 rounded-lg p-2 sm:p-2.5 hover:shadow-md transition-shadow flex flex-col ${selectedProject?.id === project.id ? 'ring-2 ring-blue-500' : ''}`}
                     onClick={() => handleProjectSelect(project)}
                   >
-                    <div className="project-header flex justify-center items-center mb-2">
-                      <div className="project-title text-lg font-semibold text-gray-800">{project.title}</div>
-                      <div className={`status-badge px-2 py-1 rounded-full text-xs font-medium text-white ml-2 ${getStatusClass(project.status)}`}>
+                    <div className="project-header flex justify-between items-start sm:items-center mb-2">
+                      <div className="project-title text-base sm:text-lg font-semibold text-gray-800 flex-1 pr-2">{project.title}</div>
+                      <div className={`status-badge px-2 py-1 rounded-full text-xs font-medium text-white flex-shrink-0 ${getStatusClass(project.status)}`}>
                         {getStatusText(project.status)}
                       </div>
                     </div>
-                    <p className="project-desc text-gray-600 text-sm mb-3 leading-tight truncate">{project.description}</p>
-                    <div className="project-meta flex flex-wrap justify-center gap-3 text-gray-500 text-sm mb-2">
+                    <p className="project-desc text-gray-600 text-xs sm:text-sm mb-2 sm:mb-3 leading-tight line-clamp-2 sm:truncate">{project.description}</p>
+                    <div className="project-meta flex flex-wrap gap-2 sm:gap-3 text-gray-500 text-xs sm:text-sm mb-2">
                       <span className="meta-item flex items-center gap-1">
                         <i className="far fa-calendar text-xs"></i>
-                        <span>{project.startDate}</span>
+                        <span className="hidden sm:inline">{project.startDate}</span>
+                        <span className="sm:hidden">{project.startDate.split('-')[1]}/{project.startDate.split('-')[2]}</span>
                       </span>
                       <span className="meta-item flex items-center gap-1">
                         <i className="far fa-file text-xs"></i>
-                        <span>문서 {project.documents}개</span>
+                        <span className="hidden sm:inline">문서 {project.documents}개</span>
+                        <span className="sm:hidden">{project.documents}</span>
                       </span>
                       <span className="meta-item flex items-center gap-1">
                         <i className="fas fa-users text-xs"></i>
-                        <span>멤버 {project.members}명</span>
+                        <span className="hidden sm:inline">멤버 {project.members}명</span>
+                        <span className="sm:hidden">{project.members}</span>
                       </span>
                     </div>
-                    <div className="last-update text-xs text-gray-500 mb-2">마지막 업데이트: {project.lastUpdate}</div>
-                    <div className="card-footer mt-auto border-t border-gray-100 flex justify-between items-center">
+                    <div className="last-update text-xs text-gray-500 mb-2 hidden sm:block">마지막 업데이트: {project.lastUpdate}</div>
+                    <div className="card-footer mt-auto pt-2 border-t border-gray-100 flex justify-between items-center">
                       <a 
                         href={`${window.location.origin}/editor?hideSidebar=false&projectId=${project.id}`}
-                        className="shortcut-link text-blue-500 text-sm hover:text-blue-700 flex items-center"
+                        className="shortcut-link text-blue-500 text-xs sm:text-sm hover:text-blue-700 flex items-center"
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
                           const id = project.id;
                           if (!id) {
-                            console.error('프로젝트 ID가 없어 에디터를 열 수 없습니다.', project);
-                            alert('프로젝트 ID를 확인할 수 없습니다.');
+                            console.error('연구 프로젝트 ID가 없어 에디터를 열 수 없습니다.', project);
+                            alert('연구 프로젝트 ID를 확인할 수 없습니다.');
                             return;
                           }
                           const url = `${window.location.origin}/editor?hideSidebar=false&projectId=${id}`;
@@ -359,28 +367,29 @@ const Projects: React.FC = () => {
                         }}
                       >
                         <i className="fas fa-external-link-alt mr-1 text-xs"></i>
-                        바로가기
+                        <span className="hidden sm:inline">바로가기</span>
+                        <span className="sm:hidden">열기</span>
                       </a>
                       <div className="actions flex gap-1">
                         <button 
-                          className="edit-btn text-gray-500 hover:text-gray-700"
+                          className="edit-btn text-gray-500 hover:text-gray-700 p-1"
                           onClick={(e) => {
                             e.stopPropagation();
                             // Add edit logic here when needed
                             console.log(`Edit clicked for project ${project.id}`);
                           }}
                         >
-                          <i className="fas fa-edit text-sm"></i>
+                          <i className="fas fa-edit text-xs sm:text-sm"></i>
                         </button>
                         <button 
-                          className="delete-btn text-gray-500 hover:text-red-500"
+                          className="delete-btn text-gray-500 hover:text-red-500 p-1"
                           onClick={(e) => {
                             e.stopPropagation();
                             // Add delete logic here when needed
                             console.log(`Delete clicked for project ${project.id}`);
                           }}
                         >
-                          <i className="fas fa-trash text-sm"></i>
+                          <i className="fas fa-trash text-xs sm:text-sm"></i>
                         </button>
                       </div>
                     </div>
@@ -431,11 +440,11 @@ const Projects: React.FC = () => {
           )}
         </div>
 
-        {/* 우측: 프로젝트 트리 뷰 */}
-        <div className="right-panel flex-1 bg-white rounded-lg shadow-md p-5">
-          <div className="panel-header flex justify-between items-center mb-5">
-            <h2 className="text-xl font-semibold text-gray-800">프로젝트 트리</h2>
-            <a href="#" className="view-all text-blue-500 text-sm hover:text-blue-600">전체 펼치기</a>
+        {/* 우측: 연구 노트 뷰 */}
+        <div className="projects-right-panel w-full lg:w-1/2 bg-white rounded-lg shadow-md p-2 sm:p-5 lg:h-[760px] overflow-y-auto">
+          <div className="panel-header flex justify-between items-center mb-3 sm:mb-5">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800">연구 노트</h2>
+            <a href="/document-management" className="view-all text-blue-500 text-xs sm:text-sm hover:text-blue-600">연구 노트 관리</a>
           </div>
           {selectedProject ? (
             <ul className="tree-view list-none" key="tree-view-container">
@@ -447,7 +456,7 @@ const Projects: React.FC = () => {
             </ul>
           ) : (
             <div className="text-center py-8 text-gray-500" key="tree-placeholder">
-              프로젝트를 선택하세요
+              연구 프로젝트를 선택하세요
             </div>
           )}
         </div>
@@ -455,43 +464,65 @@ const Projects: React.FC = () => {
 
       {/* 하단 탭 컨테이너 */}
       <div className="tab-container bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="tabs flex border-b border-gray-200">
-          <React.Fragment key="tabs-fragment">
-            <div 
+        <div className="bottom-tabs-container flex flex-wrap sm:flex-nowrap">
+            <button 
               key="info"
-              className={`tab px-6 py-4 cursor-pointer font-medium ${activeTab === 'info' ? 'text-blue-500 border-b-2 border-blue-500' : 'bg-gray-50 text-gray-600'}`}
+              className={`bottom-tab flex-1 sm:flex-none ${
+                activeTab === 'info' ? 'active' : ''
+              }`}
               onClick={() => setActiveTab('info')}
             >
-              프로젝트 정보
-            </div>
-            <div 
+              <span className="tab-icon">📊</span>
+              <span className="hidden sm:inline">연구정보</span>
+              <span className="sm:hidden">정보</span>
+            </button>
+            <button 
               key="reference"
-              className={`tab px-6 py-4 cursor-pointer font-medium ${activeTab === 'reference' ? 'text-blue-500 border-b-2 border-blue-500' : 'bg-gray-50 text-gray-600'}`}
+              className={`bottom-tab flex-1 sm:flex-none ${
+                activeTab === 'reference' ? 'active' : ''
+              }`}
               onClick={() => setActiveTab('reference')}
             >
-              참조
-            </div>
-            <div 
+              <span className="tab-icon">📚</span>
+              <span className="hidden sm:inline">출처정보</span>
+              <span className="sm:hidden">출처</span>
+            </button>
+            <button 
               key="history"
-              className={`tab px-6 py-4 cursor-pointer font-medium ${activeTab === 'history' ? 'text-blue-500 border-b-2 border-blue-500' : 'bg-gray-50 text-gray-600'}`}
+              className={`bottom-tab flex-1 sm:flex-none ${
+                activeTab === 'history' ? 'active' : ''
+              }`}
               onClick={() => setActiveTab('history')}
             >
-              이력관리
-            </div>
-          </React.Fragment>
-        </div>
+              <span className="tab-icon">📝</span>
+              <span className="hidden sm:inline">이력</span>
+              <span className="sm:hidden">이력</span>
+            </button>
+            <button 
+              key="review"
+              className={`bottom-tab flex-1 sm:flex-none ${
+                activeTab === 'review' ? 'active' : ''
+              }`}
+              onClick={() => setActiveTab('review')}
+            >
+              <span className="tab-icon">⭐</span>
+              <span className="hidden sm:inline">리뷰/피드백</span>
+              <span className="sm:hidden">리뷰</span>
+              <span className="notification-badge">3</span>
+            </button>
+          </div>
         
-        <div className="tab-content p-5">
+        <div className="tab-content p-2 sm:p-5">
           {activeTab === 'info' && selectedProject && (
-            <div className="project-info-grid grid grid-cols-1 md:grid-cols-2 gap-5" key="info-tab-content">
-              <div key="title" className="info-item mb-4">
-                <div className="info-label font-semibold text-gray-800 mb-2">프로젝트 이름</div>
-                <div className="info-value text-gray-600">{selectedProject.title}</div>
+            <div className="project-info-grid grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5" key="info-tab-content">
+              <div key="title" className="info-item mb-3 sm:mb-4">
+                <div className="info-label font-semibold text-gray-800 mb-2 text-sm sm:text-base">연구 프로젝트 이름</div>
+                <div className="info-value text-gray-600 text-sm sm:text-base">{selectedProject.title}</div>
               </div>
-              <div key="status" className="info-item mb-4">
-                <div className="info-label font-semibold text-gray-800 mb-2">상태</div>
+              <div key="status" className="info-item mb-3 sm:mb-4">
+                <div className="info-label font-semibold text-gray-800 mb-2 text-sm sm:text-base">상태</div>
                 <div className="info-value">
-                  <span className={`status-badge px-3 py-1 rounded-full text-xs font-medium text-white ${getStatusClass(selectedProject.status)}`}>
+                  <span className={`status-badge px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs font-medium text-white ${getStatusClass(selectedProject.status)}`}>
                     {getStatusText(selectedProject.status)}
                   </span>
                 </div>
@@ -501,8 +532,30 @@ const Projects: React.FC = () => {
                 <div className="info-value text-gray-600">{selectedProject.description}</div>
               </div>
               <div className="info-item mb-4">
+                <div className="info-label font-semibold text-gray-800 mb-2">목표</div>
+                <div className="info-value text-gray-600">
+                  <ul className="list-disc list-inside space-y-1 text-left">
+                    <li>연구 데이터 수집 및 분석 시스템 구축</li>
+                    <li>효율적인 프로젝트 관리 도구 개발</li>
+                    <li>팀 협업 워크플로우 최적화</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="info-item mb-4">
+                <div className="info-label font-semibold text-gray-800 mb-2">키워드</div>
+                <div className="info-value">
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    <span className="keyword-tag px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">데이터 분석</span>
+                    <span className="keyword-tag px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">프로젝트 관리</span>
+                    <span className="keyword-tag px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">협업 도구</span>
+                    <span className="keyword-tag px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">워크플로우</span>
+                    <span className="keyword-tag px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">시스템 구축</span>
+                  </div>
+                </div>
+              </div>
+              <div className="info-item mb-4">
                 <div className="info-label font-semibold text-gray-800 mb-2">멤버</div>
-                <div className="members flex gap-2 mt-2">
+                <div className="members flex gap-2 mt-2 justify-center">
                   {[
                     { id: 1, initial: 'M' },
                     { id: 2, initial: 'K' },
@@ -552,36 +605,85 @@ const Projects: React.FC = () => {
                   </li>
                 ))}
               </ul>
-              
-              {/* 댓글 섹션 */}
-              <div className="comments-section mt-8">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">댓글</h3>
-                <div className="comment-form flex gap-2 mb-5">
-                  <input 
-                    type="text" 
-                    className="comment-input flex-1 px-4 py-3 border border-gray-300 rounded-lg"
-                    placeholder="댓글을 입력하세요..."
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                  />
-                  <button 
-                    className="comment-btn px-5 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                    onClick={handleAddComment}
-                  >
-                    등록
-                  </button>
-                </div>
-                <ul className="comment-list list-none">
-                  {comments.map(comment => (
-                    <li key={`comment-${comment.id}`} className="comment-item py-4 border-b border-gray-100">
-                      <div className="comment-header flex justify-between mb-2">
-                        <div className="comment-author font-semibold text-gray-800">{comment.author}</div>
-                        <div className="comment-date text-sm text-gray-500">{comment.date}</div>
+            </div>
+          )}
+          
+          {activeTab === 'review' && (
+            <div className="review-feedback-section" key="review-tab-content">
+
+
+
+
+              {/* 피드백 섹션 */}
+              <div className="feedback-section">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                  <span className="mr-2">💬</span>
+                  리뷰/피드백
+                </h3>
+                
+
+
+                {/* 기존 피드백 목록 */}
+                <div className="feedback-list space-y-4">
+                  {[
+                    {
+                      id: 1,
+                      author: "최연구원",
+                      type: "improvement",
+                      date: "2024-01-14",
+                      content: "그래프의 색상 대비를 높이면 가독성이 더 좋아질 것 같습니다. 특히 색맹인 분들도 구분하기 쉽도록 패턴을 추가하는 것은 어떨까요?",
+                      status: "pending"
+                    },
+                    {
+                      id: 2,
+                      author: "정교수",
+                      type: "question",
+                      date: "2024-01-13",
+                      content: "실험 설계에서 통제 변수 설정 기준이 궁금합니다. 추가 설명을 부탁드립니다.",
+                      status: "answered"
+                    },
+                    {
+                      id: 3,
+                      author: "한박사",
+                      type: "compliment",
+                      date: "2024-01-11",
+                      content: "통계 분석 방법이 매우 적절하고 결과 해석도 명확합니다. 훌륭한 연구입니다!",
+                      status: "acknowledged"
+                    }
+                  ].map(feedback => (
+                    <div key={`feedback-${feedback.id}`} className="feedback-card bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                      <div className="feedback-header flex justify-between items-start mb-3">
+                        <div className="feedback-info">
+                          <div className="feedback-author font-semibold text-gray-800">{feedback.author}</div>
+                          <div className="feedback-meta flex items-center gap-3 text-sm text-gray-500 mt-1">
+                            <span className="feedback-date">{feedback.date}</span>
+                            <span className={`feedback-type px-2 py-1 rounded-full text-xs ${
+                              feedback.type === 'improvement' ? 'bg-green-100 text-green-800' :
+                              feedback.type === 'question' ? 'bg-yellow-100 text-yellow-800' :
+                              feedback.type === 'compliment' ? 'bg-purple-100 text-purple-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {feedback.type === 'improvement' ? '개선 제안' :
+                               feedback.type === 'question' ? '질문' :
+                               feedback.type === 'compliment' ? '칭찬' : '우려사항'}
+                            </span>
+                          </div>
+                        </div>
+                        <span className={`status-badge px-2 py-1 rounded-full text-xs ${
+                          feedback.status === 'pending' ? 'bg-orange-100 text-orange-800' :
+                          feedback.status === 'answered' ? 'bg-blue-100 text-blue-800' :
+                          'bg-green-100 text-green-800'
+                        }`}>
+                          {feedback.status === 'pending' ? '대기중' :
+                           feedback.status === 'answered' ? '답변완료' : '확인완료'}
+                        </span>
                       </div>
-                      <div className="comment-content text-gray-700 leading-relaxed">{comment.content}</div>
-                    </li>
+                      <div className="feedback-content text-gray-700 leading-relaxed">
+                        {feedback.content}
+                      </div>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             </div>
           )}

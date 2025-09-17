@@ -25,6 +25,7 @@ const AppLayout: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -119,6 +120,21 @@ const AppLayout: React.FC = () => {
     loadUserData();
   }, [navigate]);
 
+  // 화면 크기 변화 감지를 위한 useEffect 추가
+  useEffect(() => {
+    const handleResize = () => {
+      setIsCollapsed(window.innerWidth < 1024);
+    };
+
+    // 초기 화면 크기 확인
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   const handleLogout = () => {
     // Disconnect WebSocket connection
     disconnect();
@@ -154,7 +170,7 @@ const AppLayout: React.FC = () => {
   return (
     <div className="flex min-h-screen bg-gray-100">
       <Sidebar />
-      <div className="flex-1 ml-64 flex flex-col">
+      <div className={`flex-1 ${isCollapsed ? 'ml-16' : 'ml-64'} flex flex-col transition-all duration-300`}>
         {/* Header with user info and logout button */}
         <header className="bg-white shadow-sm p-4 flex justify-between items-center">
           <div className="flex items-center">

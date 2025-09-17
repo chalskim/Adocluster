@@ -55,14 +55,14 @@ const GeneralSettingsPage: React.FC = () => {
   const [notifications, setNotifications] = useState<NotificationSetting[]>([
     { id: 'email', label: '이메일 알림', enabled: true },
     { id: 'push', label: '푸시 알림', enabled: true },
-    { id: 'project', label: '프로젝트 업데이트', enabled: true },
+    { id: 'project', label: '연구 프로젝트 업데이트', enabled: true },
     { id: 'comments', label: '댓글 및 멘션', enabled: false }
   ]);
 
   // Share settings
   const [selectedShareOption, setSelectedShareOption] = useState<string>('팀원만');
   const shareOptions = [
-    { title: '팀원만', description: '프로젝트 팀원만 접근 가능' },
+    { title: '팀원만', description: '연구 프로젝트 팀원만 접근 가능' },
     { title: '회사 전체', description: '회사 내 모든 직원 접근 가능' },
     { title: '비공개', description: '나만 접근 가능' }
   ];
@@ -73,7 +73,7 @@ const GeneralSettingsPage: React.FC = () => {
       id: 1,
       icon: 'fas fa-edit',
       iconColor: '#27ae60',
-      text: '"웹사이트 리디자인" 프로젝트 문서 편집',
+      text: '"웹사이트 리디자인" 연구 프로젝트 문서 편집',
       time: '2시간 전'
     },
     {
@@ -87,7 +87,7 @@ const GeneralSettingsPage: React.FC = () => {
       id: 3,
       icon: 'fas fa-share-alt',
       iconColor: '#f39c12',
-      text: '"모바일 앱 개발" 프로젝트 공유',
+      text: '"모바일 앱 개발" 연구 프로젝트 공유',
       time: '1일 전'
     }
   ];
@@ -379,7 +379,7 @@ const GeneralSettingsPage: React.FC = () => {
           </div>
           
           <div>
-            <label className="block text-gray-700 font-medium mb-2">최근 작업 내역</label>
+            <label className="block text-gray-700 font-medium mb-2">최근 연구 활동 내역</label>
             <ul className="space-y-3 mt-2">
               {activityItems.map((item) => (
                 <li key={item.id} className="flex gap-3 pb-3 border-b border-gray-100 last:border-b-0 last:pb-0">

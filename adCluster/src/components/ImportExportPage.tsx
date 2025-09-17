@@ -18,16 +18,16 @@ const ImportExportPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'document' | 'citation' | 'template' | 'data'>('document');
 
   // Document tab data
-  const [selectedProject, setSelectedProject] = useState<string>('웹사이트 리디자인 프로젝트');
+  const [selectedProject, setSelectedProject] = useState<string>('웹사이트 리디자인 연구 프로젝트');
   const projects = [
-    '웹사이트 리디자인 프로젝트',
-    '모바일 앱 개발 프로젝트',
-    '데이터 분석 대시보드 프로젝트',
+    '웹사이트 리디자인 연구 프로젝트',
+    '모바일 앱 개발 연구 프로젝트',
+    '데이터 분석 대시보드 연구 프로젝트',
     '마케팅 전략 문서'
   ];
 
   const [documentItems, setDocumentItems] = useState<DocumentItem[]>([
-    { id: 1, name: '프로젝트 계획서', type: 'document', checked: true },
+    { id: 1, name: '연구 프로젝트 계획서', type: 'document', checked: true },
     { id: 2, name: '요구사항 명세서', type: 'document', checked: true },
     { id: 3, name: '디자인 가이드', type: 'document', checked: false },
     { id: 4, name: '진행 보고서.pdf', type: 'pdf', checked: true },
@@ -65,7 +65,7 @@ const ImportExportPage: React.FC = () => {
 
   // Template tab data
   const [templateItems, setTemplateItems] = useState<DocumentItem[]>([
-    { id: 1, name: '프로젝트 계획서 템플릿', type: 'document', checked: true },
+    { id: 1, name: '연구 프로젝트 계획서 템플릿', type: 'document', checked: true },
     { id: 2, name: '회의록 템플릿', type: 'document', checked: false },
     { id: 3, name: '보고서 템플릿', type: 'document', checked: true },
     { id: 4, name: '요구사항 명세서 템플릿', type: 'document', checked: false }
@@ -244,7 +244,7 @@ const ImportExportPage: React.FC = () => {
             <h2 className="text-xl font-semibold text-gray-800 mb-6 pb-4 border-b-2 border-blue-500"> 문서 </h2>
             
             <div className="mb-6">
-              <label className="block text-gray-700 font-medium mb-2">프로젝트 선택</label>
+              <label className="block text-gray-700 font-medium mb-2">연구 프로젝트 선택</label>
               <select 
                 className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
                 value={selectedProject}

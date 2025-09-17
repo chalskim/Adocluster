@@ -142,7 +142,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({ onNodeSelect, visibleTabs = {} })
           {tabVisibility.project && (
             <button className={`tab-button ${activeTab === 'project' ? 'active' : ''}`} onClick={() => setActiveTab('project')}>
               <i className="fas fa-folder"></i>
-              <span>프로젝트</span>
+              <span>연구 프로젝트</span>
             </button>
           )}
           {tabVisibility.library && (

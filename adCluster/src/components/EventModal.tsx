@@ -215,7 +215,7 @@ const EventModal: React.FC<EventModalProps> = ({
         {/* 모달 헤더 */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800">
-            {event ? '일정 수정' : '새 일정 추가'}
+            {event ? '연구 일정 수정' : '새 연구 일정 추가'}
           </h2>
           <button
             onClick={onClose}
@@ -239,7 +239,7 @@ const EventModal: React.FC<EventModalProps> = ({
               className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 errors.title ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="일정 제목을 입력하세요"
+              placeholder="연구 일정 제목을 입력하세요"
             />
             {errors.title && (
               <p className="mt-1 text-sm text-red-600">{errors.title}</p>
@@ -256,7 +256,7 @@ const EventModal: React.FC<EventModalProps> = ({
               onChange={(e) => handleInputChange('description', e.target.value)}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="일정에 대한 설명을 입력하세요"
+              placeholder="연구 일정에 대한 설명을 입력하세요"
             />
           </div>
 

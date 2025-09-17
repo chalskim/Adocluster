@@ -1,16 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useWebSocketConnection } from '../hooks/useWebSocketConnection';
+import DocumentViewer from './DocumentViewer';
+import DeleteConfirmModal from './DeleteConfirmModal';
 
 const DocumentMnagement: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [showViewer, setShowViewer] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<any>(null);
   const { isConnected, userId } = useWebSocketConnection(); // Use WebSocket connection hook
 
   // Mock data for projects
   const mockProjects = [
-    { id: '1', name: '프로젝트 A' },
-    { id: '2', name: '프로젝트 B' },
-    { id: '3', name: '프로젝트 C' },
+    { id: '1', name: '연구 프로젝트 A' },
+    { id: '2', name: '연구 프로젝트 B' },
+    { id: '3', name: '연구 프로젝트 C' },
   ];
 
   // Mock data for folders and documents
@@ -22,7 +28,7 @@ const DocumentMnagement: React.FC = () => {
 
   const mockDocuments = [
     { id: 'd1', name: '2025년 9월 회의록', projectId: '1', folderId: 'f1', date: '2025-09-13' },
-    { id: 'd2', name: '프로젝트 기획서 v1', projectId: '1', folderId: 'f2', date: '2025-09-10' },
+    { id: 'd2', name: '연구 프로젝트 기획서 v1', projectId: '1', folderId: 'f2', date: '2025-09-10' },
     { id: 'd3', name: 'UI 디자인 초안', projectId: '1', folderId: 'f3', date: '2025-09-08' },
     { id: 'd4', name: '기술 요구사항 명세', projectId: '1', folderId: 'f2', date: '2025-09-05' },
   ];
@@ -42,11 +48,63 @@ const DocumentMnagement: React.FC = () => {
     }
   }, [isConnected, userId]);
 
+  const handleDocumentOpen = (doc: any) => {
+    setSelectedDocument(doc);
+    setShowViewer(true);
+  };
+
+  const handleViewerClose = () => {
+    setShowViewer(false);
+    setSelectedDocument(null);
+  };
+
+  // Mock document content
+  const getDocumentContent = (docId: string) => {
+    return `
+      <h1>문서 내용</h1>
+      <p>이것은 ${selectedDocument?.name}의 내용입니다.</p>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+      <h2>주요 내용</h2>
+      <ul>
+        <li>첫 번째 항목</li>
+        <li>두 번째 항목</li>
+        <li>세 번째 항목</li>
+      </ul>
+      <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+    `;
+  };
+
+  const handleDeleteClick = (doc: any) => {
+    setDocumentToDelete(doc);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = (deleteType: 'source' | 'document' | 'all') => {
+    if (documentToDelete) {
+      console.log(`Deleting ${deleteType} for document:`, documentToDelete.name);
+      // Here you would implement the actual delete logic
+      // For now, just log the action
+      switch (deleteType) {
+        case 'source':
+          console.log('Deleting only source information');
+          break;
+        case 'document':
+          console.log('Deleting only document file');
+          break;
+        case 'all':
+          console.log('Deleting both source and document');
+          break;
+      }
+    }
+    setShowDeleteModal(false);
+    setDocumentToDelete(null);
+  };
+
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-800">문서 관리</h1>
-        <p className="text-gray-500 mt-1">프로젝트 내 문서를 추가 및 삭제 가능합니다.</p>
+        <h1 className="text-2xl font-semibold text-gray-800">연구노트 관리</h1>
+        <p className="text-gray-500 mt-1">연구 프로젝트 내 연구노트를 추가 및 삭제 가능합니다.</p>
         {/* Show WebSocket connection status */}
         <div className="mt-2">
           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -71,13 +129,13 @@ const DocumentMnagement: React.FC = () => {
           {/* Left column: Project selector and folder/document tree */}
           <div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">프로젝트 선택</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">연구 프로젝트 선택</label>
               <select 
                 value={selectedProject}
                 onChange={(e) => setSelectedProject(e.target.value)}
                 className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">모든 프로젝트</option>
+                <option value="">모든 연구 프로젝트</option>
                 {mockProjects.map(project => (
                   <option key={project.id} value={project.id}>{project.name}</option>
                 ))}
@@ -85,9 +143,11 @@ const DocumentMnagement: React.FC = () => {
             </div>
 
             <div className="border rounded-lg p-4 mt-4">
-              <h3 className="font-medium text-gray-800 mb-3">프로젝트 구조</h3>
+              <h3 className="font-medium text-gray-800 mb-3">연구 프로젝트 구조</h3>
               <div className="space-y-2">
-                {mockFolders.map(folder => (
+                {mockFolders
+                  .filter(folder => !selectedProject || folder.projectId === selectedProject)
+                  .map(folder => (
                   <div key={folder.id} className="ml-2">
                     <div className="flex items-center py-1">
                       <i className="fas fa-folder text-yellow-500 mr-2"></i>
@@ -135,15 +195,21 @@ const DocumentMnagement: React.FC = () => {
                     <div className="flex items-center space-x-2 text-xs text-gray-500">
                       <i className="fas fa-folder text-gray-400"></i>
                       <span>
-                        {mockProjects.find(p => p.id === doc.projectId)?.name || '프로젝트'}
+                        {mockProjects.find(p => p.id === doc.projectId)?.name || '연구 프로젝트'}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <button className="text-blue-600 hover:text-blue-700 text-sm">
+                      <button 
+                        onClick={() => handleDocumentOpen(doc)}
+                        className="text-blue-600 hover:text-blue-700 text-sm"
+                      >
                         열기
                       </button>
-                      <button className="text-gray-500 hover:text-gray-700 text-sm">
-                        더보기
+                      <button 
+                        onClick={() => handleDeleteClick(doc)}
+                        className="text-red-600 hover:text-red-700 text-sm"
+                      >
+                        삭제
                       </button>
                     </div>
                   </div>
@@ -153,6 +219,29 @@ const DocumentMnagement: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && documentToDelete && (
+        <DeleteConfirmModal
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={handleDeleteConfirm}
+          itemName={documentToDelete.name}
+          itemType="document"
+          hasReferences={true}
+          hasDocuments={true}
+        />
+      )}
+
+      {/* Document Viewer Modal */}
+      {showViewer && selectedDocument && (
+        <DocumentViewer
+          documentId={selectedDocument.id}
+          documentTitle={selectedDocument.name}
+          documentContent={getDocumentContent(selectedDocument.id)}
+          onClose={handleViewerClose}
+        />
+      )}
     </div>
   );
 };

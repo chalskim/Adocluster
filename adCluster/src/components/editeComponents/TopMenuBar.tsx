@@ -94,28 +94,28 @@ const TopMenuBar: React.FC<TopMenuBarProps> = ({
           onClick={() => handleTabClick('home')}
           type="button"
         >
-          홈
+          연구 작업
         </button>
         <button
           className={`ribbon-tab ${isActive('insert') ? 'active' : ''}`}
           onClick={() => handleTabClick('insert')}
           type="button"
         >
-          삽입
+          연구 도구
         </button>
         <button
           className={`ribbon-tab ${isActive('ai') ? 'active' : ''}`}
           onClick={() => handleTabClick('ai')}
           type="button"
         >
-          AI 도구
+          AI 연구 지원
         </button>
         <button
           className={`ribbon-tab ${isActive('view') ? 'active' : ''}`}
           onClick={() => handleTabClick('view')}
           type="button"
         >
-          보기
+          연구 환경
         </button>
       </div>
 
@@ -124,7 +124,7 @@ const TopMenuBar: React.FC<TopMenuBarProps> = ({
         {activeTab === 'home' && (
           <div className="ribbon-pane" id="tab-home">
             <div className="ribbon-group">
-              <h3>클립보드</h3>
+              <h3>편집 기록</h3>
               <div className="ribbon-buttons">
                 <button
                   className="ribbon-button"
@@ -148,7 +148,7 @@ const TopMenuBar: React.FC<TopMenuBarProps> = ({
             </div>
 
             <div className="ribbon-group">
-              <h3>글꼴</h3>
+              <h3>텍스트 서식</h3>
               <div className="ribbon-buttons">
                 <button
                   className={`ribbon-button ${editor.isActive('bold') ? 'active' : ''}`}
@@ -186,7 +186,7 @@ const TopMenuBar: React.FC<TopMenuBarProps> = ({
             </div>
 
             <div className="ribbon-group">
-              <h3>정렬</h3>
+              <h3>텍스트 정렬</h3>
               <div className="ribbon-buttons">
                 <button
                   className={`ribbon-button ${editor.isActive({ textAlign: 'left' }) ? 'active' : ''}`}
@@ -220,7 +220,7 @@ const TopMenuBar: React.FC<TopMenuBarProps> = ({
         {activeTab === 'insert' && (
           <div className="ribbon-pane" id="tab-insert">
             <div className="ribbon-group">
-              <h3>테이블</h3>
+              <h3>연구 데이터 표</h3>
               <div className="ribbon-buttons">
                 <button
                   className="ribbon-button"
@@ -236,7 +236,7 @@ const TopMenuBar: React.FC<TopMenuBarProps> = ({
             </div>
 
             <div className="ribbon-group">
-              <h3>링크</h3>
+              <h3>연구 참조</h3>
               <div className="ribbon-buttons">
                 <button
                   className="ribbon-button"
@@ -263,7 +263,7 @@ const TopMenuBar: React.FC<TopMenuBarProps> = ({
             </div>
 
             <div className="ribbon-group">
-              <h3>리스트</h3>
+              <h3>연구 목록</h3>
               <div className="ribbon-buttons">
                 <button
                   className={`ribbon-button ${editor.isActive('bulletList') ? 'active' : ''}`}
@@ -285,7 +285,7 @@ const TopMenuBar: React.FC<TopMenuBarProps> = ({
             </div>
 
             <div className="ribbon-group">
-              <h3>특수 요소</h3>
+              <h3>연구 문서 요소</h3>
               <div className="ribbon-buttons">
                 <button
                   className="ribbon-button"
@@ -327,7 +327,7 @@ const TopMenuBar: React.FC<TopMenuBarProps> = ({
         {activeTab === 'ai' && (
           <div className="ribbon-pane" id="tab-ai">
             <div className="ribbon-group">
-              <h3>AI 도구</h3>
+              <h3>AI 연구 도구</h3>
               <div className="ribbon-buttons">
                 <button
                   className="ribbon-button"
@@ -361,7 +361,7 @@ const TopMenuBar: React.FC<TopMenuBarProps> = ({
         {activeTab === 'view' && (
           <div className="ribbon-pane" id="tab-view">
             <div className="ribbon-group">
-              <h3>좌측 사이드바</h3>
+              <h3>연구 패널 관리</h3>
               <div className="ribbon-buttons">
                 <button
                   className={`ribbon-button ${Object.values(leftPanelVisibleTabs).every(value => value) ? 'active' : Object.values(leftPanelVisibleTabs).every(value => !value) ? '' : 'partial-active'}`}
@@ -388,7 +388,7 @@ const TopMenuBar: React.FC<TopMenuBarProps> = ({
                   type="button"
                 >
                   <span className="ribbon-icon">📁</span>
-                  <span className="ribbon-label">프로젝트 {leftPanelVisibleTabs.project ? '(표시)' : '(숨김)'}</span>
+                  <span className="ribbon-label">연구 프로젝트 {leftPanelVisibleTabs.project ? '(표시)' : '(숨김)'}</span>
                 </button>
                 <button
                   className={`ribbon-button ${leftPanelVisibleTabs.library ? 'active' : ''}`}
@@ -421,13 +421,13 @@ const TopMenuBar: React.FC<TopMenuBarProps> = ({
                   type="button"
                 >
                   <span className="ribbon-icon">✅</span>
-                  <span className="ribbon-label">할일 {leftPanelVisibleTabs.todos ? '(표시)' : '(숨김)'}</span>
+                  <span className="ribbon-label">연구 활동 {leftPanelVisibleTabs.todos ? '(표시)' : '(숨김)'}</span>
                 </button>
               </div>
             </div>
 
             <div className="ribbon-group">
-              <h3>우측 사이드바</h3>
+              <h3>연구 정보 패널</h3>
               <div className="ribbon-buttons">
                 <button
                   className={`ribbon-button ${Object.values(rightSidebarVisibleTabs).every(value => value) ? 'active' : Object.values(rightSidebarVisibleTabs).every(value => !value) ? '' : 'partial-active'}`}
@@ -448,7 +448,7 @@ const TopMenuBar: React.FC<TopMenuBarProps> = ({
                 <button
                   className={`ribbon-button ${rightSidebarVisibleTabs.project ? 'active' : ''}`}
                   onClick={() => {
-                    console.log('프로젝트 탭 버튼 클릭, 현재 상태:', rightSidebarVisibleTabs.project);
+                    console.log('연구 프로젝트 탭 버튼 클릭, 현재 상태:', rightSidebarVisibleTabs.project);
                     onRightSidebarVisibleTabsChange({
                       ...rightSidebarVisibleTabs,
                       project: !rightSidebarVisibleTabs.project
@@ -457,7 +457,7 @@ const TopMenuBar: React.FC<TopMenuBarProps> = ({
                   type="button"
                 >
                   <span className="ribbon-icon">📋</span>
-                  <span className="ribbon-label">프로젝트 {rightSidebarVisibleTabs.project ? '(표시)' : '(숨김)'}</span>
+                  <span className="ribbon-label">연구 프로젝트 {rightSidebarVisibleTabs.project ? '(표시)' : '(숨김)'}</span>
                 </button>
                 <button
                   className={`ribbon-button ${rightSidebarVisibleTabs.referenceInfo ? 'active' : ''}`}
@@ -505,7 +505,7 @@ const TopMenuBar: React.FC<TopMenuBarProps> = ({
             </div>
 
             <div className="ribbon-group">
-              <h3>보기 모드</h3>
+              <h3>연구 문서 보기</h3>
               <div className="ribbon-buttons">
                 <button
                   className={`ribbon-button ${!editor.isEditable ? 'active' : ''}`}
