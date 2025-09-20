@@ -1,15 +1,27 @@
 // src/components/RightSidebar.tsx
 
 import React, { useState } from 'react';
-import { DocumentDetailsData, ReferenceItem } from '../data/mockData';
+import { DocumentDetailsData, ReferenceItem } from '../../data/mockData';
 
 interface RightSidebarProps {
   details: DocumentDetailsData | null;
   onAddReference: (projectId: string) => void;
   onDeleteReference: (projectId: string, referenceId: string) => void;
+  visibleTabs?: {
+    info?: boolean;
+    references?: boolean;
+    settings?: boolean;
+    toc?: boolean;
+    collaborate?: boolean;
+  };
 }
 
-const RightSidebar: React.FC<RightSidebarProps> = ({ details, onAddReference, onDeleteReference }) => {
+const RightSidebar: React.FC<RightSidebarProps> = ({ 
+  details, 
+  onAddReference, 
+  onDeleteReference, 
+  visibleTabs = { info: true, references: true, settings: true } 
+}) => {
   const [activeTab, setActiveTab] = useState('info');
 
   if (!details) {

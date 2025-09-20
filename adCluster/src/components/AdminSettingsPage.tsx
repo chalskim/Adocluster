@@ -72,9 +72,20 @@ interface ModelQuota {
   color: string;
 }
 
+interface Notice {
+  id: number;
+  title: string;
+  content: string;
+  type: '상단 배너'; // Only dashboard banner notices
+  priority: '긴급' | '중요' | '일반'; // Add priority field
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+}
+
 const AdminSettingsPage: React.FC = () => {
   // Tab state
-  const [activeTab, setActiveTab] = useState<'global' | 'project'>('global');
+  // Removed tab state as we're displaying both sections in a single column
 
   // User management data
   const [users, setUsers] = useState<User[]>([]);
@@ -132,94 +143,6 @@ const AdminSettingsPage: React.FC = () => {
   // 페이지 변경 핸들러
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
-  // Project permission data
-  const [selectedProject, setSelectedProject] = useState<string>('데이터 분석 대시보드');
-  const projects = [
-    '웹사이트 리디자인 연구 프로젝트',
-    '모바일 앱 개발 연구 프로젝트',
-    '데이터 분석 대시보드',
-    '마케팅 전략 문서'
-  ];
-
-  const [selectedUser, setSelectedUser] = useState<string>('');
-  const [projectUsers, setProjectUsers] = useState<string[]>([]);
-  
-  // 연구 프로젝트 사용자 목록 가져오기
-  useEffect(() => {
-    const fetchProjectUsers = async () => {
-      try {
-        const token = localStorage.getItem('authToken');
-        if (!token) return;
-        
-        // 모든 사용자 정보 가져오기
-        const response = await axios.get(`${getApiBaseUrl()}/users/?full_permission=1`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        
-        // 사용자 이름과 이메일 형식으로 변환
-        const formattedUsers = response.data
-          .filter((user: any) => !user.uisdel) // uisdel=true인 사용자는 표시하지 않음
-          .map((user: any) => {
-            const name = user.uname || user.uemail.split('@')[0];
-            return `${name} (${user.uemail})`;
-          });
-        
-        setProjectUsers(formattedUsers);
-        
-        // 첫 번째 사용자를 기본 선택
-        if (formattedUsers.length > 0 && !selectedUser) {
-          setSelectedUser(formattedUsers[0]);
-        }
-      } catch (error: any) {
-        console.error('프로젝트 사용자 목록을 가져오는 중 오류 발생:', error);
-      }
-    };
-    
-    fetchProjectUsers();
-  }, [selectedProject, selectedUser]); // 선택된 프로젝트가 변경될 때마다 사용자 목록 다시 가져오기
-
-  const [projectPermissions, setProjectPermissions] = useState<ProjectPermission[]>([
-    { id: 1, name: '웹사이트 리디자인 프로젝트', permission: '편집 가능', documents: 24, members: 5 },
-    { id: 2, name: '모바일 앱 개발 프로젝트', permission: '접근 불가', documents: 18, members: 3 },
-    { id: 3, name: '데이터 분석 대시보드', permission: '읽기 전용', documents: 32, members: 4 }
-  ]);
-  
-  // 선택된 사용자의 프로젝트 권한 정보 가져오기
-  useEffect(() => {
-    const fetchUserProjectPermissions = async () => {
-      if (!selectedUser) return;
-      
-      try {
-        const token = localStorage.getItem('authToken');
-        if (!token) return;
-        
-        // 사용자 이메일 추출
-        const emailMatch = selectedUser.match(/\((.*?)\)/);
-        if (!emailMatch || !emailMatch[1]) return;
-        
-        const userEmail = emailMatch[1];
-        
-        // 실제 구현에서는 백엔드 API를 호출하여 사용자의 프로젝트 권한 정보를 가져와야 함
-        // 현재는 더미 데이터로 대체
-        const dummyPermissions = [
-          { id: 1, name: '웹사이트 리디자인 프로젝트', permission: '편집 가능', documents: 24, members: 5 },
-          { id: 2, name: '모바일 앱 개발 프로젝트', permission: '접근 불가', documents: 18, members: 3 },
-          { id: 3, name: '데이터 분석 대시보드', permission: '읽기 전용', documents: 32, members: 4 }
-        ];
-        
-        setProjectPermissions(dummyPermissions);
-        
-        console.log(`${selectedUser}의 프로젝트 권한 정보를 가져왔습니다.`);
-      } catch (error: any) {
-        console.error('사용자의 프로젝트 권한 정보를 가져오는 중 오류 발생:', error);
-      }
-    };
-    
-    fetchUserProjectPermissions();
-  }, [selectedUser]); // 선택된 사용자가 변경될 때마다 프로젝트 권한 정보 다시 가져오기
-
   // KPI data
   const kpiData: KpiCard[] = [
     { id: 1, icon: 'fas fa-users', iconColor: '#3498db', value: '1,248', label: '총 사용자' },
@@ -228,39 +151,45 @@ const AdminSettingsPage: React.FC = () => {
     { id: 4, icon: 'fas fa-project-diagram', iconColor: '#3498db', value: '156', label: '활성 프로젝트' }
   ];
 
-  const systemKpiData: KpiCard[] = [
-    { id: 1, icon: 'fas fa-server', iconColor: '#9b59b6', value: '98.5%', label: '서버 가용성' },
-    { id: 2, icon: 'fas fa-microchip', iconColor: '#f39c12', value: '72%', label: 'CPU 사용률' },
-    { id: 3, icon: 'fas fa-memory', iconColor: '#1abc9c', value: '64%', label: '메모리 사용률' },
-    { id: 4, icon: 'fas fa-exclamation-triangle', iconColor: '#e74c3c', value: '3', label: '경고 발생' }
-  ];
-
-  // System warnings
-  const systemWarnings: SystemWarning[] = [
-    { id: 1, message: '스토리지 사용량 초과', timestamp: '2023.11.20 14:30' },
-    { id: 2, message: 'CPU 사용률 과다', timestamp: '2023.11.20 10:15' },
-    { id: 3, message: '백업 실패', timestamp: '2023.11.19 23:45' }
-  ];
-
-  // AI settings
-  const [selectedModel, setSelectedModel] = useState<string>('GPT-4o');
-  const aiModels = ['GPT-4 Turbo', 'GPT-4o', 'Claude 3 Opus', 'Claude 3 Sonnet', 'Gemini Pro'];
-  
-  const [apiKey, setApiKey] = useState<string>('sk-••••••••••••••••••••••••••••••••');
-  
-  const modelQuotas: ModelQuota[] = [
-    { id: 1, name: 'GPT-4o', used: 25000, total: 50000, color: '#3498db' },
-    { id: 2, name: 'Claude 3', used: 12000, total: 30000, color: '#9b59b6' }
-  ];
-
   // Notice settings
   const [noticeTitle, setNoticeTitle] = useState<string>('');
   const [noticeContent, setNoticeContent] = useState<string>('');
-  const [noticeType, setNoticeType] = useState<string>('팝업 알림');
-  const noticeTypes = ['팝업 알림', '상단 배너', '이메일 발송', '모두'];
-  
+  const [noticePriority, setNoticePriority] = useState<'긴급' | '중요' | '일반'>('일반'); // Add priority state
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
+
+  // Notice management
+  const [notices, setNotices] = useState<Notice[]>([]);
+  const [noticeTab, setNoticeTab] = useState<'register' | 'list'>('register');
+
+  // Fetch existing notices
+  useEffect(() => {
+    // In a real implementation, this would fetch from an API
+    // For now, we'll use mock data
+    const mockNotices: Notice[] = [
+      {
+        id: 1,
+        title: '시스템 정기 점검 안내',
+        content: '2024년 1월 15일 오전 2:00 ~ 4:00 (약 2시간) 동안 시스템 점검이 진행됩니다.',
+        type: '상단 배너',
+        priority: '긴급', // Add priority field
+        startDate: '2024-01-10',
+        endDate: '2024-01-20',
+        createdAt: '2024-01-05'
+      },
+      {
+        id: 2,
+        title: '새로운 캘린더 기능 추가',
+        content: '일정 관리와 팀 협업이 더욱 편리해졌습니다. 새로운 기능을 확인해보세요.',
+        type: '상단 배너',
+        priority: '중요', // Add priority field
+        startDate: '2024-01-01',
+        endDate: '2024-01-31',
+        createdAt: '2023-12-30'
+      }
+    ];
+    setNotices(mockNotices);
+  }, []);
 
   // Login Collection states
   const [loginCollectionUsers, setLoginCollectionUsers] = useState<UserLoginInfo[]>([]);
@@ -323,7 +252,13 @@ const AdminSettingsPage: React.FC = () => {
   const handleLoginCollectionViewUserDetails = (userId: string) => {
     const userDetails = getUserLoginInfoById(userId);
     if (userDetails) {
-      alert(`사용자 상세 정보:\nID: ${userDetails.id}\n이름: ${userDetails.name}\n이메일: ${userDetails.email}\n역할: ${userDetails.role}\n로그인 시간: ${userDetails.loginTime}\n마지막 활동: ${userDetails.lastActive}`);
+      alert(`사용자 상세 정보:
+ID: ${userDetails.id}
+이름: ${userDetails.name}
+이메일: ${userDetails.email}
+역할: ${userDetails.role}
+로그인 시간: ${userDetails.loginTime}
+마지막 활동: ${userDetails.lastActive}`);
     }
   };
 
@@ -428,31 +363,38 @@ const AdminSettingsPage: React.FC = () => {
     }
   };
 
-  // Project permission change handler
-  const handlePermissionChange = (projectId: number, newPermission: string) => {
-    const project = projectPermissions.find(p => p.id === projectId);
-    if (!project) return;
-    
-    setProjectPermissions(projectPermissions.map(p => 
-      p.id === projectId ? { ...p, permission: newPermission } : p
-    ));
-    console.log(`${project.name}의 권한이 ${newPermission}으로 변경됨`);
-  };
-
   // Save handlers
-  const handleProjectPermissionSave = () => {
-    alert('연구 프로젝트별 권한 설정이 저장되었습니다.');
-  };
-
-  const handleAiSettingsSave = () => {
-    alert('AI 연동 설정이 저장되었습니다.');
-  };
-
   const handleNoticeSubmit = () => {
     if (noticeTitle) {
-      alert(`공지사항 "${noticeTitle}"이(가) 모든 사용자에게 발송되었습니다.`);
+      // In a real implementation, this would send to an API
+      const newNotice: Notice = {
+        id: notices.length + 1,
+        title: noticeTitle,
+        content: noticeContent,
+        type: '상단 배너', // Only dashboard banner notices
+        priority: noticePriority, // Add priority to the new notice
+        startDate,
+        endDate,
+        createdAt: new Date().toISOString().split('T')[0]
+      };
+      
+      setNotices([newNotice, ...notices]);
+      alert(`공지사항 "${noticeTitle}"이(가) 대시보드 배너에 등록되었습니다.`);
+      
+      // Reset form
+      setNoticeTitle('');
+      setNoticeContent('');
+      setStartDate('');
+      setEndDate('');
     } else {
       alert('공지사항 제목을 입력해주세요.');
+    }
+  };
+
+  const handleDeleteNotice = (id: number, title: string) => {
+    if (window.confirm(`"${title}" 공지사항을 삭제하시겠습니까?`)) {
+      setNotices(notices.filter(notice => notice.id !== id));
+      alert('공지사항이 삭제되었습니다.');
     }
   };
 
@@ -463,7 +405,7 @@ const AdminSettingsPage: React.FC = () => {
           🛡️ 관리자 설정 
           <span className="ml-3 bg-red-500 text-white text-xs px-2 py-1 rounded-full">관리자 전용</span>
         </h1>
-        <p className="text-gray-500">사용자 관리, 시스템 현황, AI 연동 설정 등을 관리할 수 있습니다</p>
+        <p className="text-gray-500">사용자 관리, 공지사항 등록 등을 관리할 수 있습니다</p>
       </div>
 
       {/* KPI 대시보드 */}
@@ -482,9 +424,147 @@ const AdminSettingsPage: React.FC = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="space-y-5">
+        {/* 공지사항 관리 */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center">
+              <i className="fas fa-bullhorn"></i>
+            </div>
+            <div className="text-xl font-semibold text-gray-800">대시보드 배너 공지사항 관리</div>
+          </div>
+          
+          {/* Tabs */}
+          <div className="flex border-b border-gray-200 mb-6">
+            <button
+              className={`px-4 py-2 font-medium text-sm ${noticeTab === 'register' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              onClick={() => setNoticeTab('register')}
+            >
+배너 공지 등록
+            </button>
+            <button
+              className={`px-4 py-2 font-medium text-sm ${noticeTab === 'list' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              onClick={() => setNoticeTab('list')}
+            >
+등록된 배너 공지
+            </button>
+          </div>
+          
+          {/* 공지사항 등록 탭 */}
+          {noticeTab === 'register' && (
+            <div className="space-y-3">
+              <div className="mb-3">
+                <label className="block text-gray-700 font-medium mb-2">공지사항 제목</label>
+                <input 
+                  type="text" 
+                  className="w-full p-2 border border-gray-300 rounded-lg"
+                  placeholder="공지사항 제목을 입력하세요"
+                  value={noticeTitle}
+                  onChange={(e) => setNoticeTitle(e.target.value)}
+                />
+              </div>
+
+              <div className="mb-3">
+                <label className="block text-gray-700 font-medium mb-2">공지사항 내용</label>
+                <textarea 
+                  className="w-full p-2 border border-gray-300 rounded-lg min-h-[100px]"
+                  placeholder="공지사항 내용을 입력하세요&#10;&#10;• 내용을 입력하세요&#10;• 중요한 사항을 강조하세요"
+                  value={noticeContent}
+                  onChange={(e) => setNoticeContent(e.target.value)}
+                ></textarea>
+              </div>
+
+              <div className="mb-3">
+                <label className="block text-gray-700 font-medium mb-2">중요도</label>
+                <select 
+                  className="w-full p-2 border border-gray-300 rounded-lg"
+                  value={noticePriority}
+                  onChange={(e) => setNoticePriority(e.target.value as '긴급' | '중요' | '일반')}
+                >
+                  <option value="일반">일반</option>
+                  <option value="중요">중요</option>
+                  <option value="긴급">긴급</option>
+                </select>
+              </div>
+
+              {/* Remove the static notice type display */}
+              <div className="mb-4">
+                <label className="block text-gray-700 font-medium mb-2">게시 기간</label>
+                <div className="flex gap-2">
+                  <input 
+                    type="date" 
+                    className="flex-1 p-2 border border-gray-300 rounded-lg"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
+                  <span className="flex items-center">~</span>
+                  <input 
+                    type="date" 
+                    className="flex-1 p-2 border border-gray-300 rounded-lg"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <button 
+                className="px-4 py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
+                onClick={handleNoticeSubmit}
+              >
+                <i className="fas fa-paper-plane"></i> 공지사항 발송
+              </button>
+            </div>
+          )}
+          
+          {/* 등록된 공지사항 탭 */}
+          {noticeTab === 'list' && (
+            <div className="space-y-4">
+              {notices.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  등록된 공지사항이 없습니다.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {notices.map((notice) => (
+                    <div key={notice.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-semibold text-gray-800">{notice.title}</h3>
+                            <span className={`text-xs px-2 py-1 rounded-full ${
+                              notice.priority === '긴급' 
+                                ? 'bg-red-100 text-red-800' 
+                                : notice.priority === '중요' 
+                                  ? 'bg-amber-100 text-amber-800' 
+                                  : 'bg-blue-100 text-blue-800'
+                            }`}>
+                              {notice.priority}
+                            </span>
+                          </div>
+                          <p className="text-gray-600 text-sm mb-2">{notice.content}</p>
+                          <div className="flex gap-4 text-xs text-gray-500">
+                            <span>게시 기간: {notice.startDate} ~ {notice.endDate}</span>
+                            <span>등록일: {notice.createdAt}</span>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => handleDeleteNotice(notice.id, notice.title)}
+                          className="ml-4 text-red-500 hover:text-red-700 p-2"
+                          title="공지사항 삭제"
+                        >
+                          <i className="fas fa-trash-alt"></i>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* 사용자 관리 */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-5">
+        <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center gap-3 mb-5">
             <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center">
               <i className="fas fa-user-friends"></i>
@@ -492,31 +572,10 @@ const AdminSettingsPage: React.FC = () => {
             <div className="text-xl font-semibold text-gray-800">사용자 관리</div>
           </div>
           
-          <div className="flex border-b border-gray-200 bg-gray-100 rounded-t-lg">
-            <div 
-              className={`px-5 py-3 cursor-pointer font-medium ${
-                activeTab === 'global' 
-                  ? 'bg-white border-b-2 border-blue-500 text-blue-500' 
-                  : 'hover:bg-gray-200'
-              }`}
-              onClick={() => setActiveTab('global')}
-            >
-              전체 권한
-            </div>
-            <div 
-              className={`px-5 py-3 cursor-pointer font-medium ${
-                activeTab === 'project' 
-                  ? 'bg-white border-b-2 border-blue-500 text-blue-500' 
-                  : 'hover:bg-gray-200'
-              }`}
-              onClick={() => setActiveTab('project')}
-            >
-              프로젝트별 권한
-            </div>
-          </div>
-          
-          {activeTab === 'global' && (
-            <div className="mt-4 mb-4">
+          {/* 전체 권한 섹션 */}
+          <div className="mb-4">
+            <h3 className="text-lg font-medium text-gray-800 mb-3">전체 권한</h3>
+            <div className="mb-4">
               <label className="flex items-center cursor-pointer">
                 <input 
                   type="checkbox" 
@@ -527,9 +586,7 @@ const AdminSettingsPage: React.FC = () => {
                 <span className="ml-2 text-gray-700">전체 권한 설정 시 모든 사용자 표시</span>
               </label>
             </div>
-          )}
-          
-          {activeTab === 'global' && (
+            
             <div className="overflow-x-auto mt-4">
               <table className="w-full border-collapse">
                 <thead>
@@ -626,234 +683,9 @@ const AdminSettingsPage: React.FC = () => {
                 </button>
               </div>
             </div>
-          )}
-          
-          {activeTab === 'project' && (
-            <div className="mt-4">
-              <div className="mb-4">
-                <label className="block text-gray-700 font-medium mb-2">프로젝트 선택</label>
-                <select 
-                  className="w-full p-3 border border-gray-300 rounded-lg"
-                  value={selectedProject}
-                  onChange={(e) => setSelectedProject(e.target.value)}
-                >
-                  {projects.map((project, index) => (
-                    <option key={index} value={project}>{project}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="mb-4">
-                <label className="block text-gray-700 font-medium mb-2">사용자 선택</label>
-                <select 
-                  className="w-full p-3 border border-gray-300 rounded-lg"
-                  value={selectedUser}
-                  onChange={(e) => setSelectedUser(e.target.value)}
-                >
-                  {projectUsers.map((user, index) => (
-                    <option key={index} value={user}>{user}</option>
-                  ))}
-                </select>
-              </div>
-              
-              {projectPermissions.map((permission) => (
-                <div key={permission.id} className="bg-gray-100 rounded-lg p-4 mb-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="font-semibold text-gray-800">{permission.name}</div>
-                    <select 
-                      className="p-2 border border-gray-300 rounded"
-                      value={permission.permission}
-                      onChange={(e) => handlePermissionChange(permission.id, e.target.value)}
-                    >
-                      <option>읽기 전용</option>
-                      <option>편집 가능</option>
-                      <option>관리자</option>
-                      <option>접근 불가</option>
-                    </select>
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    문서 {permission.documents}개, 멤버 {permission.members}명
-                  </div>
-                </div>
-              ))}
-              
-              <button 
-                className="px-5 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 mt-3"
-                onClick={handleProjectPermissionSave}
-              >
-                <i className="fas fa-save"></i> 프로젝트 권한 저장
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* 시스템 현황 */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-5">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center">
-              <i className="fas fa-chart-bar"></i>
-            </div>
-            <div className="text-xl font-semibold text-gray-800">시스템 현황</div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            {systemKpiData.map((kpi) => (
-              <div key={kpi.id} className="bg-white rounded-lg shadow-sm p-4 text-center">
-                <div 
-                  className="w-12 h-12 rounded-full text-white flex items-center justify-center mx-auto mb-3"
-                  style={{ backgroundColor: kpi.iconColor }}
-                >
-                  <i className={kpi.icon}></i>
-                </div>
-                <div className="text-xl font-bold text-gray-800 my-1">{kpi.value}</div>
-                <div className="text-gray-500 text-sm">{kpi.label}</div>
-              </div>
-            ))}
-          </div>
-          
-          <div className="mt-6">
-            <label className="block text-gray-700 font-medium mb-2">최근 경고 내역</label>
-            <div className="bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
-              {systemWarnings.map((warning) => (
-                <div key={warning.id} className="mb-2 last:mb-0">
-                  <strong>{warning.message}</strong> - {warning.timestamp}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* AI 연동 설정 */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-5">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center">
-              <i className="fas fa-robot"></i>
-            </div>
-            <div className="text-xl font-semibold text-gray-800">AI 연동 설정</div>
-          </div>
-          
-          <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-2">기본 AI 모델</label>
-            <select 
-              className="w-full p-3 border border-gray-300 rounded-lg"
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value)}
-            >
-              {aiModels.map((model, index) => (
-                <option key={index} value={model}>{model}</option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-2">API Key</label>
-            <input 
-              type="password" 
-              className="w-full p-3 border border-gray-300 rounded-lg"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-            />
-          </div>
-          
-          <div className="mb-6">
-            <label className="block text-gray-700 font-medium mb-2">모델 별 할당량</label>
-            <div className="bg-gray-100 rounded-lg p-4">
-              {modelQuotas.map((quota) => (
-                <div key={quota.id} className="mb-4 last:mb-0">
-                  <div className="flex justify-between mb-2">
-                    <span>{quota.name}</span>
-                    <span>{quota.used.toLocaleString()} / {quota.total.toLocaleString()}</span>
-                  </div>
-                  <div className="bg-gray-300 rounded-full h-2">
-                    <div 
-                      className="h-2 rounded-full"
-                      style={{ 
-                        width: `${(quota.used / quota.total) * 100}%`,
-                        backgroundColor: quota.color
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          <button 
-            className="px-5 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
-            onClick={handleAiSettingsSave}
-          >
-            <i className="fas fa-save"></i> 설정 저장
-          </button>
-        </div>
-
-        {/* 공지사항 등록 */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-5">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center">
-              <i className="fas fa-bullhorn"></i>
-            </div>
-            <div className="text-xl font-semibold text-gray-800">공지사항 등록</div>
-          </div>
-          
-          <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-2">공지사항 제목</label>
-            <input 
-              type="text" 
-              className="w-full p-3 border border-gray-300 rounded-lg"
-              placeholder="공지사항 제목을 입력하세요"
-              value={noticeTitle}
-              onChange={(e) => setNoticeTitle(e.target.value)}
-            />
-          </div>
-          
-          <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-2">공지사항 내용</label>
-            <textarea 
-              className="w-full p-3 border border-gray-300 rounded-lg min-h-[120px]"
-              placeholder="공지사항 내용을 입력하세요&#10;&#10;• 내용을 입력하세요&#10;• 중요한 사항을 강조하세요"
-              value={noticeContent}
-              onChange={(e) => setNoticeContent(e.target.value)}
-            ></textarea>
-          </div>
-          
-          <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-2">공지 유형</label>
-            <select 
-              className="w-full p-3 border border-gray-300 rounded-lg"
-              value={noticeType}
-              onChange={(e) => setNoticeType(e.target.value)}
-            >
-              {noticeTypes.map((type, index) => (
-                <option key={index} value={type}>{type}</option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="mb-6">
-            <label className="block text-gray-700 font-medium mb-2">게시 기간</label>
-            <div className="flex gap-2">
-              <input 
-                type="date" 
-                className="flex-1 p-3 border border-gray-300 rounded-lg"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-              <span className="flex items-center">~</span>
-              <input 
-                type="date" 
-                className="flex-1 p-3 border border-gray-300 rounded-lg"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </div>
-          </div>
-          
-          <button 
-            className="px-5 py-3 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
-            onClick={handleNoticeSubmit}
-          >
-            <i className="fas fa-paper-plane"></i> 공지사항 발송
-          </button>
+          {/* 프로젝트별 권한 섹션 */}
         </div>
       </div>
 

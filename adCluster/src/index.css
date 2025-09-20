@@ -91,10 +91,7 @@ button:focus-visible {
     margin-right: 0;
     font-size: 1.3rem;
   }
-  
-  .main-content {
-    margin-left: 70px;
-  }
+
 }
 
 /* EditorPage specific body styles */

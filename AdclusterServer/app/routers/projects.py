@@ -1,11 +1,13 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from typing import List
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.models.user import User as UserModel
 from app.models.project import Project as ProjectModel
 from app.schemas.project import ProjectCreate, ProjectResponse
+from app.schemas.project_extended import ProjectExtendedResponse
 from datetime import date
 import uuid
 
@@ -47,7 +49,7 @@ async def create_project(
             detail=f"프로젝트 생성 중 오류 발생: {str(e)}"
         )
 
-@router.get("/", response_model=List[ProjectResponse])
+@router.get("/", response_model=List[ProjectExtendedResponse])
 async def get_projects(
     skip: int = 0,
     limit: int = 100,
@@ -55,10 +57,50 @@ async def get_projects(
     # 임시로 인증 제거 - 테스트용
     # current_user: UserModel = Depends(get_current_user)
 ):
-    """Get all projects (임시로 인증 제거 - 테스트용)"""
+    """Get all projects with detailed information including notes and users count"""
     try:
-        # 임시로 모든 프로젝트 조회 - 테스트용
-        projects = db.query(ProjectModel).offset(skip).limit(limit).all()
+        # 새로운 복잡한 JOIN 쿼리 실행
+        query = """
+        SELECT 
+            p.prjid, 
+            p.crtid, 
+            u.uname, 
+            p.title, 
+            p.description, 
+            p.start_date, 
+            COALESCE(p.status, 'begin') AS status, 
+            COUNT(DISTINCT n.noteid) AS notes, 
+            COUNT(DISTINCT pu.uid) AS users 
+        FROM projects p 
+        JOIN users u 
+           ON p.crtid = u.uid 
+        LEFT JOIN pronote n 
+            ON n.prjid = p.prjid 
+        LEFT JOIN prjuser pu 
+            ON pu.prjid = p.prjid 
+        WHERE p.visibility IN ('company', 'team', 'private') 
+          AND (p.end_date IS NULL OR p.end_date > CURRENT_DATE) 
+        GROUP BY p.prjid, p.crtid, u.uname, p.title, p.description, p.start_date, COALESCE(p.status, 'begin')
+        ORDER BY p.created_at DESC
+        LIMIT :limit OFFSET :skip
+        """
+        
+        result = db.execute(text(query), {"limit": limit, "skip": skip})
+        projects = []
+        
+        for row in result:
+            projects.append({
+                "prjid": str(row.prjid),
+                "crtid": str(row.crtid),
+                "uname": row.uname,
+                "title": row.title,
+                "description": row.description,
+                "start_date": row.start_date.isoformat() if row.start_date else None,
+                "status": row.status,
+                "notes": row.notes,
+                "users": row.users
+            })
+        
         return projects
     except Exception as e:
         raise HTTPException(

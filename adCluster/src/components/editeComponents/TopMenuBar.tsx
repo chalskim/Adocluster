@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Editor } from '@tiptap/react';
+import DocumentSelector from '../DocumentSelector';
 
 interface TopMenuBarProps {
   editor: Editor | null;
@@ -27,6 +28,7 @@ interface TopMenuBarProps {
     tableOfContents: boolean;
     collaboration: boolean;
   }) => void;
+  onShowReviewPanel?: () => void; // Add this prop
 }
 
 const TopMenuBar: React.FC<TopMenuBarProps> = ({ 
@@ -34,10 +36,12 @@ const TopMenuBar: React.FC<TopMenuBarProps> = ({
   leftPanelVisibleTabs, 
   rightSidebarVisibleTabs,
   onLeftPanelVisibleTabsChange,
-  onRightSidebarVisibleTabsChange 
+  onRightSidebarVisibleTabsChange,
+  onShowReviewPanel // Add this prop
 }) => {
   const [activeTab, setActiveTab] = useState<'home' | 'insert' | 'ai' | 'view'>('home');
   const [spellcheckEnabled, setSpellcheckEnabled] = useState<boolean>(true);
+  const [showDocumentSelector, setShowDocumentSelector] = useState<boolean>(false);
 
   useEffect(() => {
     if (editor && (editor as any).view?.dom) {
@@ -240,6 +244,14 @@ const TopMenuBar: React.FC<TopMenuBarProps> = ({
               <div className="ribbon-buttons">
                 <button
                   className="ribbon-button"
+                  onClick={() => setShowDocumentSelector(true)}
+                  type="button"
+                >
+                  <span className="ribbon-icon">📚</span>
+                  <span className="ribbon-label">자료 삽입</span>
+                </button>
+                <button
+                  className="ribbon-button"
                   onClick={() => {
                     const url = window.prompt('링크 URL을 입력하세요:');
                     if (url) {
@@ -319,6 +331,17 @@ const TopMenuBar: React.FC<TopMenuBarProps> = ({
                   <span className="ribbon-icon">📄</span>
                   <span className="ribbon-label">PDF 내보내기</span>
                 </button>
+                {/* Add Review/Feedback button */}
+                {onShowReviewPanel && (
+                  <button
+                    className="ribbon-button"
+                    onClick={onShowReviewPanel}
+                    type="button"
+                  >
+                    <span className="ribbon-icon">💬</span>
+                    <span className="ribbon-label">리뷰/피드백</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -550,6 +573,20 @@ const TopMenuBar: React.FC<TopMenuBarProps> = ({
           </div>
         )}
       </div>
+
+      {/* Document Selector Modal */}
+      {showDocumentSelector && (
+        <DocumentSelector
+          isOpen={showDocumentSelector}
+          onClose={() => setShowDocumentSelector(false)}
+          onSelect={(document) => {
+            // 선택된 자료를 에디터에 삽입
+            const content = `[${document.title}](${document.id})`;
+            editor?.chain().focus().insertContent(content).run();
+            setShowDocumentSelector(false);
+          }}
+        />
+      )}
     </div>
   );
 };

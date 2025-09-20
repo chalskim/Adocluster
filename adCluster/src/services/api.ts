@@ -14,18 +14,8 @@ interface User {
   uupdated_at: string | null;
 }
 
-// Project 인터페이스 정의
-export interface Project {
-  prjID: string;
-  crtID: string;
-  title: string;
-  description: string;
-  visibility: string;
-  start_date: string;
-  end_date: string | null;
-  created_at: string;
-  update_at: string;
-}
+// Project 타입을 별도 파일에서 import
+import { ProjectData } from '../types/ProjectTypes';
 
 // API 기본 URL 가져오기
 export const getApiBaseUrl = () => {
@@ -160,7 +150,7 @@ export const updateUserProfile = async (userData: UserProfileUpdate) => {
 };
 
 // 프로젝트 목록 가져오기
-export const fetchProjects = async (limit = 4): Promise<Project[] | null> => {
+export const fetchProjects = async (limit = 4): Promise<ProjectData[] | null> => {
   try {
     const response = await fetch(`${getApiBaseUrl()}/api/projects/?limit=${limit}`, {
       method: 'GET',
@@ -188,7 +178,7 @@ export const fetchProjects = async (limit = 4): Promise<Project[] | null> => {
 };
 
 // 프로젝트 상세 정보 가져오기
-export const fetchProjectById = async (projectId: string): Promise<Project | null> => {
+export const fetchProjectById = async (projectId: string): Promise<ProjectData | null> => {
   try {
     const response = await fetch(`${getApiBaseUrl()}/api/projects/${projectId}`, {
       method: 'GET',

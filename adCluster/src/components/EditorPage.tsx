@@ -85,6 +85,41 @@ interface UserData {
   uupdated_at: string | null;
 }
 
+// Add review/feedback interfaces
+interface Review {
+  id: string;
+  documentId: string;
+  reviewerId: string;
+  reviewerName: string;
+  status: 'pending' | 'in-progress' | 'completed';
+  createdAt: string;
+  updatedAt: string;
+  comments: Comment[];
+  section?: string;
+}
+
+interface Comment {
+  id: string;
+  reviewId: string;
+  content: string;
+  authorId: string;
+  authorName: string;
+  createdAt: string;
+  updatedAt: string;
+  section?: string;
+}
+
+interface Feedback {
+  id: string;
+  documentId: string;
+  content: string;
+  authorId: string;
+  authorName: string;
+  createdAt: string;
+  updatedAt: string;
+  status: 'pending' | 'reviewed' | 'implemented';
+}
+
 const useEditorBodyStyle = () => {
   useEffect(() => {
     document.body.classList.add('editor-body');
@@ -103,6 +138,61 @@ const EditorPage: React.FC = () => {
   const queryParams = new URLSearchParams(location.search);
   const hideSidebar = queryParams.get('hideSidebar') === 'true';
   const projectId = queryParams.get('projectId');
+  const tabId = queryParams.get('tabId') || `tab-${Date.now()}`; // Generate a tab ID if not provided
+  
+  // Tab management effect
+  useEffect(() => {
+    if (projectId) {
+      // Register this tab as the active tab for this project
+      const projectTabKey = `project-tab-${projectId}`;
+      const tabInfo = {
+        tabId: tabId,
+        timestamp: new Date().getTime(),
+        projectId: projectId
+      };
+      
+      localStorage.setItem(projectTabKey, JSON.stringify(tabInfo));
+      console.log('Registered tab for project:', projectId, tabInfo);
+      
+      // Clean up when the tab is closed
+      const handleBeforeUnload = () => {
+        console.log('Cleaning up tab for project:', projectId);
+        const storedTabInfo = localStorage.getItem(projectTabKey);
+        if (storedTabInfo) {
+          try {
+            const tabInfo = JSON.parse(storedTabInfo);
+            if (tabInfo.tabId === tabId) {
+              localStorage.removeItem(projectTabKey);
+              console.log('Removed tab registration for project:', projectId);
+            }
+          } catch (e) {
+            localStorage.removeItem(projectTabKey);
+            console.log('Removed tab registration due to error for project:', projectId);
+          }
+        }
+      };
+      
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      
+      return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        // Clean up on component unmount as well
+        const storedTabInfo = localStorage.getItem(projectTabKey);
+        if (storedTabInfo) {
+          try {
+            const tabInfo = JSON.parse(storedTabInfo);
+            if (tabInfo.tabId === tabId) {
+              localStorage.removeItem(projectTabKey);
+              console.log('Removed tab registration on unmount for project:', projectId);
+            }
+          } catch (e) {
+            localStorage.removeItem(projectTabKey);
+            console.log('Removed tab registration on unmount due to error for project:', projectId);
+          }
+        }
+      };
+    }
+  }, [projectId, tabId]);
   
   // Get project data from location state if available
   const locationState = location.state as { project?: ProjectData, user?: UserData } | null;
@@ -134,6 +224,11 @@ const EditorPage: React.FC = () => {
     tableOfContents: true,
     collaboration: true
   });
+
+  // Add state for review/feedback functionality
+  const [showReviewPanel, setShowReviewPanel] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
 
   // If we have a projectId but no project data, fetch it from the backend
   useEffect(() => {
@@ -215,58 +310,17 @@ const EditorPage: React.FC = () => {
         limit: 10000,
       }),
       PaginationPlus.configure({
-        pageSize: {
-          width: '210mm',
-          height: '297mm'
-        },
-        margins: { 
-          top: '25mm', 
-          bottom: '25mm', 
-          left: '25mm', 
-          right: '25mm' 
-        },
-        showPageNumbers: true,
-        
-        // 자동 페이지 넘김 설정
-        autoPageBreak: true,
-        overflow: 'auto-break',
-        
-        // 페이지 브레이크 규칙
-        pageBreakBehavior: {
-          avoidOrphans: true,
-          avoidWidows: true,
-          minLines: 2
-        },
-        
-        // 콘텐츠 영역 높이 계산
-        contentHeight: '247mm', // 297mm - 25mm(top) - 25mm(bottom)
-        
-        // 자동 헤더/푸터
-        header: {
-          text: projectData?.title || '문서 제목',
-          fontSize: 12,
-          color: '#6b7280',
-          height: '20mm',
-          editable: true
-        },
-        footer: {
-          text: '페이지 {page} / {total}',
-          fontSize: 12,
-          color: '#6b7280',
-          height: '20mm',
-          editable: true
-        },
-        
-        // 자동 페이지 브레이크 임계값
-        autoPageBreakThreshold: 0.95,
-        
-        showHeaderFooter: true,
-        headerFooterStyle: {
-          backgroundColor: '#f9fafb',
-          borderBottom: '1px solid #e5e7eb',
-          borderTop: '1px solid #e5e7eb',
-          padding: '8px 16px'
-        }
+        pageHeight: 842,
+        pageGap: 20,
+        pageBreakBackground: "#F7F7F8",
+        pageHeaderHeight: 25,
+        pageFooterHeight: 25,
+        marginTop: 30,
+        marginBottom: 50,
+        marginLeft: 70,
+        marginRight: 70,
+        contentMarginTop: 30,
+        contentMarginBottom: 30,
       }),
     ],
     content: `<h2>${projectData?.title || '환영합니다!'}</h2><p>왼쪽 트리에서 노트를 선택해주세요.</p>`,
@@ -363,7 +417,6 @@ const EditorPage: React.FC = () => {
           
           if (contentHeight > maxHeight) {
             // 오버플로우 발생시 자동으로 새 페이지 생성
-            console.log(`페이지 ${index + 1} 오버플로우 감지: ${contentHeight}px > ${maxHeight}px`);
             // PaginationPlus가 자동으로 처리하므로 추가 작업 불필요
           }
         }
@@ -376,7 +429,6 @@ const EditorPage: React.FC = () => {
     if (!editor) return;
     
     // 초기 페이지 설정 확인
-    console.log('자동 페이지 브레이크 설정 완료');
     
     // ResizeObserver를 사용한 실시간 높이 감지
     const observer = new ResizeObserver((entries) => {
@@ -386,7 +438,7 @@ const EditorPage: React.FC = () => {
         const maxHeight = 247 * 3.779527559; // mm to px
         
         if (contentHeight > maxHeight) {
-          console.log('콘텐츠 오버플로우 감지:', contentHeight, '>', maxHeight);
+          // 콘텐츠 오버플로우 처리
         }
       });
     });
@@ -437,6 +489,7 @@ const EditorPage: React.FC = () => {
             rightSidebarVisibleTabs={rightSidebarVisibleTabs}
             onLeftPanelVisibleTabsChange={setLeftPanelVisibleTabs}
             onRightSidebarVisibleTabsChange={setRightSidebarVisibleTabs}
+            onShowReviewPanel={() => setShowReviewPanel(true)}
           />
         )}
         <div className="flex-1 overflow-auto">
@@ -458,6 +511,142 @@ const EditorPage: React.FC = () => {
             collaborate: rightSidebarVisibleTabs.collaboration,
           }}
         />
+      )}
+      
+      {/* Review Panel */}
+      {showReviewPanel && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-800">리뷰/피드백 관리</h2>
+                <button 
+                  className="text-gray-500 hover:text-gray-700"
+                  onClick={() => setShowReviewPanel(false)}
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Reviews Section */}
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-semibold text-gray-800">리뷰</h3>
+                    <button 
+                      className="text-sm bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                      onClick={() => alert('리뷰 추가 기능 - 준비 중입니다.')}
+                    >
+                      리뷰 추가
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                    {reviews.length > 0 ? (
+                      reviews.map(review => (
+                        <div key={review.id} className="p-4 border border-gray-200 rounded-lg">
+                          <div className="flex justify-between mb-2">
+                            <span className="font-medium text-gray-800">{review.reviewerName}</span>
+                            <span className="text-sm text-gray-500">
+                              {new Date(review.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          {review.section && (
+                            <div className="text-sm text-blue-600 mb-2">
+                              <i className="fas fa-bookmark mr-1"></i>
+                              {review.section}
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              review.status === 'completed' ? 'bg-green-100 text-green-800' :
+                              review.status === 'in-progress' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {review.status === 'completed' ? '완료' :
+                               review.status === 'in-progress' ? '진행중' : '대기중'}
+                            </span>
+                          </div>
+                          <div className="space-y-3">
+                            {review.comments.map(comment => (
+                              <div key={comment.id} className="p-3 bg-gray-50 rounded">
+                                <div className="flex justify-between mb-1">
+                                  <span className="text-sm font-medium">{comment.authorName}</span>
+                                  <span className="text-xs text-gray-500">
+                                    {new Date(comment.createdAt).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-700">{comment.content}</p>
+                                {comment.section && (
+                                  <div className="text-xs text-blue-600 mt-1">
+                                    <i className="fas fa-bookmark mr-1"></i>
+                                    {comment.section}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-center py-4">등록된 리뷰가 없습니다.</p>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Feedback Section */}
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-semibold text-gray-800">피드백</h3>
+                    <button 
+                      className="text-sm bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
+                      onClick={() => alert('피드백 추가 기능 - 준비 중입니다.')}
+                    >
+                      피드백 추가
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                    {feedbacks.length > 0 ? (
+                      feedbacks.map(feedback => (
+                        <div key={feedback.id} className="p-4 border border-gray-200 rounded-lg">
+                          <div className="flex justify-between mb-2">
+                            <span className="font-medium text-gray-800">{feedback.authorName}</span>
+                            <span className="text-sm text-gray-500">
+                              {new Date(feedback.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              feedback.status === 'implemented' ? 'bg-green-100 text-green-800' :
+                              feedback.status === 'reviewed' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {feedback.status === 'implemented' ? '개선 완료' :
+                               feedback.status === 'reviewed' ? '검토중' : '대기중'}
+                            </span>
+                          </div>
+                          <p className="text-gray-700">{feedback.content}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-center py-4">등록된 피드백이 없습니다.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-6 flex justify-end">
+                <button 
+                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                  onClick={() => setShowReviewPanel(false)}
+                >
+                  닫기
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

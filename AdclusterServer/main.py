@@ -6,6 +6,7 @@ from app.routers.uploads_router import router as uploads_api_router
 from app.routers.db_tables import router as db_tables_router
 from app.routers.client_ip_router import router as client_ip_router
 from app.routers.todos import router as todos_router 
+from app.routers.resources import router as resources_router
 from app.core.database import Base, engine
 from app.models import user, project, node, content_block, file, reference, citation, ai_job, revision, team, client_ip
 from sqlalchemy import MetaData
@@ -59,6 +60,7 @@ app.include_router(uploads_api_router, prefix="/api")
 app.include_router(db_tables_router)
 app.include_router(client_ip_router)
 app.include_router(todos_router)
+app.include_router(resources_router)
 logger.debug("--- main.py: API routers included ---")
 
 @app.get("/health-check")

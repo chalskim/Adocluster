@@ -12,7 +12,7 @@ interface SearchResult {
   date: string;
 }
 
-const SearchPage: React.FC = () => {
+const ExternalDocumentManagementPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('웹사이트 리디자인');
   const [activeScope, setActiveScope] = useState<string>('내 연구 프로젝트');
   const [activeFilter, setActiveFilter] = useState<string>('전체');
@@ -198,38 +198,24 @@ const SearchPage: React.FC = () => {
             >
               <div className="flex items-center gap-2 text-lg font-semibold text-gray-800 mb-3">
                 <i className={`${getResultIcon(result.type)} text-blue-500`}></i>
-                {result.title}
+                <span>{result.title}</span>
               </div>
-              <div className="text-gray-500 mb-4 line-clamp-2">
-                {result.preview}
-              </div>
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+              <p className="text-gray-600 mb-3 line-clamp-2">{result.preview}</p>
+              <div className="flex justify-between items-center text-sm text-gray-500">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold">
+                  <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-800 font-semibold text-xs">
                     {result.author.avatar}
                   </div>
                   <span>{result.author.name}</span>
                 </div>
-                <div className="flex items-center gap-1 text-gray-500 text-sm">
-                  <i className="far fa-clock"></i>
-                  <span>{result.date}</span>
-                </div>
+                <span>{result.date}</span>
               </div>
             </div>
           ))}
-        </div>
-        
-        {/* 페이지네이션 */}
-        <div className="flex justify-center items-center gap-2 mt-8">
-          <button className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">이전</button>
-          <button className="px-4 py-2 bg-blue-500 text-white border border-blue-500 rounded">1</button>
-          <button className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">2</button>
-          <button className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">3</button>
-          <button className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">다음</button>
         </div>
       </div>
     </div>
   );
 };
 
-export default SearchPage;
+export default ExternalDocumentManagementPage;

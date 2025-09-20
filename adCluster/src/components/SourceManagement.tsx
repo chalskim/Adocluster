@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { fetchProjects, Project } from '../services/api';
+import { Project, ProjectData, mapProjectDataToProject } from '../types/ProjectTypes';
+import { fetchProjects } from '../services/api';
 
 interface SourceInfo {
   id: string;
@@ -44,7 +45,7 @@ const SourceManagement: React.FC<SourceManagementProps> = ({ projectId, onSource
       try {
         const fetchedProjects = await fetchProjects(100);
         if (fetchedProjects) {
-          setProjects(fetchedProjects);
+          setProjects(fetchedProjects.map(mapProjectDataToProject));
         }
       } catch (error) {
         console.error('Failed to fetch projects:', error);
@@ -351,7 +352,7 @@ const SourceManagement: React.FC<SourceManagementProps> = ({ projectId, onSource
               >
                 <option value="all">모든 프로젝트</option>
                 {projects.map(project => (
-                  <option key={project.prjID} value={project.prjID}>
+                  <option key={project.id} value={project.id}>
                     {project.title}
                   </option>
                 ))}
@@ -539,7 +540,7 @@ const SourceManagement: React.FC<SourceManagementProps> = ({ projectId, onSource
                 >
                   <option value="">프로젝트를 선택하세요</option>
                   {projects.map(project => (
-                    <option key={project.prjID} value={project.prjID}>
+                    <option key={project.id} value={project.id}>
                       {project.title}
                     </option>
                   ))}

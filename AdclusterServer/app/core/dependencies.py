@@ -6,6 +6,7 @@ from app.core.database import get_db
 from app.core.jwt import verify_token
 from app.models.user import User as UserModel
 from typing import Optional
+import uuid
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
@@ -22,14 +23,11 @@ def get_current_user(
     
     token_data = verify_token(token, credentials_exception)
     
-    # 디버깅 로그 추가
-    print(f"토큰에서 추출한 user_id: {token_data.user_id}, 타입: {type(token_data.user_id)}")
-    
     # 수정: uid 필드 사용 (UUID 타입)
     if token_data.user_id is not None:
+        # Ensure we're comparing UUIDs properly
         user = db.query(UserModel).filter(UserModel.uid == token_data.user_id).first()
         if user is None:
-            print(f"사용자를 찾을 수 없음: user_id={token_data.user_id}")
             raise credentials_exception
         
         return user

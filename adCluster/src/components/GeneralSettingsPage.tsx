@@ -53,7 +53,7 @@ const GeneralSettingsPage: React.FC = () => {
 
   // Notification settings
   const [notifications, setNotifications] = useState<NotificationSetting[]>([
-    { id: 'email', label: '이메일 알림', enabled: true },
+    { id: 'email', label: '메세지 알림', enabled: true },
     { id: 'push', label: '푸시 알림', enabled: true },
     { id: 'project', label: '연구 프로젝트 업데이트', enabled: true },
     { id: 'comments', label: '댓글 및 멘션', enabled: false }
@@ -65,31 +65,6 @@ const GeneralSettingsPage: React.FC = () => {
     { title: '팀원만', description: '연구 프로젝트 팀원만 접근 가능' },
     { title: '회사 전체', description: '회사 내 모든 직원 접근 가능' },
     { title: '비공개', description: '나만 접근 가능' }
-  ];
-
-  // Activity history
-  const activityItems: ActivityItem[] = [
-    {
-      id: 1,
-      icon: 'fas fa-edit',
-      iconColor: '#27ae60',
-      text: '"웹사이트 리디자인" 연구 프로젝트 문서 편집',
-      time: '2시간 전'
-    },
-    {
-      id: 2,
-      icon: 'fas fa-comment',
-      iconColor: '#3498db',
-      text: '이디자인님의 댓글에 답글 작성',
-      time: '5시간 전'
-    },
-    {
-      id: 3,
-      icon: 'fas fa-share-alt',
-      iconColor: '#f39c12',
-      text: '"모바일 앱 개발" 연구 프로젝트 공유',
-      time: '1일 전'
-    }
   ];
 
   // Fetch user profile data from the server
@@ -226,7 +201,19 @@ const GeneralSettingsPage: React.FC = () => {
                   }}
                 />
               </div>
-              
+
+              <div className="mb-4">
+                <label className="block text-gray-700 font-medium mb-2">이메일</label>
+                <input 
+                  type="email" 
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                  value={profileEmail}
+                  onChange={(e) => {
+                    setProfileEmail(e.target.value);
+                  }}
+                />
+              </div>
+
               <div className="mb-6">
                 <label className="block text-gray-700 font-medium mb-2">비밀번호</label>
                 <input 
@@ -378,25 +365,7 @@ const GeneralSettingsPage: React.FC = () => {
             </div>
           </div>
           
-          <div>
-            <label className="block text-gray-700 font-medium mb-2">최근 연구 활동 내역</label>
-            <ul className="space-y-3 mt-2">
-              {activityItems.map((item) => (
-                <li key={item.id} className="flex gap-3 pb-3 border-b border-gray-100 last:border-b-0 last:pb-0">
-                  <div 
-                    className="w-8 h-8 rounded-full text-white flex items-center justify-center text-xs flex-shrink-0"
-                    style={{ backgroundColor: item.iconColor }}
-                  >
-                    <i className={item.icon}></i>
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-gray-800 mb-1">{item.text}</div>
-                    <div className="text-xs text-gray-500">{item.time}</div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Remove the recent research activity history section */}
         </div>
       </div>
     </div>

@@ -1,0 +1,251 @@
+CREATE TABLE "user" (
+	"uid"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"uemail"	VARCHAR(150)		NOT NULL,
+	"upassword"	VARCHAR(50)		NULL,
+	"uname"	VARCHAR(100)		NULL,
+	"urole"	VARCHAR(50)	DEFAULT user	NULL,
+	"uavatar"	TEXT		NULL,
+	"ucreate_at"	TIMESTAMPTZ	DEFAULT CURRENT_TIMESTAMP	NOT NULL,
+	"ulast_login"	TIMESTAMPTZ		NULL,
+	"uupdated_at"	TIMESTAMPTZ	DEFAULT CURRENT_TIMESTAMP	NULL,
+	"uauth"	varchar(10)		NULL,
+	"ustate"	BOOLEAN	DEFAULT TRUE	NULL
+);
+
+COMMENT ON COLUMN "user"."urole" IS 'user, admin';
+
+CREATE TABLE "pnote_history" (
+	"pnhID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"nodeID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"prjID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"note_id"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"pnhUserID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"pnhModify"	text		NULL,
+	"pnhText"	text		NULL,
+	"pnhModifySRange"	intger	DEFAULT 0	NULL,
+	"pnhModifyERange"	intger	DEFAULT 0	NULL,
+	"pnhModifyDate"	TIMESTAMPTZ		NULL,
+	"pnhCreateDate"	TIMESTAMPTZ	DEFAULT CURRENT_TIMESTAMP	NULL
+);
+
+CREATE TABLE "mycitations" (
+	"mcID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"mcName"	text		NOT NULL,
+	"mcAuthors"	text		NOT NULL,
+	"mcPublicationyear"	integer		NOT NULL,
+	"mcSource_type"	varchar(20)		NOT NULL,
+	"mcPublisher"	varchar(200)		NULL,
+	"mcJorunalNm"	varchar(200)		NULL,
+	"mcVolume"	varchar(200)		NULL,
+	"mcIssue"	varchar(200)		NULL,
+	"mcPages"	varchar(200)		NULL,
+	"mcUrl"	text		NULL,
+	"mcAccess_date"	date	DEFAULT date	NULL,
+	"mcDoi"	varchar(200)		NULL,
+	"mcNotes"	text		NULL,
+	"mcCreated_at"	TIMESTAMP	DEFAULT CURRENT_TIMESTAMP	NULL,
+	"mcUpdated_at"	TIMESTAMP	DEFAULT CURRENT_TIMESTAMP	NULL
+);
+
+CREATE TABLE "proNote" (
+	"nodeID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"prjID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"note_id"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"crtID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"pnote_status"	BOOLEAN	DEFAULT true	NULL,
+	"pnote_endDate"	Date		NULL,
+	"pnote_saveYear"	integer		NULL,
+	"pnote_saveStatus"	BOOLEAN	DEFAULT true	NULL,
+	"tmpID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"style_id"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"pnote_ispublic"	VARCHAR(255)		NULL
+);
+
+CREATE TABLE "myTempletes" (
+	"tmpID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"tmpkind"	VARCHAR(255)		NULL,
+	"tmpdescription"	text		NULL,
+	"tmpDisplay_order"	INTEGER	DEFAULT 0	NULL,
+	"tmpCreated_at"	TIMESTAMP	DEFAULT CURRENT_TIMESTAMP	NULL,
+	"tmpUpdated_at"	TIMESTAMP		NULL
+);
+
+CREATE TABLE "note" (
+	"note_id"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"note_text"	jsonb		NULL,
+	"note_sdate"	TIMESTAMPTZ	DEFAULT CURRENT_TIMESTAMP	NULL,
+	"note_update"	TIMESTAMPTZ		NULL,
+	"Field"	VARCHAR(255)		NULL,
+	"uid"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"note_public"	BOOLEAN	DEFAULT FALSE	NULL
+);
+
+CREATE TABLE "clbcomments" (
+	"nodeID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"prjID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"id"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"note_id"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"ctID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"ctDate"	TIMESTAMPTZ	DEFAULT CURRENT_TIMESTAMP	NULL,
+	"ctState"	varchar(20)	DEFAULT begin	NULL,
+	"ctUpdate"	TIMESTAMPTZ		NULL,
+	"ctEndDate"	TIMESTAMPTZ		NULL,
+	"cCompleteID"	uuid	DEFAULT uuid_generate_v4()	NULL
+);
+
+CREATE TABLE "format_rules" (
+	"rule_id"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"category_id"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"style_id"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"element_name"	VARCHAR(100)		NOT NULL,
+	"element_name_en"	VARCHAR(100)		NULL,
+	"element_code"	VARCHAR(50)		NULL,
+	"setting_value"	TEXT		NOT NULL,
+	"example_note"	TEXT		NULL,
+	"css_selector"	VARCHAR(200)		NULL,
+	"is_active"	BOOLEAN	DEFAULT TRUE	NULL,
+	"display_order"	INTEGER	DEFAULT 0	NULL,
+	"created_at"	TIMESTAMP	DEFAULT CURRENT_TIMESTAMP	NULL,
+	"updated_at"	TIMESTAMP	DEFAULT CURRENT_TIMESTAMP	NULL
+);
+
+COMMENT ON COLUMN "format_rules"."element_code" IS '프로그래밍용 코드명 (예: h1, body_text)';
+
+CREATE TABLE "myLibraries" (
+	"mlID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"mltype"	TEXT		NOT NULL,
+	"mlTitle"	TEXT		NOT NULL,
+	"mldisription"	TEXT		NULL,
+	"mlauthor"	TEXT		NULL,
+	"mlurl"	TEXT		NULL,
+	"mlFile"	TEXT		NULL,
+	"mlPath"	TEXT		NULL,
+	"mlpublisher"	varchar(200)		NULL,
+	"mlpublished_date"	DATE		NULL,
+	"mlaccessed_date"	DATE	DEFAULT CURRENT_DATE	NULL,
+	"mlcreated_at"	TIMESTAMP	DEFAULT CURRENT_TIMESTAMP	NULL,
+	"mlupdated_at"	TIMESTAMP		NULL
+);
+
+CREATE TABLE "format_categories" (
+	"category_id"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"style_id"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"category_name"	varchar(50)		NOT NULL,
+	"category_name_en"	varchar(50)		NULL,
+	"icon"	text		NULL,
+	"display_order"	INTEGER	DEFAULT 0	NULL,
+	"description"	text		NULL,
+	"is_active"	BOOLEAN	DEFAULT TRUE	NULL,
+	"created_at"	TIMESTAMP	DEFAULT CURRENT_TIMESTAMP	NULL,
+	"updated_at"	TIMESTAMP	DEFAULT CURRENT_TIMESTAMP	NULL
+);
+
+CREATE TABLE "proNodes" (
+	"nodeID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"prjID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"prjID_parents"	uuid	DEFAULT uuid_generate_v4()	NULL,
+	"type"	VARCHAR(50)	DEFAULT folder	NOT NULL,
+	"title"	ARCHAR(200)		NOT NULL,
+	"created_at"	TIMESTAMPTZ	DEFAULT now()	NULL,
+	"updated_at"	TIMESTAMPTZ	DEFAULT now()	NULL
+);
+
+COMMENT ON COLUMN "proNodes"."type" IS 'folder, note, external';
+
+CREATE TABLE "prjuser" (
+	"id"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"prjID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"role"	VARCHAR(50)	DEFAULT reader	NULL,
+	"created_at"	TIMESTAMPTZ	DEFAULT CURRENT_TIMESTAMP	NOT NULL,
+	"update_at"	TIMESTAMPTZ	DEFAULT CURRENT_TIMESTAMP	NULL
+);
+
+COMMENT ON COLUMN "prjuser"."role" IS 'admin, editor, reviewer, reader, none';
+
+CREATE TABLE "myTodolist" (
+	"id"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"uid"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"prjID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"todoDspOrder"	integer	DEFAULT 0	NOT NULL,
+	"todoPriority"	varchar(20)		NOT NULL,
+	"todoDsc"	text		NULL,
+	"todoCreateDT"	TIMESTAMPTZ	DEFAULT CURRENT_TIMESTAMP	NULL,
+	"todoSttDT"	TIMESTAMPTZ	DEFAULT CURRENT_TIMESTAMP	NULL,
+	"todoUpdateDT"	TIMESTAMPTZ		NULL,
+	"todoEndDT"	TIMESTAMPTZ		NULL,
+	"todoStatue"	boolean	DEFAULT true	NULL
+);
+
+CREATE TABLE "myStyles" (
+	"style_id"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"style_name"	varchar(100)		NOT NULL,
+	"style_name_en"	varchar(100)		NULL,
+	"description"	text		NULL,
+	"version"	VARCHAR(20)	DEFAULT 1.0	NULL,
+	"display_order"	INTEGER	DEFAULT 0	NULL,
+	"created_at"	TIMESTAMP	DEFAULT CURRENT_TIMESTAMP	NULL,
+	"updated_at"	TIMESTAMP	DEFAULT CURRENT_TIMESTAMP	NULL
+);
+
+CREATE TABLE "projects" (
+	"prjID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"crtID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"title"	VARCHAR(200)		NOT NULL,
+	"description"	TEXT		NULL,
+	"proTag"	TEXT		NULL,
+	"proKey"	TEXT		NULL,
+	"visibility"	VARCHAR(50)	DEFAULT team	NOT NULL,
+	"status"	VARCHAR(50)		NULL,
+	"start_date"	DATE		NULL,
+	"end_date"	DATE		NULL,
+	"created_at"	TIMESTAMPTZ	DEFAULT CURRENT_TIMESTAMP	NULL,
+	"update_at"	TIMESTAMPTZ	DEFAULT CURRENT_TIMESTAMP	NULL
+);
+
+COMMENT ON COLUMN "projects"."visibility" IS 'rivate, team, company, public';
+
+CREATE TABLE "genSettings" (
+	"gstkind"	varchar(20)	DEFAULT user	NOT NULL,
+	"gstkeyid"	varchar(20)	DEFAULT 0000	NOT NULL,
+	"uid"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"gstname"	VARCHAR(200)		NULL,
+	"gstvalue"	TEXT		NOT NULL,
+	"gsttype"	VARCHAR(50)		NULL,
+	"gstcategory"	VARCHAR(50)		NULL,
+	"gstdescription"	TEXT		NULL,
+	"gstisactive"	BOOLEAN	DEFAULT true	NULL,
+	"gstcreated_at"	TIMESTAMPTZ	DEFAULT CURRENT_TIMESTAMP	NULL,
+	"gstupdated_at"	TIMESTAMPTZ		NULL
+);
+
+COMMENT ON COLUMN "genSettings"."gstkind" IS 'user, admin';
+
+COMMENT ON COLUMN "genSettings"."gstvalue" IS 'string, number, boolean, json';
+
+CREATE TABLE "noteHistory" (
+	"hisKey"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"nodeID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"prjID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"note_id"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"mlID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"hisKind"	varchar(20)		NULL,
+	"hisSAply"	integer	DEFAULT 0	NULL,
+	"ntlEAply"	integer	DEFAULT 0	NULL,
+	"ntlDescrption"	text		NULL,
+	"ntlUserID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"ntlDate"	TIMESTAMPTZ	DEFAULT CURRENT_TIMESTAMP	NULL
+);
+
+CREATE TABLE "pnote_ciations" (
+	"npcID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"ctID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"nodeID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"prjID"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"note_id"	uuid	DEFAULT uuid_generate_v4()	NOT NULL,
+	"npcStNum"	integer		NULL,
+	"npcEdNum"	integer		NULL,
+	"npcStatus"	BOOLEAN	DEFAULT true	NULL,
+	"npcCtID"	uuid		NULL,
+	"npcCtDate"	date	DEFAULT CURRENT_TIMESTAMP	NULL
+);
+

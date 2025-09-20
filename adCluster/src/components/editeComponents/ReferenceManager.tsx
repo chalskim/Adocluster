@@ -84,7 +84,7 @@ const ReferenceManager = ({ references, onCiteReference, onAddToProject }: Refer
       id: result.id,
       title: result.title,
       author: result.author,
-      year: result.year,
+      year: parseInt(result.year) || 0,
       publication: result.publication,
       doi: result.doi,
       url: result.url

@@ -100,6 +100,15 @@ const LeftPanel: React.FC<LeftPanelProps> = ({ onNodeSelect, visibleTabs = {} })
     { id: 'data-quotes', name: '인용/발췌', type: 'folder', fileType: 'format_quote' },
   ];
 
+  // Resource folder data (matching the EnhancedResourceManagement folders)
+  const resourceFoldersData = [
+    { id: 'images', name: '이미지', icon: 'image' },
+    { id: 'tables', name: '표(엑셀, CSV)', icon: 'table_chart' },
+    { id: 'formulas', name: '수식', icon: 'calculate' },
+    { id: 'videos', name: '동영상', icon: 'videocam' },
+    { id: 'audio', name: '음성', icon: 'mic' }
+  ];
+
   const handleAddNode = () => {
     console.log('Add node clicked');
     // Implement add node functionality here
@@ -147,7 +156,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({ onNodeSelect, visibleTabs = {} })
           )}
           {tabVisibility.library && (
             <button className={`tab-button ${activeTab === 'library' ? 'active' : ''}`} onClick={() => setActiveTab('library')}>
-              <i className="fas fa-upload"></i>
+              <i className="fas fa-folder mr-2 text-yellow-500"></i>
               <span>참고자료</span>
             </button>
           )}
@@ -181,9 +190,21 @@ const LeftPanel: React.FC<LeftPanelProps> = ({ onNodeSelect, visibleTabs = {} })
               <input type="text" placeholder="검색..." className="search-input" />
             </div>
             <div className="file-explorer-container">
-              {fileExplorerData.map(node => (
-                <FileNode key={node.id} node={node} />
-              ))}
+              {/* Resource folders with icons matching EnhancedResourceManagement */}
+              <div className="p-2">
+                <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  자료 폴더
+                </div>
+                {resourceFoldersData.map(folder => (
+                  <div 
+                    key={folder.id}
+                    className="p-3 rounded-lg cursor-pointer mb-1 flex items-center hover:bg-gray-100"
+                  >
+                    <i className="fas fa-folder mr-2 text-yellow-500"></i>
+                    <span>{folder.name}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}

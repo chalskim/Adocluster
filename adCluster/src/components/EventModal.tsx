@@ -38,6 +38,7 @@ const EventModal: React.FC<EventModalProps> = ({
   const [attendeeInput, setAttendeeInput] = useState('');
   const [reminderInput, setReminderInput] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false); // For collapsible section
 
   // 모달이 열릴 때 폼 데이터 초기화
   useEffect(() => {
@@ -78,6 +79,8 @@ const EventModal: React.FC<EventModalProps> = ({
         });
       }
       setErrors({});
+      // 기본적으로 고급 설정 섹션을 닫음
+      setIsAdvancedOpen(false);
     }
   }, [isOpen, event, selectedDate]);
 
@@ -210,11 +213,11 @@ const EventModal: React.FC<EventModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* 모달 헤더 */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-800">
             {event ? '연구 일정 수정' : '새 연구 일정 추가'}
           </h2>
           <button
@@ -226,17 +229,31 @@ const EventModal: React.FC<EventModalProps> = ({
         </div>
 
         {/* 모달 내용 */}
-        <div className="p-6 space-y-6">
+        <div className="p-4 space-y-3">
+          {/* 설명 - 1줄로 표시 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              설명
+            </label>
+            <input
+              type="text"
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              placeholder="연구 일정에 대한 설명을 입력하세요"
+            />
+          </div>
+
           {/* 제목 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               제목 *
             </label>
             <input
               type="text"
               value={formData.title}
               onChange={(e) => handleInputChange('title', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${
                 errors.title ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="연구 일정 제목을 입력하세요"
@@ -246,31 +263,17 @@ const EventModal: React.FC<EventModalProps> = ({
             )}
           </div>
 
-          {/* 설명 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              설명
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="연구 일정에 대한 설명을 입력하세요"
-            />
-          </div>
-
           {/* 날짜 및 시간 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 시작 날짜 *
               </label>
               <input
                 type="date"
                 value={formData.startDate}
                 onChange={(e) => handleInputChange('startDate', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${
                   errors.startDate ? 'border-red-500' : 'border-gray-300'
                 }`}
               />
@@ -279,14 +282,14 @@ const EventModal: React.FC<EventModalProps> = ({
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 종료 날짜 *
               </label>
               <input
                 type="date"
                 value={formData.endDate}
                 onChange={(e) => handleInputChange('endDate', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${
                   errors.endDate ? 'border-red-500' : 'border-gray-300'
                 }`}
               />
@@ -312,16 +315,16 @@ const EventModal: React.FC<EventModalProps> = ({
 
           {/* 시간 (종일이 아닐 때만 표시) */}
           {!formData.isAllDay && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   시작 시간 *
                 </label>
                 <input
                   type="time"
                   value={formData.startTime}
                   onChange={(e) => handleInputChange('startTime', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${
                     errors.startTime ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />
@@ -330,14 +333,14 @@ const EventModal: React.FC<EventModalProps> = ({
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   종료 시간 *
                 </label>
                 <input
                   type="time"
                   value={formData.endTime}
                   onChange={(e) => handleInputChange('endTime', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${
                     errors.endTime ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />
@@ -349,15 +352,15 @@ const EventModal: React.FC<EventModalProps> = ({
           )}
 
           {/* 카테고리 및 우선순위 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 카테고리
               </label>
               <select
                 value={formData.category}
                 onChange={(e) => handleInputChange('category', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               >
                 <option value="work">업무</option>
                 <option value="personal">개인</option>
@@ -367,13 +370,13 @@ const EventModal: React.FC<EventModalProps> = ({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 우선순위
               </label>
               <select
                 value={formData.priority}
                 onChange={(e) => handleInputChange('priority', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               >
                 <option value="low">낮음</option>
                 <option value="medium">보통</option>
@@ -384,109 +387,126 @@ const EventModal: React.FC<EventModalProps> = ({
 
           {/* 장소 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               장소
             </label>
             <input
               type="text"
               value={formData.location}
               onChange={(e) => handleInputChange('location', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               placeholder="장소를 입력하세요"
             />
           </div>
 
-          {/* 참석자 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              참석자
-            </label>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={attendeeInput}
-                onChange={(e) => setAttendeeInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addAttendee()}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="참석자 이름을 입력하세요"
-              />
-              <button
-                type="button"
-                onClick={addAttendee}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-              >
-                추가
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {formData.attendees.map((attendee, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-sm"
-                >
-                  {attendee}
-                  <button
-                    type="button"
-                    onClick={() => removeAttendee(attendee)}
-                    className="text-gray-500 hover:text-red-500"
-                  >
-                    <i className="fas fa-times text-xs"></i>
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
+          {/* 고급 설정 토글 버튼 */}
+          <div className="border-t border-gray-200 pt-3">
+            <button
+              type="button"
+              onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
+              className="flex items-center text-sm text-gray-600 hover:text-gray-800"
+            >
+              <i className={`fas fa-chevron-${isAdvancedOpen ? 'down' : 'right'} mr-2`}></i>
+              고급 설정
+            </button>
 
-          {/* 알림 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              알림 (분 단위)
-            </label>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="number"
-                value={reminderInput}
-                onChange={(e) => setReminderInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addReminder()}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="알림 시간(분)을 입력하세요"
-                min="1"
-              />
-              <button
-                type="button"
-                onClick={addReminder}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-              >
-                추가
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {formData.reminders.map((minutes, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-sm"
-                >
-                  {minutes}분 전
-                  <button
-                    type="button"
-                    onClick={() => removeReminder(minutes)}
-                    className="text-gray-500 hover:text-red-500"
-                  >
-                    <i className="fas fa-times text-xs"></i>
-                  </button>
-                </span>
-              ))}
-            </div>
+            {/* 접을 수 있는 고급 설정 섹션 */}
+            {isAdvancedOpen && (
+              <div className="mt-3 space-y-3">
+                {/* 참석자 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    참석자
+                  </label>
+                  <div className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={attendeeInput}
+                      onChange={(e) => setAttendeeInput(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && addAttendee()}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      placeholder="참석자 이름을 입력하세요"
+                    />
+                    <button
+                      type="button"
+                      onClick={addAttendee}
+                      className="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
+                    >
+                      추가
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.attendees.map((attendee, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs"
+                      >
+                        {attendee}
+                        <button
+                          type="button"
+                          onClick={() => removeAttendee(attendee)}
+                          className="text-gray-500 hover:text-red-500"
+                        >
+                          <i className="fas fa-times text-xs"></i>
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 알림 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    알림 (분 단위)
+                  </label>
+                  <div className="flex gap-2 mb-2">
+                    <input
+                      type="number"
+                      value={reminderInput}
+                      onChange={(e) => setReminderInput(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && addReminder()}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      placeholder="알림 시간(분)을 입력하세요"
+                      min="1"
+                    />
+                    <button
+                      type="button"
+                      onClick={addReminder}
+                      className="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
+                    >
+                      추가
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.reminders.map((minutes, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs"
+                      >
+                        {minutes}분 전
+                        <button
+                          type="button"
+                          onClick={() => removeReminder(minutes)}
+                          className="text-gray-500 hover:text-red-500"
+                        >
+                          <i className="fas fa-times text-xs"></i>
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         {/* 모달 푸터 */}
-        <div className="flex items-center justify-between p-6 border-t border-gray-200">
+        <div className="flex items-center justify-between p-4 border-t border-gray-200">
           <div>
             {event && (
               <button
                 onClick={handleDelete}
-                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-sm"
               >
                 삭제
               </button>
@@ -495,13 +515,13 @@ const EventModal: React.FC<EventModalProps> = ({
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+              className="px-3 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors text-sm"
             >
               취소
             </button>
             <button
               onClick={handleSave}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+              className="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
             >
               {event ? '수정' : '저장'}
             </button>

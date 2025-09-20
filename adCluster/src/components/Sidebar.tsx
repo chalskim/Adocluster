@@ -59,21 +59,22 @@ const Sidebar: React.FC = () => {
 
   // 기본 메뉴 아이템 - 연구 중심으로 재편
   const baseMenuItems: MenuItem[] = [
-    // 연구 핵심 메뉴
+    // 연구 핵심 메뉴 (항상 상단 고정)
     { id: 'dashboard', icon: 'fas fa-tachometer-alt', label: '연구 대시보드', path: '/dashboard' },
     { id: 'projects', icon: 'fas fa-project-diagram', label: '연구 프로젝트 관리', path: '/projects' },
     { id: 'calendar-management', icon: 'fas fa-calendar-alt', label: '연구 일정 관리', path: '/calendar-management' },
     
-    // 연구 자료 관리
+    // 자주 사용하는 메뉴들
     { id: 'document-management', icon: 'fas fa-folder-open', label: '연구노트 관리', path: '/document-management' },
-    { id: 'data-management', icon: 'fas fa-database', label: '자료 관리', path: '/data-management' },
     { id: 'source-management', icon: 'fas fa-bookmark', label: '출처 관리', path: '/source-management' },
+    { id: 'message-management', icon: 'fas fa-code-branch', label: '이력관리', path: '/message-management' },
+    { id: 'review-feedback', icon: 'fas fa-comments', label: '리뷰/피드백', path: '/review-feedback' },
     
-    // 연구 협업 및 소통
-    { id: 'message-management', icon: 'fas fa-envelope', label: '연구팀 소통', path: '/message-management' },
+    // 자료 관리
+    { id: 'enhanced-resource-management', icon: 'fas fa-book', label: '자료관리', path: '/enhanced-resource-management' },
+    { id: 'search', icon: 'fas fa-book', label: '참고문서', path: '/search' },
     
-    // 연구 도구
-    { id: 'search', icon: 'fas fa-external-link-alt', label: '외부 문서 관리', path: '/search' },
+    // 기타 도구
     { id: 'import-export', icon: 'fas fa-file-export', label: '가져오기/내보내기', path: '/import-export' },
     
     // 시스템 설정
@@ -103,11 +104,11 @@ const Sidebar: React.FC = () => {
           <div className="text-blue-500 text-xl font-bold">AD</div>
         )}
       </div>
-      <div className="menu py-4">
+      <div className="menu py-2">
         {menuItems.map((item) => (
           <div
             key={item.id}
-            className={`menu-item p-4 flex items-center cursor-pointer transition-all duration-300 border-l-4 ${
+            className={`menu-item px-4 py-3 flex items-center cursor-pointer transition-all duration-300 border-l-4 ${
               activeItem === item.id
                 ? 'bg-blue-900 bg-opacity-20 border-blue-500'
                 : 'border-transparent hover:bg-gray-700 hover:bg-opacity-50'

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ProjectData } from '../types/ProjectTypes';
 import { useNavigate } from 'react-router-dom';
 import { getApiBaseUrl, getAuthHeaders, fetchCurrentUser } from '../services/api';
 
@@ -8,16 +9,7 @@ interface Member {
   email: string;
 }
 
-interface ProjectData {
-  prjID: string;
-  title: string;
-  description: string;
-  visibility: string;
-  start_date: string;
-  end_date: string | null;
-  created_at: string;
-  update_at: string;
-}
+
 
 const ProjectSetting: React.FC = () => {
   const navigate = useNavigate();
@@ -160,18 +152,12 @@ const ProjectSetting: React.FC = () => {
     // 프로젝트 생성
     const projectData = await createProject();
     
-    // Debugging: Log the projectData to see what we received
-    console.log('Project data received:', projectData);
-    
     if (projectData) {
       // Get current user information
       const currentUser = await fetchCurrentUser();
       
       // Extract project ID - try multiple possible field names
-      const projectId = projectData.prjID || projectData.prjid || projectData.id;
-      
-      // Debugging: Log the projectId to see if it exists
-      console.log('Project ID:', projectId);
+      const projectId = projectData.prjID;
       
       // Check if we have a valid project ID
       if (!projectId) {

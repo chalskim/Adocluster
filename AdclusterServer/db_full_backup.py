@@ -109,7 +109,44 @@ def create_full_backup(backup_path):
                     values_str = "', '".join(values)
                     f.write(f"CREATE TYPE {enum_name} AS ENUM ('{values_str}');\n\n")
             
-            # 3. 테이블 스키마 및 데이터 백업
+            # 3. 뷰(View) 백업
+            logging.info("뷰(View) 백업 중")
+            with engine.connect() as conn:
+                # 일반 뷰 백업
+                views_query = text("""
+                    SELECT schemaname, viewname, definition 
+                    FROM pg_views 
+                    WHERE schemaname = 'public'
+                    ORDER BY viewname;
+                """)
+                
+                views = conn.execute(views_query).fetchall()
+                if views:
+                    f.write("-- Views\n")
+                    for row in views:
+                        schema_name, view_name, definition = row
+                        f.write(f"-- View: {view_name}\n")
+                        f.write(f"DROP VIEW IF EXISTS {view_name} CASCADE;\n")
+                        f.write(f"CREATE VIEW {view_name} AS {definition};\n\n")
+                
+                # 머티리얼라이즈드 뷰 백업
+                materialized_views_query = text("""
+                    SELECT schemaname, matviewname, definition 
+                    FROM pg_matviews 
+                    WHERE schemaname = 'public'
+                    ORDER BY matviewname;
+                """)
+                
+                mat_views = conn.execute(materialized_views_query).fetchall()
+                if mat_views:
+                    f.write("-- Materialized Views\n")
+                    for row in mat_views:
+                        schema_name, mat_view_name, definition = row
+                        f.write(f"-- Materialized View: {mat_view_name}\n")
+                        f.write(f"DROP MATERIALIZED VIEW IF EXISTS {mat_view_name} CASCADE;\n")
+                        f.write(f"CREATE MATERIALIZED VIEW {mat_view_name} AS {definition};\n\n")
+            
+            # 4. 테이블 스키마 및 데이터 백업
             # 테이블 목록 가져오기
             with engine.connect() as conn:
                 tables_query = text("""

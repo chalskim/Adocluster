@@ -31,7 +31,11 @@ def verify_token(token: str, credentials_exception):
             
         # user_id를 UUID로 변환
         try:
-            user_id = uuid.UUID(str(user_id))
+            # Handle both string and UUID formats
+            if isinstance(user_id, str):
+                user_id = uuid.UUID(user_id)
+            elif not isinstance(user_id, uuid.UUID):
+                user_id = uuid.UUID(str(user_id))
         except (ValueError, TypeError):
             raise credentials_exception
             

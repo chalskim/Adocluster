@@ -188,16 +188,16 @@ const ImportExportPage: React.FC = () => {
   };
 
   return (
-    <div className="p-5 bg-gray-100 min-h-screen">
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-5">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">📥 가져오기 / 내보내기</h1>
-        <p className="text-gray-500">문서, 참고문헌, 템플릿, 자료를 다양한 형식으로 가져오고 내보낼 수 있습니다</p>
+    <div className="p-4 bg-gray-100 min-h-screen">
+      <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+        <h1 className="text-xl font-bold text-gray-800 mb-1">📥 가져오기 / 내보내기</h1>
+        <p className="text-gray-500 text-sm">문서, 참고문헌, 템플릿, 자료를 다양한 형식으로 가져오고 내보낼 수 있습니다</p>
       </div>
 
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         <div className="flex flex-wrap border-b border-gray-200 bg-gray-100">
           <div 
-            className={`px-6 py-4 cursor-pointer font-medium transition-colors ${
+            className={`px-4 py-3 cursor-pointer font-medium transition-colors text-sm ${
               activeTab === 'document' 
                 ? 'bg-white border-b-2 border-blue-500 text-blue-500' 
                 : 'hover:bg-gray-200'
@@ -207,7 +207,7 @@ const ImportExportPage: React.FC = () => {
             문서 
           </div>
           <div 
-            className={`px-6 py-4 cursor-pointer font-medium transition-colors ${
+            className={`px-4 py-3 cursor-pointer font-medium transition-colors text-sm ${
               activeTab === 'citation' 
                 ? 'bg-white border-b-2 border-blue-500 text-blue-500' 
                 : 'hover:bg-gray-200'
@@ -217,7 +217,7 @@ const ImportExportPage: React.FC = () => {
             참고문헌 
           </div>
           <div 
-            className={`px-6 py-4 cursor-pointer font-medium transition-colors ${
+            className={`px-4 py-3 cursor-pointer font-medium transition-colors text-sm ${
               activeTab === 'template' 
                 ? 'bg-white border-b-2 border-blue-500 text-blue-500' 
                 : 'hover:bg-gray-200'
@@ -227,7 +227,7 @@ const ImportExportPage: React.FC = () => {
             템플릿 
           </div>
           <div 
-            className={`px-6 py-4 cursor-pointer font-medium transition-colors ${
+            className={`px-4 py-3 cursor-pointer font-medium transition-colors text-sm ${
               activeTab === 'data' 
                 ? 'bg-white border-b-2 border-blue-500 text-blue-500' 
                 : 'hover:bg-gray-200'
@@ -240,13 +240,13 @@ const ImportExportPage: React.FC = () => {
 
         {/* Document Tab */}
         {activeTab === 'document' && (
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6 pb-4 border-b-2 border-blue-500"> 문서 </h2>
+          <div className="p-4">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4 pb-3 border-b-2 border-blue-500"> 문서 </h2>
             
-            <div className="mb-6">
-              <label className="block text-gray-700 font-medium mb-2">연구 프로젝트 선택</label>
+            <div className="mb-4">
+              <label className="block text-gray-700 font-medium mb-1 text-sm">연구 프로젝트 선택</label>
               <select 
-                className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                className="w-full p-2 border border-gray-300 rounded-md focus:border-blue-500 focus:outline-none text-sm"
                 value={selectedProject}
                 onChange={(e) => setSelectedProject(e.target.value)}
               >
@@ -256,54 +256,54 @@ const ImportExportPage: React.FC = () => {
               </select>
             </div>
 
-            <div className="mb-6">
-              <label className="block text-gray-700 font-medium mb-2">문서 선택</label>
-              <div className="border border-gray-300 rounded-lg max-h-80 overflow-y-auto">
+            <div className="mb-4">
+              <label className="block text-gray-700 font-medium mb-1 text-sm">문서 선택</label>
+              <div className="border border-gray-300 rounded-md max-h-64 overflow-y-auto">
                 {documentItems.map((item) => (
                   <div 
                     key={item.id} 
-                    className="flex items-center gap-3 p-3 border-b border-gray-200 last:border-b-0 hover:bg-gray-50"
+                    className="flex items-center gap-2 p-2 border-b border-gray-200 last:border-b-0 hover:bg-gray-50 text-sm"
                   >
                     <input 
                       type="checkbox" 
-                      className="w-5 h-5"
+                      className="w-4 h-4"
                       checked={item.checked}
                       onChange={() => toggleDocumentItem(item.id, 'document')}
                     />
-                    <i className={`${getDocumentIcon(item.type)} text-blue-500`}></i>
+                    <i className={`${getDocumentIcon(item.type)} text-blue-500 text-sm`}></i>
                     <span>{item.name}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="mb-8">
-              <label className="block text-gray-700 font-medium mb-2">포맷 선택</label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+            <div className="mb-5">
+              <label className="block text-gray-700 font-medium mb-1 text-sm">포맷 선택</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-1">
                 {documentFormats.map((format) => (
                   <div 
                     key={format.id}
-                    className={`p-4 border-2 rounded-lg text-center cursor-pointer transition-all ${
+                    className={`p-3 border-2 rounded-md text-center cursor-pointer transition-all ${
                       format.selected 
                         ? 'border-blue-500 bg-blue-50' 
                         : 'border-gray-300 hover:border-blue-300'
                     }`}
                     onClick={() => selectFormat(format.id, 'document')}
                   >
-                    <div className="text-2xl mb-2 text-blue-500">
+                    <div className="text-lg mb-1 text-blue-500">
                       <i className={format.icon}></i>
                     </div>
-                    <div>{format.name}</div>
+                    <div className="text-sm">{format.name}</div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <button className="px-5 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2">
+            <div className="flex flex-wrap gap-2">
+              <button className="px-4 py-2 bg-blue-500 text-white font-medium rounded-md hover:bg-blue-600 transition-colors flex items-center gap-1 text-sm">
                 <i className="fas fa-download"></i> 내보내기
               </button>
-              <button className="px-5 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2">
+              <button className="px-4 py-2 bg-gray-500 text-white font-medium rounded-md hover:bg-gray-600 transition-colors flex items-center gap-1 text-sm">
                 <i className="fas fa-upload"></i> 가져오기
               </button>
             </div>
@@ -312,67 +312,67 @@ const ImportExportPage: React.FC = () => {
 
         {/* Citation Tab */}
         {activeTab === 'citation' && (
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6 pb-4 border-b-2 border-blue-500"> 참고문헌 </h2>
+          <div className="p-4">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4 pb-3 border-b-2 border-blue-500"> 참고문헌 </h2>
             
-            <div className="mb-6">
-              <label className="block text-gray-700 font-medium mb-2">참고문헌 스타일 선택</label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+            <div className="mb-4">
+              <label className="block text-gray-700 font-medium mb-1 text-sm">참고문헌 스타일 선택</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-1">
                 {citationFormats.map((format) => (
                   <div 
                     key={format.id}
-                    className={`p-4 border-2 rounded-lg text-center cursor-pointer transition-all ${
+                    className={`p-3 border-2 rounded-md text-center cursor-pointer transition-all ${
                       format.selected 
                         ? 'border-blue-500 bg-blue-50' 
                         : 'border-gray-300 hover:border-blue-300'
                     }`}
                     onClick={() => selectFormat(format.id, 'citation')}
                   >
-                    <div className="text-2xl mb-2 text-blue-500">
+                    <div className="text-lg mb-1 text-blue-500">
                       <i className={format.icon}></i>
                     </div>
-                    <div>{format.name}</div>
+                    <div className="text-sm">{format.name}</div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="mb-6">
-              <label className="block text-gray-700 font-medium mb-2">참고문헌 목록</label>
-              <div className="border border-gray-300 rounded-lg max-h-80 overflow-y-auto">
+            <div className="mb-4">
+              <label className="block text-gray-700 font-medium mb-1 text-sm">참고문헌 목록</label>
+              <div className="border border-gray-300 rounded-md max-h-64 overflow-y-auto">
                 {citationItems.map((item) => (
                   <div 
                     key={item.id} 
-                    className="flex items-center gap-3 p-3 border-b border-gray-200 last:border-b-0 hover:bg-gray-50"
+                    className="flex items-center gap-2 p-2 border-b border-gray-200 last:border-b-0 hover:bg-gray-50 text-sm"
                   >
                     <input 
                       type="checkbox" 
-                      className="w-5 h-5"
+                      className="w-4 h-4"
                       checked={item.checked}
                       onChange={() => toggleDocumentItem(item.id, 'citation')}
                     />
-                    <i className={`${getDocumentIcon(item.type)} text-blue-500`}></i>
+                    <i className={`${getDocumentIcon(item.type)} text-blue-500 text-sm`}></i>
                     <span>{item.name}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-3 mb-8">
-              <button className="px-5 py-3 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2">
+            <div className="flex flex-wrap gap-2 mb-5">
+              <button className="px-4 py-2 bg-green-500 text-white font-medium rounded-md hover:bg-green-600 transition-colors flex items-center gap-1 text-sm">
                 <i className="fas fa-copy"></i> 클립보드 복사
               </button>
-              <button className="px-5 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2">
+              <button className="px-4 py-2 bg-blue-500 text-white font-medium rounded-md hover:bg-blue-600 transition-colors flex items-center gap-1 text-sm">
                 <i className="fas fa-download"></i> 다운로드
               </button>
-              <button className="px-5 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2">
+              <button className="px-4 py-2 bg-gray-500 text-white font-medium rounded-md hover:bg-gray-600 transition-colors flex items-center gap-1 text-sm">
                 <i className="fas fa-upload"></i> 가져오기
               </button>
             </div>
 
-            <div className="bg-gray-100 rounded-lg p-5">
-              <div className="font-medium text-gray-700 mb-3">미리보기</div>
-              <div className="bg-white rounded p-4 min-h-24 font-mono whitespace-pre-wrap">
+            <div className="bg-gray-100 rounded-md p-3">
+              <div className="font-medium text-gray-700 mb-2 text-sm">미리보기</div>
+              <div className="bg-white rounded p-3 min-h-20 font-mono whitespace-pre-wrap text-xs">
                 {citationPreview}
               </div>
             </div>
@@ -381,73 +381,73 @@ const ImportExportPage: React.FC = () => {
 
         {/* Template Tab */}
         {activeTab === 'template' && (
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6 pb-4 border-b-2 border-blue-500"> 템플릿 </h2>
+          <div className="p-4">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4 pb-3 border-b-2 border-blue-500"> 템플릿 </h2>
             
-            <div className="mb-6">
-              <label className="block text-gray-700 font-medium mb-2">템플릿 선택</label>
-              <div className="border border-gray-300 rounded-lg max-h-80 overflow-y-auto">
+            <div className="mb-4">
+              <label className="block text-gray-700 font-medium mb-1 text-sm">템플릿 선택</label>
+              <div className="border border-gray-300 rounded-md max-h-64 overflow-y-auto">
                 {templateItems.map((item) => (
                   <div 
                     key={item.id} 
-                    className="flex items-center gap-3 p-3 border-b border-gray-200 last:border-b-0 hover:bg-gray-50"
+                    className="flex items-center gap-2 p-2 border-b border-gray-200 last:border-b-0 hover:bg-gray-50 text-sm"
                   >
                     <input 
                       type="checkbox" 
-                      className="w-5 h-5"
+                      className="w-4 h-4"
                       checked={item.checked}
                       onChange={() => toggleDocumentItem(item.id, 'template')}
                     />
-                    <i className={`${getDocumentIcon(item.type)} text-blue-500`}></i>
+                    <i className={`${getDocumentIcon(item.type)} text-blue-500 text-sm`}></i>
                     <span>{item.name}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="mb-8">
-              <label className="block text-gray-700 font-medium mb-2">내보내기 포맷</label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+            <div className="mb-5">
+              <label className="block text-gray-700 font-medium mb-1 text-sm">내보내기 포맷</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-1">
                 {templateFormats.map((format) => (
                   <div 
                     key={format.id}
-                    className={`p-4 border-2 rounded-lg text-center cursor-pointer transition-all ${
+                    className={`p-3 border-2 rounded-md text-center cursor-pointer transition-all ${
                       format.selected 
                         ? 'border-blue-500 bg-blue-50' 
                         : 'border-gray-300 hover:border-blue-300'
                     }`}
                     onClick={() => selectFormat(format.id, 'template')}
                   >
-                    <div className="text-2xl mb-2 text-blue-500">
+                    <div className="text-lg mb-1 text-blue-500">
                       <i className={format.icon}></i>
                     </div>
-                    <div>{format.name}</div>
+                    <div className="text-sm">{format.name}</div>
                   </div>
                 ))}
               </div>
             </div>
 
             <div 
-              className="border-2 border-dashed border-gray-300 rounded-lg p-10 text-center mb-8 transition-colors hover:border-blue-500 hover:bg-gray-50"
+              className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center mb-5 transition-colors hover:border-blue-500 hover:bg-gray-50"
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
-              <div className="text-4xl text-gray-400 mb-4">
+              <div className="text-2xl text-gray-400 mb-2">
                 <i className="fas fa-cloud-upload-alt"></i>
               </div>
-              <h3 className="text-xl font-semibold mb-2">템플릿 가져오기</h3>
-              <p className="text-gray-500 mb-4">여기에 템플릿 파일을 드래그 앤 드롭하거나 클릭하여 선택하세요</p>
+              <h3 className="text-base font-semibold mb-1">템플릿 가져오기</h3>
+              <p className="text-gray-500 mb-3 text-sm">여기에 템플릿 파일을 드래그 앤 드롭하거나 클릭하여 선택하세요</p>
               <button 
-                className="px-5 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2 mx-auto"
+                className="px-4 py-2 bg-gray-500 text-white font-medium rounded-md hover:bg-gray-600 transition-colors flex items-center gap-1 mx-auto text-sm"
                 onClick={handleFileSelect}
               >
                 <i className="fas fa-folder-open"></i> 파일 선택
               </button>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <button className="px-5 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2">
+            <div className="flex flex-wrap gap-2">
+              <button className="px-4 py-2 bg-blue-500 text-white font-medium rounded-md hover:bg-blue-600 transition-colors flex items-center gap-1 text-sm">
                 <i className="fas fa-download"></i> 내보내기
               </button>
             </div>
@@ -456,53 +456,53 @@ const ImportExportPage: React.FC = () => {
 
         {/* Data Tab */}
         {activeTab === 'data' && (
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6 pb-4 border-b-2 border-blue-500"> 자료 </h2>
+          <div className="p-4">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4 pb-3 border-b-2 border-blue-500"> 자료 </h2>
             
-            <div className="mb-6">
-              <label className="block text-gray-700 font-medium mb-2">자료 선택</label>
-              <div className="flex flex-wrap gap-4 mt-2">
+            <div className="mb-4">
+              <label className="block text-gray-700 font-medium mb-1 text-sm">자료 선택</label>
+              <div className="flex flex-wrap gap-3 mt-1">
                 {dataItems.map((item) => (
-                  <div key={item.id} className="flex items-center gap-2">
+                  <div key={item.id} className="flex items-center gap-1">
                     <input 
                       type="checkbox" 
-                      className="w-5 h-5"
+                      className="w-4 h-4"
                       checked={item.checked}
                       onChange={() => toggleDataItem(item.id)}
                     />
-                    <span>{item.name}</span>
+                    <span className="text-sm">{item.name}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="mb-8">
-              <label className="block text-gray-700 font-medium mb-2">압축 형식 선택</label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+            <div className="mb-5">
+              <label className="block text-gray-700 font-medium mb-1 text-sm">압축 형식 선택</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-1">
                 {dataFormats.map((format) => (
                   <div 
                     key={format.id}
-                    className={`p-4 border-2 rounded-lg text-center cursor-pointer transition-all ${
+                    className={`p-3 border-2 rounded-md text-center cursor-pointer transition-all ${
                       format.selected 
                         ? 'border-blue-500 bg-blue-50' 
                         : 'border-gray-300 hover:border-blue-300'
                     }`}
                     onClick={() => selectFormat(format.id, 'data')}
                   >
-                    <div className="text-2xl mb-2 text-blue-500">
+                    <div className="text-lg mb-1 text-blue-500">
                       <i className={format.icon}></i>
                     </div>
-                    <div>{format.name}</div>
+                    <div className="text-sm">{format.name}</div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <button className="px-5 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2">
+            <div className="flex flex-wrap gap-2">
+              <button className="px-4 py-2 bg-blue-500 text-white font-medium rounded-md hover:bg-blue-600 transition-colors flex items-center gap-1 text-sm">
                 <i className="fas fa-download"></i> 내보내기
               </button>
-              <button className="px-5 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2">
+              <button className="px-4 py-2 bg-gray-500 text-white font-medium rounded-md hover:bg-gray-600 transition-colors flex items-center gap-1 text-sm">
                 <i className="fas fa-upload"></i> 가져오기
               </button>
             </div>
