@@ -230,20 +230,6 @@ const EventModal: React.FC<EventModalProps> = ({
 
         {/* 모달 내용 */}
         <div className="p-4 space-y-3">
-          {/* 설명 - 1줄로 표시 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              설명
-            </label>
-            <input
-              type="text"
-              value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              placeholder="연구 일정에 대한 설명을 입력하세요"
-            />
-          </div>
-
           {/* 제목 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -261,6 +247,20 @@ const EventModal: React.FC<EventModalProps> = ({
             {errors.title && (
               <p className="mt-1 text-sm text-red-600">{errors.title}</p>
             )}
+          </div>
+
+          {/* 설명 - 1줄로 표시 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              설명
+            </label>
+            <input
+              type="text"
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              placeholder="연구 일정에 대한 설명을 입력하세요"
+            />
           </div>
 
           {/* 날짜 및 시간 */}

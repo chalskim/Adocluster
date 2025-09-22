@@ -104,11 +104,11 @@ const Sidebar: React.FC = () => {
           <div className="text-blue-500 text-xl font-bold">AD</div>
         )}
       </div>
-      <div className="menu py-2">
+      <div className="menu py-1">
         {menuItems.map((item) => (
           <div
             key={item.id}
-            className={`menu-item px-4 py-3 flex items-center cursor-pointer transition-all duration-300 border-l-4 ${
+            className={`menu-item px-3 py-2 flex items-center cursor-pointer transition-all duration-300 border-l-4 ${
               activeItem === item.id
                 ? 'bg-blue-900 bg-opacity-20 border-blue-500'
                 : 'border-transparent hover:bg-gray-700 hover:bg-opacity-50'
@@ -116,7 +116,7 @@ const Sidebar: React.FC = () => {
             onClick={() => handleMenuClick(item)}
             title={isCollapsed ? item.label : ''}
           >
-            <i className={`${item.icon} text-lg w-5 text-center ${isCollapsed ? '' : 'mr-3'}`}></i>
+            <i className={`${item.icon} text-base w-5 text-center ${isCollapsed ? '' : 'mr-2'}`}></i>
             <span className={isCollapsed ? 'hidden' : 'block'}>{item.label}</span>
           </div>
         ))}

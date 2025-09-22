@@ -559,7 +559,11 @@ export class EditorSettingsManager {
         characterCount: { enabled: true, limit: null, showCount: true },
         wordCount: { enabled: true, showCount: true },
         readingTime: { enabled: true, wordsPerMinute: 200 },
-        autoSave: { enabled: true, interval: 30000, showIndicator: true },
+        autoSave: { 
+    enabled: import.meta.env.VITE_AUTO_SAVE_ENABLED === 'true' || true, 
+    interval: parseInt(import.meta.env.VITE_AUTO_SAVE_INTERVAL) || 30000, 
+    showIndicator: true 
+  },
         spellCheck: { enabled: true, language: "ko-KR" }
       },
       shortcuts: {

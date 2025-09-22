@@ -17,7 +17,45 @@ interface SearchResult {
   doi?: string;
   abstract?: string;
   url?: string;
-  source: 'Google Scholar' | 'PubMed' | 'arXiv' | 'IEEE Xplore' | 'ACM Digital Library';
+  source: 'Google Scholar' | 'PubMed' | 'arXiv' | 'IEEE Xplore' | 'Crossref (ACM)' | 'Crossref' | 'ACM (Crossref)';
+}
+
+// Define the structure for Google Scholar API response
+interface ScholarSearchResult {
+  title: string;
+  link?: string;
+  snippet?: string;
+  authors?: string[];
+  publication_info?: string;
+  cited_by?: number;
+  year?: number;
+}
+
+// Define the structure for Crossref API response
+interface CrossrefSearchResult {
+  id: string;
+  title: string;
+  authors: string[];
+  publisher: string;
+  publication_year?: number;
+  journal: string;
+  abstract?: string;
+  doi: string;
+  url: string;
+  citation_count: number;
+  type: string;
+}
+
+interface ScholarSearchResponse {
+  results: ScholarSearchResult[];
+  total_results: number;
+  search_time: number;
+}
+
+interface CrossrefSearchResponse {
+  results: CrossrefSearchResult[];
+  total_results: number;
+  search_time: number;
 }
 
 const ReferenceManager = ({ references, onCiteReference, onAddToProject }: ReferenceManagerProps) => {
@@ -27,55 +65,168 @@ const ReferenceManager = ({ references, onCiteReference, onAddToProject }: Refer
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [libraryFilter, setLibraryFilter] = useState('');
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5); // 페이지당 5개 결과 표시
 
   // 학술 검색 실행
   const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
+    if (!searchQuery.trim()) {
+      console.log('Search query is empty, returning early');
+      return;
+    }
     
+    console.log('Starting search for:', searchQuery);
     setIsSearching(true);
     
-    // 실제 구현에서는 각 학술 DB API를 호출
-    // 현재는 모의 데이터로 구현
-    setTimeout(() => {
-      const mockResults: SearchResult[] = [
-        {
-          id: 'search-1',
-          title: `${searchQuery}에 관한 최신 연구 동향`,
-          author: 'Kim, J., Lee, S., & Park, H.',
-          year: '2024',
-          publication: 'Journal of Advanced Research',
-          doi: '10.1000/182',
-          abstract: `${searchQuery}에 대한 포괄적인 연구를 통해 새로운 접근 방법을 제시합니다...`,
-          url: 'https://example.com/paper1',
-          source: selectedSource as any
-        },
-        {
-          id: 'search-2',
-          title: `${searchQuery} 분야의 혁신적 접근법`,
-          author: 'Smith, A., & Johnson, B.',
-          year: '2023',
-          publication: 'International Conference Proceedings',
-          doi: '10.1000/183',
-          abstract: `본 연구는 ${searchQuery} 분야에서의 새로운 방법론을 제안합니다...`,
-          url: 'https://example.com/paper2',
-          source: selectedSource as any
-        },
-        {
-          id: 'search-3',
-          title: `${searchQuery}의 실용적 응용`,
-          author: 'Chen, L., et al.',
-          year: '2023',
-          publication: 'Applied Science Review',
-          doi: '10.1000/184',
-          abstract: `${searchQuery}의 실제 적용 사례와 효과를 분석한 연구입니다...`,
-          url: 'https://example.com/paper3',
-          source: selectedSource as any
-        }
-      ];
+    try {
+      // Check if we're doing a citation search
+      const isCitationSearch = selectedSource === 'Google Scholar Citations';
+      const actualSource = isCitationSearch ? 'Google Scholar' : selectedSource;
       
-      setSearchResults(mockResults);
+      // Only Google Scholar is currently implemented
+      if (actualSource === 'Google Scholar') {
+        console.log('Using Google Scholar search');
+        // Get the auth token from localStorage
+        const authToken = localStorage.getItem('authToken');
+        
+        console.log('=== Google Scholar Search Debug Info ===');
+        console.log('Search query:', searchQuery);
+        console.log('Auth token exists:', !!authToken);
+        console.log('Selected source:', selectedSource);
+        console.log('Is citation search:', isCitationSearch);
+        
+        if (!authToken) {
+          console.log('ERROR: No auth token found in localStorage');
+          throw new Error('인증 토큰이 없습니다. 다시 로그인해주세요.');
+        }
+        
+        // Log token info (first and last 10 characters for security)
+        console.log('Token length:', authToken.length);
+        console.log('Token preview:', authToken.substring(0, 10) + '...' + authToken.substring(authToken.length - 10));
+        
+        // Use different endpoint for citation search
+        const endpoint = isCitationSearch ? 'citation-search' : 'search';
+        const apiUrl = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}${import.meta.env.VITE_GOOGLE_SCHOLAR_ENDPOINT || '/api/google-scholar'}/${endpoint}?query=${encodeURIComponent(searchQuery)}&limit=10`;
+        console.log('API URL:', apiUrl);
+        
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+        
+        console.log('Response status:', response.status);
+        console.log('Response headers:', [...response.headers.entries()]);
+        
+        if (!response.ok) {
+          // Try to get error details
+          let errorText = '';
+          try {
+            errorText = await response.text();
+            console.log('Error response body:', errorText);
+          } catch (e) {
+            console.log('Could not read error response body');
+          }
+          
+          if (response.status === 401) {
+            console.log('ERROR: 401 Unauthorized - Token may be invalid or expired');
+            // Remove invalid token and notify user
+            localStorage.removeItem('authToken');
+            throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.');
+          }
+          throw new Error(`API request failed with status ${response.status}: ${errorText}`);
+        }
+        
+        const data = await response.json();
+        console.log('Search results:', data);
+        console.log('Number of results:', data.results?.length || 0);
+        
+        // Transform the API response to our SearchResult format
+        const transformedResults: SearchResult[] = (data.results || []).map((result: any, index: number) => ({
+          id: `scholar-${Date.now()}-${index}`,
+          title: result.title,
+          author: result.authors ? result.authors.join(', ') : 'Unknown',
+          year: result.year ? result.year.toString() : 'N.d.',
+          publication: result.publication_info || 'Unknown publication',
+          abstract: result.snippet,
+          url: result.link,
+          source: isCitationSearch ? 'Google Scholar Citations' : 'Google Scholar'
+        }));
+        
+        console.log('Transformed results:', transformedResults);
+        setSearchResults(transformedResults);
+        console.log('=== End Google Scholar Search Debug Info ===');
+      } else if (actualSource === 'Crossref' || actualSource === 'ACM (Crossref)' || actualSource === 'Crossref (ACM)') {
+        console.log('Using Crossref search');
+        // Get the auth token from localStorage
+        const authToken = localStorage.getItem('authToken');
+        
+        console.log('=== Crossref Search Debug Info ===');
+        console.log('Search query:', searchQuery);
+        console.log('Auth token exists:', !!authToken);
+        console.log('Selected source:', selectedSource);
+        
+        if (!authToken) {
+          console.log('ERROR: No auth token found in localStorage');
+          throw new Error('인증 토큰이 없습니다. 다시 로그인해주세요.');
+        }
+        
+        // Determine source parameter for Crossref API
+        const sourceParam = (actualSource === 'ACM (Crossref)' || actualSource === 'Crossref (ACM)') ? 'acm' : 'all';
+        const apiUrl = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/api/crossref/search?query=${encodeURIComponent(searchQuery)}&source=${sourceParam}&page_size=10`;
+        console.log('Crossref API URL:', apiUrl);
+        
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+        
+        console.log('Crossref API response status:', response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.log('Crossref API error response:', errorText);
+          throw new Error(`Crossref API 요청 실패: ${response.status} ${response.statusText}`);
+        }
+        
+        const data: CrossrefSearchResponse = await response.json();
+        console.log('Crossref API response data:', data);
+        
+        // Transform Crossref results to SearchResult format
+        const transformedResults: SearchResult[] = data.results.map((item, index) => ({
+          id: item.doi || `crossref-${index}`,
+          title: item.title,
+          author: item.authors.join(', '),
+          year: item.publication_year?.toString() || '',
+          publication: item.journal || item.publisher,
+          doi: item.doi,
+          abstract: item.abstract,
+          url: item.url,
+          source: (actualSource === 'ACM (Crossref)' || actualSource === 'Crossref (ACM)') ? 'Crossref (ACM)' : 'Crossref'
+        }));
+        
+        console.log('Transformed Crossref results:', transformedResults);
+        setSearchResults(transformedResults);
+        console.log('=== End Crossref Search Debug Info ===');
+      } else {
+        // For other sources, show a message that they are not implemented yet
+        console.log(`Search requested for ${selectedSource}, but it's not implemented yet`);
+        alert(`${selectedSource} 검색은 아직 구현되지 않았습니다. 현재 Google Scholar와 Crossref만 지원됩니다.`);
+        setSearchResults([]);
+      }
+    } catch (error) {
+      console.error('학술 검색 중 오류 발생:', error);
+      alert(`검색 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+    } finally {
       setIsSearching(false);
-    }, 1500);
+    }
   };
 
   // 검색 결과를 라이브러리에 추가
@@ -104,6 +255,34 @@ const ReferenceManager = ({ references, onCiteReference, onAddToProject }: Refer
     ref.author.toLowerCase().includes(libraryFilter.toLowerCase()) ||
     ref.publication.toLowerCase().includes(libraryFilter.toLowerCase())
   );
+
+  // Pagination logic for search results
+  const totalPages = Math.ceil(searchResults.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedResults = searchResults.slice(startIndex, endIndex);
+
+  // Reset to first page when search results change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchResults]);
+
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
   // 파일 업로드 처리 (BIB, RIS, XML 지원)
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -235,10 +414,19 @@ const ReferenceManager = ({ references, onCiteReference, onAddToProject }: Refer
               <input 
                 type="text" 
                 className="search-input" 
-                placeholder="학술 논문 검색..." 
+                placeholder="Google Scholar에서 학술 논문 검색..." 
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                onChange={(e) => {
+                  console.log('Search query changed to:', e.target.value);
+                  setSearchQuery(e.target.value);
+                }}
+                onKeyPress={(e) => {
+                  console.log('Key pressed:', e.key);
+                  if (e.key === 'Enter') {
+                    console.log('Enter key pressed, triggering search');
+                    handleSearch();
+                  }
+                }}
               />
             </div>
             <div className="search-options">
@@ -248,16 +436,22 @@ const ReferenceManager = ({ references, onCiteReference, onAddToProject }: Refer
                   value={selectedSource}
                   onChange={(e) => setSelectedSource(e.target.value)}
                 >
-                  <option>Google Scholar</option>
-                  <option>PubMed</option>
-                  <option>arXiv</option>
-                  <option>IEEE Xplore</option>
-                  <option>ACM Digital Library</option>
+                  <option value="Google Scholar">Google Scholar (지원됨)</option>
+                  <option value="Google Scholar Citations">Google Scholar 인용 검색</option>
+                  <option value="Crossref">Crossref (지원됨)</option>
+                  <option value="ACM (Crossref)">ACM Digital Library (Crossref)</option>
+                  <option value="PubMed">PubMed (준비 중)</option>
+                  <option value="arXiv">arXiv (준비 중)</option>
+                  <option value="IEEE Xplore">IEEE Xplore (준비 중)</option>
+                  <option value="Crossref (ACM)">Crossref (ACM)</option>
                 </select>
               </div>
               <button 
                 className="btn search-btn" 
-                onClick={handleSearch}
+                onClick={() => {
+                  console.log('Search button clicked');
+                  handleSearch();
+                }}
                 disabled={isSearching || !searchQuery.trim()}
               >
                 <span className="material-symbols-outlined">
@@ -277,50 +471,103 @@ const ReferenceManager = ({ references, onCiteReference, onAddToProject }: Refer
               
               {!isSearching && searchResults.length > 0 && (
                 <>
-                  <h3 className="mt-4 mb-2 font-medium">
+                  <h3 className="mt-2 mb-1 font-medium text-sm">
                     검색 결과 ({searchResults.length}개) - {selectedSource}
+                    {totalPages > 1 && (
+                      <span className="text-xs text-gray-500 ml-2">
+                        (페이지 {currentPage}/{totalPages})
+                      </span>
+                    )}
                   </h3>
-                  {searchResults.map(result => (
-                    <div key={result.id} className="ref-card mb-3">
-                      <div className="flex justify-between items-start mb-2">
-                        <p className="ref-author">{result.author} ({result.year})</p>
-                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                  {paginatedResults.map(result => (
+                    <div key={result.id} className="ref-card mb-2 p-2">
+                      <div className="flex justify-between items-start mb-1">
+                        <p className="ref-author text-sm">{result.author} ({result.year})</p>
+                        <span className="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">
                           {result.source}
                         </span>
                       </div>
-                      <p className="ref-title font-medium">{result.title}</p>
-                      <p className="text-sm text-gray-600">{result.publication}</p>
+                      <p className="ref-title font-medium text-sm mb-1">{result.title}</p>
+                      <p className="text-xs text-gray-600 mb-1">{result.publication}</p>
                       {result.doi && (
-                        <p className="text-xs text-gray-500 mt-1">DOI: {result.doi}</p>
+                        <p className="text-xs text-gray-500 mb-1">DOI: {result.doi}</p>
                       )}
                       {result.abstract && (
-                        <p className="text-xs text-gray-600 mt-2 line-clamp-2">
+                        <p className="text-xs text-gray-600 line-clamp-2 mb-1">
                           {result.abstract}
                         </p>
                       )}
-                      <div className="ref-card-actions mt-3">
+                      <div className="ref-card-actions flex space-x-1">
                         <button 
-                          className="btn-icon" 
+                          className="btn-icon w-6 h-6" 
                           title="라이브러리에 추가" 
                           onClick={() => addToLibrary(result)}
                         >
-                          <span className="material-symbols-outlined">add</span>
+                          <span className="material-symbols-outlined text-xs">add</span>
                         </button>
                         {result.url && (
                           <button 
-                            className="btn-icon" 
+                            className="btn-icon w-6 h-6" 
                             title="원문 보기"
                             onClick={() => window.open(result.url, '_blank')}
                           >
-                            <span className="material-symbols-outlined">open_in_new</span>
+                            <span className="material-symbols-outlined text-xs">open_in_new</span>
                           </button>
                         )}
-                        <button className="btn-icon" title="상세 정보">
-                          <span className="material-symbols-outlined">info</span>
+                        <button className="btn-icon w-6 h-6" title="상세 정보">
+                          <span className="material-symbols-outlined text-xs">info</span>
                         </button>
                       </div>
                     </div>
                   ))}
+                  
+                  {/* Pagination Navigation */}
+                  {totalPages > 1 && (
+                    <div className="pagination-container mt-4 flex items-center justify-center space-x-2">
+                      <button 
+                        className={`pagination-btn ${currentPage === 1 ? 'disabled' : ''}`}
+                        onClick={handlePrevPage}
+                        disabled={currentPage === 1}
+                        title="이전 페이지"
+                      >
+                        <span className="material-symbols-outlined text-sm">chevron_left</span>
+                      </button>
+                      
+                      <div className="pagination-numbers flex space-x-1">
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          let pageNum;
+                          if (totalPages <= 5) {
+                            pageNum = i + 1;
+                          } else if (currentPage <= 3) {
+                            pageNum = i + 1;
+                          } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                          } else {
+                            pageNum = currentPage - 2 + i;
+                          }
+                          
+                          return (
+                            <button
+                              key={pageNum}
+                              className={`pagination-number ${currentPage === pageNum ? 'active' : ''}`}
+                              onClick={() => handlePageChange(pageNum)}
+                            >
+                              {pageNum}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      
+                      <button 
+                        className={`pagination-btn ${currentPage === totalPages ? 'disabled' : ''}`}
+                        onClick={handleNextPage}
+                        disabled={currentPage === totalPages}
+                        title="다음 페이지"
+                      >
+                        <span className="material-symbols-outlined text-sm">chevron_right</span>
+                      </button>
+                    </div>
+                  )}
                 </>
               )}
               

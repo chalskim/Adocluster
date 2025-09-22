@@ -7,6 +7,13 @@ from app.routers.db_tables import router as db_tables_router
 from app.routers.client_ip_router import router as client_ip_router
 from app.routers.todos import router as todos_router 
 from app.routers.resources import router as resources_router
+from app.routers.google_scholar import router as google_scholar_router  # Add this import
+from app.routers.pubmed import router as pubmed_router  # Add PubMed router import
+from app.routers.ieee import router as ieee_router  # Add IEEE router import
+from app.routers.acm import router as acm_router  # Add ACM router import
+from app.routers.nalib import router as nalib_router  # Add 국회도서관 router import
+from app.routers.kci import router as kci_router  # Add KCI router import
+from app.routers.crossref import router as crossref_router  # Add Crossref router import
 from app.core.database import Base, engine
 from app.models import user, project, node, content_block, file, reference, citation, ai_job, revision, team, client_ip
 from sqlalchemy import MetaData
@@ -61,6 +68,13 @@ app.include_router(db_tables_router)
 app.include_router(client_ip_router)
 app.include_router(todos_router)
 app.include_router(resources_router)
+app.include_router(google_scholar_router)  # Add this line
+app.include_router(pubmed_router)  # Add PubMed router
+app.include_router(ieee_router)  # Add IEEE router
+app.include_router(acm_router)  # Add ACM router
+app.include_router(nalib_router)  # Add 국회도서관 router
+app.include_router(kci_router)  # Add KCI router
+app.include_router(crossref_router)  # Add Crossref router
 logger.debug("--- main.py: API routers included ---")
 
 @app.get("/health-check")

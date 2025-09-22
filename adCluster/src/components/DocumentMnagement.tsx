@@ -729,14 +729,6 @@ const DocumentMnagement: React.FC = () => {
                           >
                             미리보기
                           </button>
-                          
-                          {/* Review/Feedback buttons */}
-                          <button
-                            onClick={() => handleViewReviews(doc)}
-                            className="text-sm bg-purple-500 hover:bg-purple-600 text-white border border-purple-500 rounded px-2 py-1 transition-colors"
-                          >
-                            리뷰/피드백
-                          </button>
 
                           {selectedProject && (
                             <button

@@ -193,7 +193,7 @@ const LoginPage: React.FC = () => {
         
         // 클라이언트 IP 기록
         try {
-          await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/client-ip/record`, {
+          await fetch(`${import.meta.env.VITE_API_BASE_URL}${import.meta.env.VITE_CLIENT_IP_ENDPOINT}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

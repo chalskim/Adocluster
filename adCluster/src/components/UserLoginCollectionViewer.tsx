@@ -67,7 +67,7 @@ const UserLoginCollectionViewer: React.FC = () => {
   // API 호출 함수들
   const fetchUsers = async () => {
     try {
-      const response = await fetch('http://localhost:8000/users?full_permission=1');
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}${import.meta.env.VITE_USERS_ENDPOINT || '/users'}?full_permission=1`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -81,7 +81,7 @@ const UserLoginCollectionViewer: React.FC = () => {
 
   const fetchProjects = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/projects');
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}${import.meta.env.VITE_PROJECTS_ENDPOINT || '/api/projects'}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

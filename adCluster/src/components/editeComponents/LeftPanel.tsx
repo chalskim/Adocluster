@@ -114,30 +114,8 @@ const LeftPanel: React.FC<LeftPanelProps> = ({ onNodeSelect, visibleTabs = {} })
     // Implement add node functionality here
   };
 
-  // Sample references data
-  const sampleReferences: ReferenceItem[] = [
-    {
-      id: 'ref-1',
-      author: 'Smith, J.',
-      year: 2020,
-      title: 'AI in Content Creation',
-      publication: 'Journal of AI Research, 15(3), 123-145',
-    },
-    {
-      id: 'ref-2',
-      author: 'Johnson, A.',
-      year: 2019,
-      title: 'Collaborative Writing Platforms',
-      publication: 'Tech Writing Review, 8(2), 67-89',
-    },
-    {
-      id: 'ref-3',
-      author: 'Brown, T.',
-      year: 2021,
-      title: 'Modern Data Visualization Techniques',
-      publication: 'Visualization Quarterly, 12(1), 45-67',
-    },
-  ];
+  // References data - now empty to allow Google Scholar search
+  const sampleReferences: ReferenceItem[] = [];
 
   const handleCiteReference = (reference: ReferenceItem) => {
     console.log('Cite reference:', reference);
@@ -151,7 +129,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({ onNodeSelect, visibleTabs = {} })
           {tabVisibility.project && (
             <button className={`tab-button ${activeTab === 'project' ? 'active' : ''}`} onClick={() => setActiveTab('project')}>
               <i className="fas fa-folder"></i>
-              <span>연구 프로젝트</span>
+              <span>연구노트</span>
             </button>
           )}
           {tabVisibility.library && (

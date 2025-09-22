@@ -17,7 +17,93 @@ interface SourceInfo {
   addedDate: Date;
   citationCount: number;
   isBookmarked: boolean;
-  projectId?: string; // 프로젝트 ID 추가
+  projectId?: string;
+}
+
+interface ScholarSearchResult {
+  title: string;
+  link?: string;
+  snippet?: string;
+  authors?: string[];
+  publication_info?: string;
+  cited_by?: number;
+  year?: number;
+}
+
+interface ScholarSearchResponse {
+  results: ScholarSearchResult[];
+  total_results: number;
+  search_time: number;
+}
+
+interface PubMedSearchResult {
+  pmid: string;
+  title: string;
+  authors: string[];
+  journal: string;
+  publication_date: string;
+  doi?: string;
+  abstract?: string;
+  url: string;
+}
+
+interface PubMedSearchResponse {
+  results: PubMedSearchResult[];
+  total_results: number;
+  search_time: number;
+}
+
+interface IEEESearchResult {
+  id: string;
+  title: string;
+  authors: string[];
+  publication_title: string;
+  publication_year: number;
+  doi?: string;
+  abstract?: string;
+  url: string;
+  article_number?: string;
+}
+
+interface IEEESearchResponse {
+  results: IEEESearchResult[];
+  total_results: number;
+  search_time: number;
+}
+
+interface NalibSearchResult {
+  id: string;
+  title: string;
+  authors: string[];
+  publisher: string;
+  publication_year: number;
+  isbn?: string;
+  url: string;
+  description?: string;
+}
+
+interface NalibSearchResponse {
+  results: NalibSearchResult[];
+  total_results: number;
+  search_time: number;
+}
+
+interface KciSearchResult {
+  id: string;
+  title: string;
+  authors: string[];
+  journal: string;
+  publication_year: number;
+  doi?: string;
+  url: string;
+  abstract?: string;
+  keywords?: string[];
+}
+
+interface KciSearchResponse {
+  results: KciSearchResult[];
+  total_results: number;
+  search_time: number;
 }
 
 interface SourceManagementProps {
@@ -28,83 +114,247 @@ interface SourceManagementProps {
 const SourceManagement: React.FC<SourceManagementProps> = ({ projectId, onSourceSelect }) => {
   const [sources, setSources] = useState<SourceInfo[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedType, setSelectedType] = useState<string>('all');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(projectId || 'all');
   const [sortBy, setSortBy] = useState<'title' | 'year' | 'addedDate' | 'citationCount'>('addedDate');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [selectedType, setSelectedType] = useState<string>('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingSource, setEditingSource] = useState<SourceInfo | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'grid' | 'table'>('list');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSource, setSelectedSource] = useState('국회도서관');
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<SourceInfo[]>([]);
+  
+  // 페이지네이션 상태 관리
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalResults, setTotalResults] = useState(0);
+  const [itemsPerPage] = useState(10);
 
-  // Mock data for demonstration
   useEffect(() => {
-    // 프로젝트 목록 로드
     const loadProjects = async () => {
       try {
-        const fetchedProjects = await fetchProjects(100);
-        if (fetchedProjects) {
-          setProjects(fetchedProjects.map(mapProjectDataToProject));
+        const projectsData = await fetchProjects();
+        if (projectsData) {
+          const mappedProjects = projectsData.map(mapProjectDataToProject);
+          setProjects(mappedProjects);
         }
       } catch (error) {
-        console.error('Failed to fetch projects:', error);
+        console.error('Failed to load projects:', error);
       }
     };
-
     loadProjects();
-
-    const mockSources: SourceInfo[] = [
-      {
-        id: '1',
-        title: 'Deep Learning for Natural Language Processing',
-        authors: ['John Smith', 'Jane Doe'],
-        year: 2023,
-        type: 'article',
-        journal: 'Journal of AI Research',
-        doi: '10.1000/182',
-        tags: ['deep learning', 'NLP', 'AI'],
-        notes: 'Important paper on transformer architectures',
-        addedDate: new Date('2024-01-15'),
-        citationCount: 156,
-        isBookmarked: true,
-        projectId: '1'
-      },
-      {
-        id: '2',
-        title: 'Machine Learning: A Probabilistic Perspective',
-        authors: ['Kevin Murphy'],
-        year: 2012,
-        type: 'book',
-        publisher: 'MIT Press',
-        tags: ['machine learning', 'probability', 'textbook'],
-        notes: 'Comprehensive textbook on ML fundamentals',
-        addedDate: new Date('2024-01-10'),
-        citationCount: 2847,
-        isBookmarked: false,
-        projectId: '2'
-      }
-    ];
-    setSources(mockSources);
   }, []);
 
-  const filteredSources = sources.filter(source => {
-    const matchesSearch = source.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         source.authors.some(author => author.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesType = selectedType === 'all' || source.type === selectedType;
-    const matchesTags = selectedTags.length === 0 || selectedTags.some(tag => source.tags.includes(tag));
-    const matchesProject = selectedProjectId === 'all' || source.projectId === selectedProjectId;
+  const handleSearch = async (page: number = 1) => {
+    if (!searchQuery.trim()) return;
     
-    return matchesSearch && matchesType && matchesTags && matchesProject;
-  });
+    setIsSearching(true);
+    try {
+      // 인증 토큰 확인
+      const authToken = localStorage.getItem('authToken');
+      if (!authToken) {
+        alert('인증 토큰이 없습니다. 다시 로그인해주세요.');
+        return;
+      }
 
-  // 검색어와 필터 상태 변수들 추가
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
-  const [setIsBookmarked] = useState(() => (sourceId: string, bookmarked: boolean) => {
-    setSources(sources.map(s => 
-      s.id === sourceId ? { ...s, isBookmarked: bookmarked } : s
-    ));
+      let apiUrl = '';
+      let params: URLSearchParams;
+
+      // 선택된 검색 소스에 따라 API URL과 파라미터 결정
+      if (selectedSource === 'PubMed') {
+        params = new URLSearchParams({
+          query: searchQuery,
+          limit: itemsPerPage.toString(),
+          offset: ((page - 1) * itemsPerPage).toString()
+        });
+        apiUrl = `/api/pubmed/search?${params}`;
+      } else if (selectedSource === 'IEEE Xplore') {
+        params = new URLSearchParams({
+          query: searchQuery,
+          limit: itemsPerPage.toString(),
+          offset: ((page - 1) * itemsPerPage).toString()
+        });
+        apiUrl = `/api/ieee/search?${params}`;
+      } else if (selectedSource === '국회도서관') {
+        // 국회도서관 API는 query, page, page_size, search_target 파라미터를 사용
+        params = new URLSearchParams({
+          query: searchQuery,
+          page: page.toString(),
+          page_size: itemsPerPage.toString()
+        });
+        
+        apiUrl = `/api/nalib/search?${params}`;
+      } else if (selectedSource === '한국학술정보(KCI)') {
+        // KCI API는 title, page, page_size 파라미터를 사용
+        params = new URLSearchParams({
+          title: searchQuery,
+          page: page.toString(),
+          page_size: itemsPerPage.toString()
+        });
+        apiUrl = `/api/kci/search?${params}`;
+      } else {
+        params = new URLSearchParams({
+          query: searchQuery,
+          limit: itemsPerPage.toString(),
+          offset: ((page - 1) * itemsPerPage).toString()
+        });
+        apiUrl = `/api/google-scholar/search?${params}`;
+      }
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('authToken');
+          alert('인증이 만료되었습니다. 다시 로그인해주세요.');
+          return;
+        }
+        
+        let errorMessage = 'Search failed';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.detail || errorMessage;
+        } catch (e) {
+          // JSON 파싱 실패 시 기본 메시지 사용
+        }
+        
+        throw new Error(`API 요청 실패 (${response.status}): ${errorMessage}`);
+      }
+
+      let convertedResults: SourceInfo[] = [];
+
+      if (selectedSource === 'PubMed') {
+        const data: PubMedSearchResponse = await response.json();
+        
+        convertedResults = data.results.map((result, index) => ({
+          id: `pubmed-${result.pmid}`,
+          title: result.title,
+          authors: result.authors,
+          year: new Date(result.publication_date).getFullYear(),
+          type: 'article' as const,
+          journal: result.journal,
+          doi: result.doi,
+          url: result.url,
+          tags: ['PubMed'],
+          notes: result.abstract || '',
+          addedDate: new Date(),
+          citationCount: 0,
+          isBookmarked: false,
+          projectId: selectedProjectId !== 'all' ? selectedProjectId : undefined
+        }));
+
+        setTotalResults(data.total_results);
+      } else if (selectedSource === '국회도서관') {
+        const data = await response.json();
+        
+        // 백엔드 API 응답 구조에 맞게 수정 (items 배열 사용)
+        const items = data.items || [];
+        
+        convertedResults = items.map((result: any, index: number) => ({
+          id: `nalib-${index}`,
+          title: result.title || '제목 없음',
+          authors: result.author ? [result.author] : [],
+          year: result.pub_year ? parseInt(result.pub_year) : new Date().getFullYear(),
+          type: 'book' as const,
+          publisher: result.publisher || '',
+          url: result.url || '',
+          tags: ['국회도서관'],
+          notes: result.abstract || '',
+          addedDate: new Date(),
+          citationCount: 0,
+          isBookmarked: false,
+          projectId: selectedProjectId !== 'all' ? selectedProjectId : undefined
+        }));
+
+        setTotalResults(data.total_count || 0);
+      } else if (selectedSource === '한국학술정보(KCI)') {
+        const data = await response.json();
+        
+        // 백엔드 API 응답 구조에 맞게 수정 (articles 배열 사용)
+        const articles = data.articles || [];
+        
+        convertedResults = articles.map((result: any, index: number) => ({
+          id: `kci-${index}`,
+          title: result.title || '제목 없음',
+          authors: result.author ? [result.author] : [],
+          year: result.year ? parseInt(result.year) : new Date().getFullYear(),
+          type: 'article' as const,
+          journal: result.journal || '',
+          doi: result.doi || '',
+          url: result.url || '',
+          tags: ['한국학술정보(KCI)'],
+          notes: result.abstract || '',
+          addedDate: new Date(),
+          citationCount: 0,
+          isBookmarked: false,
+          projectId: selectedProjectId !== 'all' ? selectedProjectId : undefined
+        }));
+
+        setTotalResults(data.total_count || 0);
+      } else if (selectedSource === 'IEEE Xplore') {
+        const data: IEEESearchResponse = await response.json();
+        
+        convertedResults = data.results.map((result, index) => ({
+          id: `ieee-${result.id}`,
+          title: result.title,
+          authors: result.authors,
+          year: result.publication_year,
+          type: 'article' as const,
+          journal: result.publication_title,
+          doi: result.doi,
+          url: result.url,
+          tags: ['IEEE Xplore'],
+          notes: result.abstract || '',
+          addedDate: new Date(),
+          citationCount: 0,
+          isBookmarked: false,
+          projectId: selectedProjectId !== 'all' ? selectedProjectId : undefined
+        }));
+
+        setTotalResults(data.total_results);
+      } else {
+        const data: ScholarSearchResponse = await response.json();
+        
+        convertedResults = data.results.map((result, index) => ({
+          id: `scholar-${Date.now()}-${index}`,
+          title: result.title,
+          authors: result.authors || ['Unknown'],
+          year: result.year || new Date().getFullYear(),
+          type: 'article' as const,
+          journal: result.publication_info,
+          url: result.link,
+          tags: ['Google Scholar'],
+          notes: result.snippet || '',
+          addedDate: new Date(),
+          citationCount: result.cited_by || 0,
+          isBookmarked: false,
+          projectId: selectedProjectId !== 'all' ? selectedProjectId : undefined
+        }));
+
+        setTotalResults(data.total_results);
+      }
+
+      setSearchResults(convertedResults);
+      setCurrentPage(page);
+    } catch (error) {
+      console.error('Search error:', error);
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
+      alert(`검색 중 오류가 발생했습니다: ${errorMessage}`);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const filteredSources = sources.filter(source => {
+    const matchesProject = selectedProjectId === 'all' || source.projectId === selectedProjectId;
+    const matchesType = selectedType === 'all' || source.type === selectedType;
+    return matchesProject && matchesType;
   });
 
   const sortedSources = [...filteredSources].sort((a, b) => {
@@ -148,12 +398,10 @@ const SourceManagement: React.FC<SourceManagementProps> = ({ projectId, onSource
 
   const handleExportSources = (format: 'bibtex' | 'ris' | 'csv') => {
     console.log(`Exporting ${filteredSources.length} sources in ${format} format`);
-    // Implementation for export functionality
   };
 
   const handleImportSources = (file: File) => {
     console.log('Importing sources from file:', file.name);
-    // Implementation for import functionality
   };
 
   const getTypeIcon = (type: string) => {
@@ -178,7 +426,6 @@ const SourceManagement: React.FC<SourceManagementProps> = ({ projectId, onSource
 
   return (
     <div className="sources-management-page p-6">
-      {/* Header */}
       <div>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">연구 프로젝트 출처 관리</h1>
@@ -189,7 +436,6 @@ const SourceManagement: React.FC<SourceManagementProps> = ({ projectId, onSource
       </div>
       
       <div className="flex flex-col lg:flex-row gap-6 h-full">
-        {/* Source Management Panel */}
         <div className="w-full lg:w-1/2 bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-gray-900">출처 검색 및 관리</h2>
@@ -199,15 +445,22 @@ const SourceManagement: React.FC<SourceManagementProps> = ({ projectId, onSource
             </div>
           </div>
 
-          {/* Search and Filters */}
           <div className="mb-4 space-y-3">
             <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
               <input
                 type="text"
-                placeholder="Google Scholar, PubMed 등에서 검색..."
-                className="flex-1 p-2 border border-gray-300 rounded"
+                placeholder="국회도서관, 한국학술정보(KCI), Google Scholar, PubMed, IEEE Xplore 등에서 검색..."
+                className="flex-1 p-1.5 border border-gray-300 rounded"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <select className="p-2 border border-gray-300 rounded sm:w-auto">
+              <select 
+                className="p-1.5 border border-gray-300 rounded sm:w-auto"
+                value={selectedSource}
+                onChange={(e) => setSelectedSource(e.target.value)}
+              >
+                <option>국회도서관</option>
+                <option>한국학술정보(KCI)</option>
                 <option>Google Scholar</option>
                 <option>PubMed</option>
                 <option>IEEE Xplore</option>
@@ -215,10 +468,41 @@ const SourceManagement: React.FC<SourceManagementProps> = ({ projectId, onSource
               </select>
               <button 
                 type="button"
-                className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 sm:w-auto"
+                className="bg-blue-500 text-white py-1.5 px-4 rounded hover:bg-blue-600 sm:w-auto disabled:bg-gray-400"
+                onClick={() => handleSearch(1)}
+                disabled={isSearching}
               >
-                검색
+                {isSearching ? '검색 중...' : '검색'}
               </button>
+            </div>
+
+
+
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+              <select
+                className="p-1.5 border border-gray-300 rounded sm:w-auto"
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
+              >
+                <option value="all">모든 유형</option>
+                <option value="article">논문</option>
+                <option value="book">도서</option>
+                <option value="conference">학회</option>
+                <option value="thesis">학위논문</option>
+                <option value="website">웹사이트</option>
+                <option value="other">기타</option>
+              </select>
+
+              <select
+                className="p-2 border border-gray-300 rounded sm:w-auto"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+              >
+                <option value="addedDate">추가일</option>
+                <option value="title">제목</option>
+                <option value="year">연도</option>
+                <option value="citationCount">인용수</option>
+              </select>
 
               <button
                 onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
@@ -229,24 +513,20 @@ const SourceManagement: React.FC<SourceManagementProps> = ({ projectId, onSource
             </div>
           </div>
 
-          {/* Sources List */}
-          <div className="flex-1 overflow-auto border border-gray-200 rounded-lg">
-            <div className="p-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-medium text-gray-900">
-                  검색 결과
+          <div className="flex-1 overflow-auto border border-gray-200 rounded">
+            <div className="p-3">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="font-medium">
+                  {searchResults.length > 0 ? `검색 결과 (${totalResults})` : '출처 목록'}
                 </h3>
-                <span className="text-sm text-gray-500">
-                  {sortedSources.length}개 출처
-                </span>
               </div>
               
-              {sortedSources.length > 0 ? (
+              {(searchResults.length > 0 ? searchResults : sortedSources).length > 0 ? (
                 <div className="grid grid-cols-1 gap-3">
-                  {sortedSources.map(source => (
+                  {(searchResults.length > 0 ? searchResults : sortedSources).map(source => (
                     <div 
                       key={source.id} 
-                      className="source-card p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      className="source-card p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
                       onClick={() => onSourceSelect?.(source)}
                     >
                       <div className="flex items-start space-x-3">
@@ -285,7 +565,7 @@ const SourceManagement: React.FC<SourceManagementProps> = ({ projectId, onSource
                               <i className="fas fa-tags text-gray-400 text-xs" />
                               <div className="flex flex-wrap gap-1">
                                 {source.tags.map((tag, index) => (
-                                  <span key={index} className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs">
+                                  <span key={index} className={`px-2 py-0.5 rounded-full text-xs ${getTypeColor(source.type)}`}>
                                     {tag}
                                   </span>
                                 ))}
@@ -294,33 +574,35 @@ const SourceManagement: React.FC<SourceManagementProps> = ({ projectId, onSource
                           )}
 
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3 text-xs text-gray-500">
+                            <div className="flex items-center space-x-2 text-xs text-gray-500">
+                              <span className={`px-2 py-0.5 rounded-full ${getTypeColor(source.type)}`}>
+                                {source.type}
+                              </span>
                               {source.citationCount > 0 && (
-                                <span>인용 {source.citationCount}회</span>
+                                <span className="text-blue-600">
+                                  인용 {source.citationCount}회
+                                </span>
                               )}
-                              <span>추가일: {source.addedDate.toLocaleDateString()}</span>
                             </div>
                             
                             <div className="flex items-center space-x-1">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  // PDF 미리보기 기능 구현
-                                  console.log('PDF 미리보기:', source.title);
+                                  handleToggleBookmark(source.id);
                                 }}
-                                className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
-                                title="PDF 미리보기"
+                                className={`text-xs ${source.isBookmarked ? 'text-yellow-500' : 'text-gray-400'} hover:text-yellow-600`}
                               >
-                                <i className="fas fa-file-pdf text-xs" />
+                                <i className="fas fa-star" />
                               </button>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  // 저장 기능 구현
+                                  handleEditSource(source);
                                 }}
-                                className="p-1.5 text-gray-400 hover:text-green-500 rounded-lg transition-colors"
+                                className="text-blue-500 hover:text-blue-700 text-xs"
                               >
-                                <i className="fas fa-save text-xs" />
+                                편집
                               </button>
                             </div>
                           </div>
@@ -330,137 +612,142 @@ const SourceManagement: React.FC<SourceManagementProps> = ({ projectId, onSource
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <i className="fas fa-search text-4xl mb-4 text-gray-300" />
-                  <h4 className="text-lg font-medium text-gray-900 mb-2">검색 결과가 없습니다</h4>
-                  <p className="text-sm">다른 검색어나 필터를 시도해보세요.</p>
+                <div className="text-center py-8 text-gray-500">
+                  <i className="fas fa-search text-2xl mb-2" />
+                  <p>검색 결과가 없습니다.</p>
+                </div>
+              )}
+              
+              {/* 페이지네이션 UI */}
+              {searchResults.length > 0 && totalResults > itemsPerPage && (
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+                  
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handleSearch(currentPage - 1)}
+                      disabled={currentPage <= 1 || isSearching}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      이전
+                    </button>
+                    
+                    <div className="flex items-center space-x-1">
+                      {(() => {
+                        const totalPages = Math.ceil(totalResults / itemsPerPage);
+                        const pages = [];
+                        const startPage = Math.max(1, currentPage - 2);
+                        const endPage = Math.min(totalPages, currentPage + 2);
+                        
+                        if (startPage > 1) {
+                          pages.push(
+                            <button
+                              key={1}
+                              onClick={() => handleSearch(1)}
+                              disabled={isSearching}
+                              className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50"
+                            >
+                              1
+                            </button>
+                          );
+                          if (startPage > 2) {
+                            pages.push(<span key="ellipsis1" className="px-2 text-gray-400">...</span>);
+                          }
+                        }
+                        
+                        for (let i = startPage; i <= endPage; i++) {
+                          pages.push(
+                            <button
+                              key={i}
+                              onClick={() => handleSearch(i)}
+                              disabled={isSearching}
+                              className={`px-2 py-1 text-sm border rounded disabled:opacity-50 ${
+                                i === currentPage
+                                  ? 'bg-blue-500 text-white border-blue-500'
+                                  : 'border-gray-300 hover:bg-gray-100'
+                              }`}
+                            >
+                              {i}
+                            </button>
+                          );
+                        }
+                        
+                        if (endPage < totalPages) {
+                          if (endPage < totalPages - 1) {
+                            pages.push(<span key="ellipsis2" className="px-2 text-gray-400">...</span>);
+                          }
+                          pages.push(
+                            <button
+                              key={totalPages}
+                              onClick={() => handleSearch(totalPages)}
+                              disabled={isSearching}
+                              className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50"
+                            >
+                              {totalPages}
+                            </button>
+                          );
+                        }
+                        
+                        return pages;
+                      })()}
+                    </div>
+                    
+                    <button
+                      onClick={() => handleSearch(currentPage + 1)}
+                      disabled={currentPage >= Math.ceil(totalResults / itemsPerPage) || isSearching}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      다음
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
           </div>
         </div>
-        
-        {/* Project Sources Panel */}
+
         <div className="w-full lg:w-1/2 bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col">
-          <div className="mb-4">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-lg font-semibold text-gray-900">연구 프로젝트별 출처</h2>
-              <select 
-                value={selectedProjectId}
-                onChange={(e) => setSelectedProjectId(e.target.value)}
-                className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">연구 프로젝트별 출처</h2>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={handleAddSource}
+                className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center space-x-1"
               >
-                <option value="all">모든 프로젝트</option>
-                {projects.map(project => (
-                  <option key={project.id} value={project.id}>
-                    {project.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col sm:flex-row sm:justify-end">
-              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                <button
-                  onClick={handleAddSource}
-                  className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center space-x-1"
-                >
-                  <i className="fas fa-plus text-xs" />
-                  <span>출처 추가</span>
-                </button>
-                <div className="relative">
-                  <select
-                    onChange={(e) => handleExportSources(e.target.value as any)}
-                    className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-sm hover:bg-gray-200 appearance-none pr-6"
-                  >
-                    <option value="">내보내기</option>
-                    <option value="bibtex">BibTeX</option>
-                    <option value="ris">RIS</option>
-                    <option value="csv">CSV</option>
-                  </select>
-                  <i className="fas fa-download absolute right-1 top-1.5 text-gray-500 pointer-events-none text-xs" />
-                </div>
-                <label className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-sm hover:bg-gray-200 cursor-pointer flex items-center space-x-1">
-                  <i className="fas fa-upload text-xs" />
-                  <span>가져오기</span>
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept=".bib,.ris,.csv"
-                    onChange={(e) => e.target.files?.[0] && handleImportSources(e.target.files[0])}
-                  />
-                </label>
-              </div>
+                <i className="fas fa-plus text-xs" />
+                <span>출처 추가</span>
+              </button>
             </div>
           </div>
-          
-          {/* Project Statistics */}
-          {selectedProjectId !== 'all' && (
-            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-              <h4 className="font-medium text-sm mb-2">프로젝트 출처 통계</h4>
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="bg-white p-2 rounded">
-                  <div className="text-gray-500">총 출처</div>
-                  <div className="text-lg font-semibold text-blue-600">
-                    {sortedSources.length}개
-                  </div>
-                </div>
-                <div className="bg-white p-2 rounded">
-                  <div className="text-gray-500">유형별 분포</div>
-                  <div className="text-xs mt-1">
-                    {Object.entries(
-                      sortedSources.reduce((acc, source) => {
-                        acc[source.type] = (acc[source.type] || 0) + 1;
-                        return acc;
-                      }, {} as Record<string, number>)
-                    ).map(([type, count]) => (
-                      <div key={type} className="flex justify-between">
-                        <span>{type}</span>
-                        <span className="font-medium">{count}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="bg-white p-2 rounded">
-                  <div className="text-gray-500">최근 추가</div>
-                  <div className="text-sm font-medium">
-                    {sortedSources.length > 0 
-                      ? Math.max(...sortedSources.map(s => s.addedDate.getTime())) === 
-                        Math.max(...sortedSources.map(s => s.addedDate.getTime()))
-                        ? new Date(Math.max(...sortedSources.map(s => s.addedDate.getTime()))).toLocaleDateString()
-                        : '없음'
-                      : '없음'
-                    }
-                  </div>
-                </div>
-                <div className="bg-white p-2 rounded">
-                  <div className="text-gray-500">북마크</div>
-                  <div className="text-lg font-semibold text-yellow-600">
-                    {sortedSources.filter(s => s.isBookmarked).length}개
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {/* Project Sources List */}
+
+          {/* 프로젝트 선택 selector를 이곳으로 이동 */}
+          <div className="mb-4">
+            <select
+              className="p-2 border border-gray-300 rounded sm:w-auto w-full"
+              value={selectedProjectId}
+              onChange={(e) => setSelectedProjectId(e.target.value)}
+            >
+              <option value="all">모든 프로젝트</option>
+              {projects.map(project => (
+                <option key={project.id} value={project.id}>{project.title}</option>
+              ))}
+            </select>
+          </div>
+
           <div className="flex-1 overflow-auto border border-gray-200 rounded">
             <div className="p-3">
               <div className="flex justify-between items-center mb-3">
-                <h3 className="font-medium">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   {selectedProjectId === 'all' 
-                    ? '전체 프로젝트 출처' 
+                    ? '전체 출처' 
                     : `${projects.find(p => p.id === selectedProjectId)?.title} 출처`
                   }
                 </h3>
-                <span className="text-sm text-gray-500">
-                  ({sortedSources.length}개)
-                </span>
               </div>
-              
+
               {sortedSources.length > 0 ? (
-                <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-1 gap-2">
                   {sortedSources.map(source => (
-                    <div key={source.id} className="source-card p-3 border border-gray-200 rounded hover:bg-gray-50">
+                    <div key={source.id} className="source-card p-2 border border-gray-200 rounded hover:bg-gray-50">
                       <div className="flex justify-between">
                         <div className="flex items-center space-x-2">
                           {getTypeIcon(source.type)}
@@ -507,6 +794,7 @@ const SourceManagement: React.FC<SourceManagementProps> = ({ projectId, onSource
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">
+                  <i className="fas fa-folder-open text-2xl mb-2" />
                   <p>
                     {selectedProjectId === 'all' 
                       ? '등록된 출처가 없습니다.' 
@@ -521,65 +809,53 @@ const SourceManagement: React.FC<SourceManagementProps> = ({ projectId, onSource
         </div>
       </div>
 
-      {/* Add/Edit Source Modal would go here */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">
-              {editingSource ? '출처 편집' : '새 출처 추가'}
-            </h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">
+                {editingSource ? '출처 편집' : '새 출처 추가'}
+              </h3>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <i className="fas fa-times" />
+              </button>
+            </div>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  프로젝트 선택 *
-                </label>
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  defaultValue={editingSource?.projectId || selectedProjectId !== 'all' ? selectedProjectId : ''}
-                >
-                  <option value="">프로젝트를 선택하세요</option>
-                  {projects.map(project => (
-                    <option key={project.id} value={project.id}>
-                      {project.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  제목 *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">제목 *</label>
                 <input
                   type="text"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   placeholder="출처 제목을 입력하세요"
-                  defaultValue={editingSource?.title || ''}
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  저자
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">저자</label>
                 <input
                   type="text"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   placeholder="저자명을 쉼표로 구분하여 입력하세요"
-                  defaultValue={editingSource?.authors.join(', ') || ''}
                 />
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    유형
-                  </label>
-                  <select
+                  <label className="block text-sm font-medium text-gray-700 mb-1">연도</label>
+                  <input
+                    type="number"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    defaultValue={editingSource?.type || 'article'}
-                  >
+                    placeholder="발행 연도"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">유형</label>
+                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                     <option value="article">논문</option>
                     <option value="book">도서</option>
                     <option value="conference">학회</option>
@@ -588,41 +864,41 @@ const SourceManagement: React.FC<SourceManagementProps> = ({ projectId, onSource
                     <option value="other">기타</option>
                   </select>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    연도
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="발행 연도"
-                    defaultValue={editingSource?.year || ''}
-                  />
-                </div>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  태그
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">저널/출판사</label>
                 <input
                   type="text"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="태그를 쉼표로 구분하여 입력하세요"
-                  defaultValue={editingSource?.tags.join(', ') || ''}
+                  placeholder="저널명 또는 출판사를 입력하세요"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  메모
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">URL</label>
+                <input
+                  type="url"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="https://..."
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">태그</label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="태그를 쉼표로 구분하여 입력하세요"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">메모</label>
                 <textarea
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   rows={3}
                   placeholder="출처에 대한 메모를 입력하세요"
-                  defaultValue={editingSource?.notes || ''}
                 />
               </div>
             </div>
@@ -635,7 +911,6 @@ const SourceManagement: React.FC<SourceManagementProps> = ({ projectId, onSource
                 취소
               </button>
               <button
-                onClick={() => setShowAddModal(false)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 저장

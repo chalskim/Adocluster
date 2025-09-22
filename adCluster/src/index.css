@@ -1051,7 +1051,7 @@ button:focus-visible {
 }
 
 .saved-searches-select {
-    padding: 4px 8px;
+    padding: 3px 6px;
     border-radius: 4px;
     border: 1px solid #cbd5e1;
     background: white;
@@ -1073,8 +1073,8 @@ button:focus-visible {
 .ref-card {
     background: #f8fafc;
     border-radius: 6px;
-    padding: 12px;
-    margin-bottom: 12px;
+    padding: 8px;
+    margin-bottom: 8px;
     border: 1px solid #e2e8f0;
 }
 
@@ -1082,20 +1082,20 @@ button:focus-visible {
     font-size: 12px;
     font-weight: 600;
     color: #1f2937;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
 
 .ref-title {
     font-size: 13px;
     color: #374151;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
 
 .ref-card-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 8px;
-    margin-top: 8px;
+    gap: 6px;
+    margin-top: 6px;
 }
 
 .btn-icon {
@@ -1191,7 +1191,7 @@ button:focus-visible {
 }
 
 .search-source-select {
-    padding: 4px 8px;
+    padding: 3px 6px;
     border-radius: 4px;
     border: 1px solid #cbd5e1;
     background: white;
@@ -1221,6 +1221,58 @@ button:focus-visible {
     background: #f8fafc;
     border-radius: 6px;
     padding: 20px;
+}
+
+/* Pagination Styles */
+.pagination-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 0;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 16px;
+}
+
+.pagination-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: white;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(.disabled) {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+}
+
+.pagination-btn.active {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+}
+
+.pagination-btn.disabled {
+    background: #f8fafc;
+    color: #94a3b8;
+    cursor: not-allowed;
+    border-color: #e2e8f0;
+}
+
+.pagination-info {
+    font-size: 12px;
+    color: #64748b;
+    margin: 0 8px;
 }
 
 /* Data Management Page Styles */
