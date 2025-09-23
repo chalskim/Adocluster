@@ -201,3 +201,124 @@ export const fetchProjectById = async (projectId: string): Promise<ProjectData |
     return null;
   }
 };
+
+// 폴더 관련 API 함수들
+
+// 폴더 인터페이스 정의
+export interface FolderData {
+  id: string;
+  name: string;
+  project_id: string;
+  parent_id?: string;
+  creator_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// 프로젝트의 폴더 목록 가져오기
+export const fetchFoldersByProject = async (projectId: string): Promise<FolderData[] | null> => {
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/api/folders/project/${projectId}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.log('API - 401 Unauthorized 응답을 받았습니다. 토큰을 제거합니다.');
+        localStorage.removeItem('authToken');
+        return null;
+      }
+      throw new Error('폴더 목록을 가져오는데 실패했습니다.');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('폴더 목록 조회 오류:', error);
+    return null;
+  }
+};
+
+// 새 폴더 생성
+export const createFolder = async (folderData: {
+  name: string;
+  project_id: string;
+  parent_id?: string;
+}): Promise<FolderData | null> => {
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/api/folders/`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(folderData),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.log('API - 401 Unauthorized 응답을 받았습니다. 토큰을 제거합니다.');
+        localStorage.removeItem('authToken');
+        return null;
+      }
+      throw new Error('폴더 생성에 실패했습니다.');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('폴더 생성 오류:', error);
+    return null;
+  }
+};
+
+// 폴더 삭제
+export const deleteFolder = async (folderId: string): Promise<boolean> => {
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/api/folders/${folderId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.log('API - 401 Unauthorized 응답을 받았습니다. 토큰을 제거합니다.');
+        localStorage.removeItem('authToken');
+        return false;
+      }
+      throw new Error('폴더 삭제에 실패했습니다.');
+    }
+
+    return true;
+  } catch (error) {
+    console.error('폴더 삭제 오류:', error);
+    return false;
+  }
+};
+
+// 폴더 이름 수정
+export const updateFolder = async (folderId: string, folderData: {
+  name?: string;
+  parent_id?: string;
+}): Promise<FolderData | null> => {
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/api/folders/${folderId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(folderData),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.log('API - 401 Unauthorized 응답을 받았습니다. 토큰을 제거합니다.');
+        localStorage.removeItem('authToken');
+        return null;
+      }
+      throw new Error('폴더 수정에 실패했습니다.');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('폴더 수정 오류:', error);
+    return null;
+  }
+};

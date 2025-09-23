@@ -8,11 +8,28 @@ import React, { useState, useEffect } from 'react';
 import EditorSettingsPanel from '../EditorSettingsPanel';
 import { useEditorSettings } from '../../hooks/useEditorSettings';
 
-interface TiptapEditorProps {
-  editor: any;
+interface EditorTab {
+  id: string;
+  title: string;
+  content: string;
+  nodeId?: string;
 }
 
-const TiptapEditor: React.FC<TiptapEditorProps> = ({ editor }) => {
+interface TiptapEditorProps {
+  editor: any;
+  tabs?: EditorTab[];
+  activeTab?: string;
+  onTabChange?: (tabId: string) => void;
+  onTabClose?: (tabId: string) => void;
+}
+
+const TiptapEditor: React.FC<TiptapEditorProps> = ({ 
+  editor, 
+  tabs = [], 
+  activeTab, 
+  onTabChange, 
+  onTabClose 
+}) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { settings, loading } = useEditorSettings();
 
@@ -25,6 +42,38 @@ const TiptapEditor: React.FC<TiptapEditorProps> = ({ editor }) => {
   return (
     <div className="bg-gray-100 p-4 flex-1 overflow-auto">
       <div className="max-w-4xl mx-auto h-full flex flex-col">
+        {/* 탭 바 */}
+        {tabs.length > 0 && (
+          <div className="bg-white border-b border-gray-200 flex overflow-x-auto">
+            {tabs.map((tab) => (
+              <div
+                key={tab.id}
+                className={`flex items-center px-4 py-2 border-r border-gray-200 cursor-pointer min-w-0 ${
+                  activeTab === tab.id 
+                    ? 'bg-blue-50 border-b-2 border-blue-500 text-blue-600' 
+                    : 'hover:bg-gray-50 text-gray-600'
+                }`}
+                onClick={() => onTabChange?.(tab.id)}
+              >
+                <span className="truncate max-w-32" title={tab.title}>
+                  {tab.title}
+                </span>
+                {tabs.length > 1 && (
+                  <button
+                    className="ml-2 text-gray-400 hover:text-gray-600 flex-shrink-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTabClose?.(tab.id);
+                    }}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        
         <div className="bg-white shadow-lg rounded-lg overflow-hidden flex-1 flex flex-col">
           <div className="p-4 flex-1">
             <EditorContent 

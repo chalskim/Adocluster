@@ -26,3 +26,4 @@ class Project(Base):
     
     # Relationships
     owner = relationship("User", back_populates="projects")
+    folders = relationship("Folder", back_populates="project", cascade="all, delete-orphan")

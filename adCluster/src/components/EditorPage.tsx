@@ -50,6 +50,13 @@ import StatusBar from './editeComponents/StatusBar';
 import TiptapEditor from './editeComponents/TiptapEditor';
 import RightSidebar from './editeComponents/RightSidebar';
 
+interface EditorTab {
+  id: string;
+  title: string;
+  content: string;
+  nodeId?: string;
+}
+
 // 데이터 및 타입
 import { allDocumentDetails, treeData, findParentProject, TreeNodeData, DocumentDetailsData, ReferenceItem } from '../data/mockData';
 
@@ -230,6 +237,64 @@ const EditorPage: React.FC = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
 
+  // TopMenuBar 상태 추가
+  const [activeTab, setActiveTab] = useState('home');
+  const [isReadOnly, setIsReadOnly] = useState(false);
+
+  // 탭 시스템 상태 추가
+  
+  const [editorTabs, setEditorTabs] = useState<EditorTab[]>([
+    { id: 'welcome', title: '환영합니다', content: `<h2>${projectData?.title || '환영합니다!'}</h2><p>왼쪽 트리에서 노트를 선택해주세요.</p>` }
+  ]);
+  const [activeEditorTab, setActiveEditorTab] = useState('welcome');
+
+  // 패널 토글 함수들
+  const toggleLeftPanel = useCallback(() => {
+    setLeftPanelVisibleTabs(prev => {
+      const allHidden = Object.values(prev).every(value => !value);
+      if (allHidden) {
+        // 모든 탭이 숨겨져 있으면 모든 탭을 표시
+        return {
+          project: true,
+          library: true,
+          references: true,
+          todos: true
+        };
+      } else {
+        // 하나라도 표시되어 있으면 모든 탭을 숨김
+        return {
+          project: false,
+          library: false,
+          references: false,
+          todos: false
+        };
+      }
+    });
+  }, []);
+
+  const toggleRightSidebar = useCallback(() => {
+    setRightSidebarVisibleTabs(prev => {
+      const allHidden = Object.values(prev).every(value => !value);
+      if (allHidden) {
+        // 모든 탭이 숨겨져 있으면 모든 탭을 표시
+        return {
+          project: true,
+          referenceInfo: true,
+          tableOfContents: true,
+          collaboration: true
+        };
+      } else {
+        // 하나라도 표시되어 있으면 모든 탭을 숨김
+        return {
+          project: false,
+          referenceInfo: false,
+          tableOfContents: false,
+          collaboration: false
+        };
+      }
+    });
+  }, []);
+
   // If we have a projectId but no project data, fetch it from the backend
   useEffect(() => {
     if (projectId && !projectData) {
@@ -360,10 +425,78 @@ const EditorPage: React.FC = () => {
       setCurrentDetails(null);
     }
 
+    // 노트 타입일 때 탭으로 추가
     if (node.type === 'note' && node.content) {
-      editor.commands.setContent(node.content);
+      // TiptapEditor.tsx 탭이 있는지 확인 (title이 'TiptapEditor' 또는 파일명을 포함하는 탭)
+      const tiptapEditorTab = editorTabs.find(tab => 
+        tab.title === 'TiptapEditor' || 
+        tab.title.includes('TiptapEditor.tsx') ||
+        tab.id === 'tiptap-editor-main'
+      );
+      
+      if (tiptapEditorTab) {
+        // TiptapEditor 탭이 있으면 해당 탭으로 이동하고 내용 업데이트
+        setActiveEditorTab(tiptapEditorTab.id);
+        // 탭의 내용을 선택된 노트 내용으로 업데이트
+        setEditorTabs(prev => prev.map(tab => 
+          tab.id === tiptapEditorTab.id 
+            ? { ...tab, content: node.content || '', title: `TiptapEditor - ${node.name}` }
+            : tab
+        ));
+        // 에디터 내용도 업데이트
+        if (editor) {
+          editor.commands.setContent(node.content || '');
+        }
+      } else {
+        // TiptapEditor 탭이 없으면 새로 생성
+        const newTab: EditorTab = {
+          id: 'tiptap-editor-main',
+          title: `TiptapEditor - ${node.name}`,
+          content: node.content || '',
+          nodeId: node.id
+        };
+        
+        setEditorTabs(prev => [...prev, newTab]);
+        setActiveEditorTab(newTab.id);
+      }
     }
-  }, [editor, documents]);
+  }, [editor, documents, editorTabs]);
+
+  // 탭 관련 핸들러 함수들
+  const handleTabChange = useCallback((tabId: string) => {
+    setActiveEditorTab(tabId);
+    const tab = editorTabs.find(t => t.id === tabId);
+    if (tab && editor) {
+      editor.commands.setContent(tab.content);
+    }
+  }, [editorTabs, editor]);
+
+  const handleTabClose = useCallback((tabId: string) => {
+    const tabIndex = editorTabs.findIndex(t => t.id === tabId);
+    if (tabIndex === -1) return;
+
+    const newTabs = editorTabs.filter(t => t.id !== tabId);
+    setEditorTabs(newTabs);
+
+    // 닫힌 탭이 활성 탭이었다면 다른 탭으로 전환
+    if (activeEditorTab === tabId) {
+      if (newTabs.length > 0) {
+        const nextTab = newTabs[Math.max(0, tabIndex - 1)];
+        setActiveEditorTab(nextTab.id);
+        if (editor) {
+          editor.commands.setContent(nextTab.content);
+        }
+      }
+    }
+  }, [editorTabs, activeEditorTab, editor]);
+
+  // 활성 탭의 내용이 변경될 때 에디터 내용 업데이트
+  useEffect(() => {
+    const activeTab = editorTabs.find(tab => tab.id === activeEditorTab);
+    if (activeTab && editor) {
+      editor.commands.setContent(activeTab.content);
+    }
+  }, [activeEditorTab, editorTabs, editor]);
 
   const handleAddReference = useCallback((projectId: string) => {
     const author = window.prompt("저자 (예: 홍길동 (2024))") || "";
@@ -485,16 +618,21 @@ const EditorPage: React.FC = () => {
         {shouldShowTopMenuBar && (
           <TopMenuBar 
             editor={editor}
-            leftPanelVisibleTabs={leftPanelVisibleTabs}
-            rightSidebarVisibleTabs={rightSidebarVisibleTabs}
-            onLeftPanelVisibleTabsChange={setLeftPanelVisibleTabs}
-            onRightSidebarVisibleTabsChange={setRightSidebarVisibleTabs}
-            onShowReviewPanel={() => setShowReviewPanel(true)}
+            onTabChange={setActiveTab}
+            activeTab={activeTab}
+            onToggleReadOnly={() => setIsReadOnly(!isReadOnly)}
+            isReadOnly={isReadOnly}
+            onToggleLeftPanel={toggleLeftPanel}
+            onToggleRightSidebar={toggleRightSidebar}
           />
         )}
         <div className="flex-1 overflow-auto">
           <TiptapEditor 
             editor={editor}
+            tabs={editorTabs}
+            activeTab={activeEditorTab}
+            onTabChange={handleTabChange}
+            onTabClose={handleTabClose}
           />
         </div>
         <StatusBar editor={editor} />

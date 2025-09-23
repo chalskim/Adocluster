@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchProjects } from '../services/api';
+import { fetchProjects, fetchFoldersByProject, createFolder, deleteFolder, updateFolder, FolderData } from '../services/api';
 import { Project, ProjectData, mapProjectDataToProject } from '../types/ProjectTypes';
 import '../styles/tabs.css';
 
@@ -11,6 +11,8 @@ interface TreeNode {
   children?: TreeNode[];
   lastModified?: string;
   documentCount?: number;
+  folderId?: string; // 실제 폴더 ID 추가
+  isEditing?: boolean; // 편집 모드 상태 추가
 }
 
 interface Reference {
@@ -43,6 +45,10 @@ const Projects: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const projectsPerPage = 3;
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [folders, setFolders] = useState<FolderData[]>([]);
+  const [treeData, setTreeData] = useState<TreeNode[]>([]);
+  const [editingNodeId, setEditingNodeId] = useState<number | null>(null);
+  const [editingName, setEditingName] = useState('');
 
   // Fetch projects from the database
   useEffect(() => {
@@ -90,14 +96,63 @@ const Projects: React.FC = () => {
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   // Handle project selection
-  const handleProjectSelect = (project: Project) => {
+  const handleProjectSelect = async (project: Project) => {
     setSelectedProject(project);
+    // 선택된 프로젝트의 폴더 목록 가져오기
+    if (project.id) {
+      const projectFolders = await fetchFoldersByProject(project.id);
+      if (projectFolders) {
+        setFolders(projectFolders);
+        // 폴더 데이터를 트리 구조로 변환
+        const tree = generateTreeDataFromFolders(project, projectFolders);
+        setTreeData(tree);
+      }
+    }
   };
 
-  // Generate tree data based on selected project
+  // Generate tree data based on selected project and folders
+  const generateTreeDataFromFolders = (project: Project, folderList: FolderData[]): TreeNode[] => {
+    if (!project) {
+      return [];
+    }
+    
+    // 폴더를 계층 구조로 변환
+    const buildFolderTree = (parentId: string | null = null, nodeId: number = 2): TreeNode[] => {
+      return folderList
+        .filter(folder => folder.parent_id === parentId)
+        .map((folder, index) => ({
+          id: nodeId + index,
+          name: folder.name,
+          type: 'folder' as const,
+          folderId: folder.id,
+          children: buildFolderTree(folder.id, nodeId + folderList.length + index * 10),
+          lastModified: folder.updated_at
+        }));
+    };
+
+    return [
+      {
+        id: 1,
+        name: project.title,
+        type: 'folder',
+        documentCount: project.documents,
+        children: [
+          ...buildFolderTree(), // 실제 폴더들
+          {
+            id: 1000,
+            name: '기본 문서',
+            type: 'file',
+            lastModified: project.lastUpdate
+          }
+        ]
+      }
+    ];
+  };
+
+  // Generate tree data based on selected project (fallback)
   const generateTreeData = (): TreeNode[] => {
     if (!selectedProject) {
-      return [];
+      return treeData; // 기존 트리 데이터 반환
     }
     
     return [
@@ -160,7 +215,129 @@ const Projects: React.FC = () => {
     ];
   };
 
-  const treeData = generateTreeData();
+  // 폴더 추가 함수
+  const handleAddFolder = async (parentNodeId?: number) => {
+    if (!selectedProject?.id) return;
+
+    const folderName = prompt('새 폴더 이름을 입력하세요:');
+    if (!folderName) return;
+
+    // 부모 폴더 ID 찾기
+    let parentFolderId: string | undefined;
+    if (parentNodeId && parentNodeId !== 1) {
+      const findParentFolder = (nodes: TreeNode[]): string | undefined => {
+        for (const node of nodes) {
+          if (node.id === parentNodeId && node.folderId) {
+            return node.folderId;
+          }
+          if (node.children) {
+            const found = findParentFolder(node.children);
+            if (found) return found;
+          }
+        }
+        return undefined;
+      };
+      parentFolderId = findParentFolder(treeData);
+    }
+
+    const newFolder = await createFolder({
+      name: folderName,
+      project_id: selectedProject.id,
+      parent_id: parentFolderId
+    });
+
+    if (newFolder) {
+      // 폴더 목록 새로고침
+      const updatedFolders = await fetchFoldersByProject(selectedProject.id);
+      if (updatedFolders) {
+        setFolders(updatedFolders);
+        const tree = generateTreeDataFromFolders(selectedProject, updatedFolders);
+        setTreeData(tree);
+      }
+    }
+  };
+
+  // 폴더 삭제 함수
+  const handleDeleteFolder = async (nodeId: number) => {
+    const findFolderToDelete = (nodes: TreeNode[]): string | undefined => {
+      for (const node of nodes) {
+        if (node.id === nodeId && node.folderId) {
+          return node.folderId;
+        }
+        if (node.children) {
+          const found = findFolderToDelete(node.children);
+          if (found) return found;
+        }
+      }
+      return undefined;
+    };
+
+    const folderId = findFolderToDelete(treeData);
+    if (!folderId) return;
+
+    if (confirm('이 폴더를 삭제하시겠습니까?')) {
+      const success = await deleteFolder(folderId);
+      if (success && selectedProject?.id) {
+        // 폴더 목록 새로고침
+        const updatedFolders = await fetchFoldersByProject(selectedProject.id);
+        if (updatedFolders) {
+          setFolders(updatedFolders);
+          const tree = generateTreeDataFromFolders(selectedProject, updatedFolders);
+          setTreeData(tree);
+        }
+      }
+    }
+  };
+
+  // 폴더 이름 편집 시작
+  const handleStartEdit = (nodeId: number, currentName: string) => {
+    setEditingNodeId(nodeId);
+    setEditingName(currentName);
+  };
+
+  // 폴더 이름 편집 완료
+  const handleFinishEdit = async (nodeId: number) => {
+    const findFolderToUpdate = (nodes: TreeNode[]): string | undefined => {
+      for (const node of nodes) {
+        if (node.id === nodeId && node.folderId) {
+          return node.folderId;
+        }
+        if (node.children) {
+          const found = findFolderToUpdate(node.children);
+          if (found) return found;
+        }
+      }
+      return undefined;
+    };
+
+    const folderId = findFolderToUpdate(treeData);
+    if (!folderId || !editingName.trim()) {
+      setEditingNodeId(null);
+      setEditingName('');
+      return;
+    }
+
+    const updatedFolder = await updateFolder(folderId, { name: editingName.trim() });
+    if (updatedFolder && selectedProject?.id) {
+      // 폴더 목록 새로고침
+      const updatedFolders = await fetchFoldersByProject(selectedProject.id);
+      if (updatedFolders) {
+        setFolders(updatedFolders);
+        const tree = generateTreeDataFromFolders(selectedProject, updatedFolders);
+        setTreeData(tree);
+      }
+    }
+
+    setEditingNodeId(null);
+    setEditingName('');
+  };
+
+  // 편집 취소
+  const handleCancelEdit = () => {
+    setEditingNodeId(null);
+    setEditingName('');
+  };
+
   const references = generateReferences();
   const history = generateHistory();
 
@@ -201,32 +378,101 @@ const Projects: React.FC = () => {
   const renderTreeNode = (node: TreeNode, level = 0) => {
     const isExpanded = expandedNodes.has(node.id);
     const hasChildren = node.children && node.children.length > 0;
+    const isEditing = editingNodeId === node.id;
 
     return (
       <div key={node.id} className="tree-item w-full">
         <div 
-          className="tree-toggle cursor-pointer py-1.5 w-full"
+          className="tree-toggle cursor-pointer py-1.5 w-full group"
           style={{ paddingLeft: `${level * 16}px` }}
-          onClick={() => hasChildren && toggleNode(node.id)}
         >
           <div className="tree-content flex items-center justify-between w-full">
-            {hasChildren ? (
-              <div className={`toggle-icon w-4 text-center mr-1.5 transition-transform ${isExpanded ? 'rotate-90' : ''}`}>
-                ▶
-              </div>
-            ) : (
-              <div className="w-4 mr-1.5"></div>
-            )}
-            <div className="tree-icon w-4 text-center mr-1.5">
-              {node.type === 'folder' ? (
-                <i className="fas fa-folder"></i>
+            <div className="flex items-center flex-1" onClick={() => hasChildren && toggleNode(node.id)}>
+              {hasChildren ? (
+                <div className={`toggle-icon w-4 text-center mr-1.5 transition-transform ${isExpanded ? 'rotate-90' : ''}`}>
+                  ▶
+                </div>
               ) : (
-                <i className="far fa-file-alt"></i>
+                <div className="w-4 mr-1.5"></div>
+              )}
+              <div className="tree-icon w-4 text-center mr-1.5">
+                {node.type === 'folder' ? (
+                  <i className="fas fa-folder"></i>
+                ) : (
+                  <i className="far fa-file-alt"></i>
+                )}
+              </div>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={editingName}
+                  onChange={(e) => setEditingName(e.target.value)}
+                  onBlur={() => handleFinishEdit(node.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleFinishEdit(node.id);
+                    if (e.key === 'Escape') handleCancelEdit();
+                  }}
+                  className="tree-text flex-1 text-sm border border-blue-300 rounded px-1"
+                  autoFocus
+                />
+              ) : (
+                <div className="tree-text flex-1 text-sm">{node.name}</div>
               )}
             </div>
-            <div className="tree-text flex-1 text-sm">{node.name}</div>
-            <div className="tree-meta text-xs text-gray-500">
-              {node.type === 'folder' && node.documentCount ? `${node.documentCount} 문서` : `수정: ${node.lastModified}`}
+            <div className="flex items-center gap-1">
+              <div className="tree-meta text-xs text-gray-500 mr-2">
+                {node.type === 'folder' && node.documentCount ? `${node.documentCount} 문서` : `수정: ${node.lastModified}`}
+              </div>
+              {/* 폴더 관리 버튼들 (폴더이고 루트가 아닐 때만 표시) */}
+              {node.type === 'folder' && node.folderId && (
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddFolder(node.id);
+                    }}
+                    className="text-green-500 hover:text-green-700 text-xs"
+                    title="하위 폴더 추가"
+                  >
+                    <i className="fas fa-plus"></i>
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStartEdit(node.id, node.name);
+                    }}
+                    className="text-blue-500 hover:text-blue-700 text-xs"
+                    title="폴더 이름 수정"
+                  >
+                    <i className="fas fa-edit"></i>
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteFolder(node.id);
+                    }}
+                    className="text-red-500 hover:text-red-700 text-xs"
+                    title="폴더 삭제"
+                  >
+                    <i className="fas fa-trash"></i>
+                  </button>
+                </div>
+              )}
+              {/* 루트 폴더에는 추가 버튼만 표시 */}
+              {node.id === 1 && (
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddFolder(node.id);
+                    }}
+                    className="text-green-500 hover:text-green-700 text-xs"
+                    title="폴더 추가"
+                  >
+                    <i className="fas fa-plus"></i>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

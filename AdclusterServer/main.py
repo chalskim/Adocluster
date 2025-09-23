@@ -7,6 +7,7 @@ from app.routers.db_tables import router as db_tables_router
 from app.routers.client_ip_router import router as client_ip_router
 from app.routers.todos import router as todos_router 
 from app.routers.resources import router as resources_router
+from app.routers.folders import router as folders_router  # Add folders router import
 from app.routers.google_scholar import router as google_scholar_router  # Add this import
 from app.routers.pubmed import router as pubmed_router  # Add PubMed router import
 from app.routers.ieee import router as ieee_router  # Add IEEE router import
@@ -14,8 +15,14 @@ from app.routers.acm import router as acm_router  # Add ACM router import
 from app.routers.nalib import router as nalib_router  # Add 국회도서관 router import
 from app.routers.kci import router as kci_router  # Add KCI router import
 from app.routers.crossref import router as crossref_router  # Add Crossref router import
+from app.routers.arxiv import router as arxiv_router  # Add arXiv router import
+from routers.doaj import router as doaj_router  # Add DOAJ router import
+from routers.core import router as core_router  # Add CORE router import
+from routers.semantic_scholar import router as semantic_scholar_router  # Add Semantic Scholar router import
+from routers.scopus import router as scopus_router  # Add Scopus router import
+from routers.web_of_science import router as web_of_science_router  # Add Web of Science router import
 from app.core.database import Base, engine
-from app.models import user, project, node, content_block, file, reference, citation, ai_job, revision, team, client_ip
+from app.models import user, project, node, content_block, file, reference, citation, ai_job, revision, team, client_ip, folder
 from sqlalchemy import MetaData
 import os
 import uvicorn # Added for direct uvicorn.run call within main.py
@@ -59,6 +66,7 @@ logger.debug("--- main.py: Including API routers ---")
 app.include_router(users_router)
 app.include_router(auth_router)
 app.include_router(projects_router)
+app.include_router(folders_router)  # Add folders router
 # WebSocket endpoints don't use prefixes
 app.include_router(websocket_router)
 # HTTP API endpoints use the /api prefix
@@ -75,6 +83,12 @@ app.include_router(acm_router)  # Add ACM router
 app.include_router(nalib_router)  # Add 국회도서관 router
 app.include_router(kci_router)  # Add KCI router
 app.include_router(crossref_router)  # Add Crossref router
+app.include_router(arxiv_router)  # Add arXiv router
+app.include_router(doaj_router, prefix="/api/doaj")  # Add DOAJ router
+app.include_router(core_router, prefix="/api/core")  # Add CORE router
+app.include_router(semantic_scholar_router, prefix="/api/semantic-scholar")  # Add Semantic Scholar router
+app.include_router(scopus_router, prefix="/api/scopus")  # Add Scopus router
+app.include_router(web_of_science_router, prefix="/api/web-of-science")  # Add Web of Science router
 logger.debug("--- main.py: API routers included ---")
 
 @app.get("/health-check")

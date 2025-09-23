@@ -23,6 +23,7 @@ class User(Base):
     projects = relationship("Project", back_populates="owner")
     teams = relationship("Team", secondary="team_members", back_populates="members")
     owned_teams = relationship("Team", back_populates="owner")
+    folders = relationship("Folder", back_populates="creator")
     
     def __repr__(self):
         return f"<User(uid={self.uid}, uemail={self.uemail}, uname={self.uname})>"

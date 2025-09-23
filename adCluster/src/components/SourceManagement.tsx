@@ -106,6 +106,136 @@ interface KciSearchResponse {
   search_time: number;
 }
 
+interface ArxivSearchResult {
+  id: string;
+  title: string;
+  authors: string[];
+  abstract?: string;
+  published: string;
+  updated?: string;
+  doi?: string;
+  journal_ref?: string;
+  categories: string[];
+  pdf_url: string;
+  abs_url: string;
+}
+
+interface ArxivSearchResponse {
+  results: ArxivSearchResult[];
+  total_results: number;
+  search_time: number;
+}
+
+// Web of Science interfaces
+interface WebOfScienceSearchResult {
+  id: string;
+  title: string;
+  authors: string[];
+  journal: string;
+  publication_year: number;
+  doi?: string;
+  abstract?: string;
+  url: string;
+  citation_count?: number;
+  keywords?: string[];
+}
+
+interface WebOfScienceSearchResponse {
+  results: WebOfScienceSearchResult[];
+  total_results: number;
+  search_time: number;
+}
+
+// Scopus interfaces
+interface ScopusSearchResult {
+  id: string;
+  title: string;
+  author: string;
+  year: string;
+  publication: string;
+  doi?: string;
+  abstract?: string;
+  url: string;
+  citation_count?: number;
+  source_type?: string;
+  publisher?: string;
+}
+
+interface ScopusSearchResponse {
+  results: ScopusSearchResult[];
+  total_results: number;
+  search_time: number;
+  query: string;
+  start: number;
+  count: number;
+  note?: string;
+}
+
+// DOAJ interfaces
+interface DOAJSearchResult {
+  id: string;
+  title: string;
+  authors: string[];
+  journal: string;
+  publication_date: string;
+  doi?: string;
+  abstract?: string;
+  url: string;
+  keywords?: string[];
+  language?: string;
+}
+
+interface DOAJSearchResponse {
+  results: DOAJSearchResult[];
+  total_results: number;
+  search_time: number;
+}
+
+// CORE interfaces
+interface CORESearchResult {
+  id: string;
+  title: string;
+  authors: string[];
+  journal?: string;
+  publication_date: string;
+  doi?: string;
+  abstract?: string;
+  url: string;
+  download_url?: string;
+  repository?: string;
+}
+
+interface CORESearchResponse {
+  results: CORESearchResult[];
+  total_results: number;
+  search_time: number;
+}
+
+// Semantic Scholar interfaces
+interface SemanticScholarSearchResult {
+  id: string;
+  title: string;
+  authors: string[];
+  year?: number;
+  venue?: string;
+  abstract?: string;
+  doi?: string;
+  url?: string;
+  citation_count?: number;
+  reference_count?: number;
+  fields_of_study?: string[];
+  publication_date?: string;
+  source: string;
+}
+
+interface SemanticScholarSearchResponse {
+  results: SemanticScholarSearchResult[];
+  total_results: number;
+  offset: number;
+  limit: number;
+  query: string;
+}
+
 interface SourceManagementProps {
   projectId?: string;
   onSourceSelect?: (source: SourceInfo) => void;
@@ -192,6 +322,54 @@ const SourceManagement: React.FC<SourceManagementProps> = ({ projectId, onSource
           page_size: itemsPerPage.toString()
         });
         apiUrl = `/api/kci/search?${params}`;
+      } else if (selectedSource === 'arXiv') {
+        // arXiv API는 search_query, start, max_results 파라미터를 사용
+        params = new URLSearchParams({
+          search_query: searchQuery,
+          start: ((page - 1) * itemsPerPage).toString(),
+          max_results: itemsPerPage.toString()
+        });
+        apiUrl = `/api/arxiv/search?${params}`;
+      } else if (selectedSource === 'Web of Science') {
+        // Web of Science API는 query, limit, offset 파라미터를 사용
+        params = new URLSearchParams({
+          query: searchQuery,
+          limit: itemsPerPage.toString(),
+          offset: ((page - 1) * itemsPerPage).toString()
+        });
+        apiUrl = `/api/web-of-science/search?${params}`;
+      } else if (selectedSource === 'Scopus') {
+        // Scopus API는 query, count, start 파라미터를 사용
+        params = new URLSearchParams({
+          query: searchQuery,
+          count: itemsPerPage.toString(),
+          start: ((page - 1) * itemsPerPage).toString()
+        });
+        apiUrl = `/api/scopus/search?${params}`;
+      } else if (selectedSource === 'DOAJ') {
+        // DOAJ API는 query, page_size, page 파라미터를 사용
+        params = new URLSearchParams({
+          query: searchQuery,
+          page_size: itemsPerPage.toString(),
+          page: page.toString()
+        });
+        apiUrl = `/api/doaj/search?${params}`;
+      } else if (selectedSource === 'CORE') {
+        // CORE API는 query, limit, offset 파라미터를 사용
+        params = new URLSearchParams({
+          query: searchQuery,
+          limit: itemsPerPage.toString(),
+          offset: ((page - 1) * itemsPerPage).toString()
+        });
+        apiUrl = `/api/core/search?${params}`;
+      } else if (selectedSource === 'Semantic Scholar') {
+        // Semantic Scholar API는 query, limit, offset 파라미터를 사용
+        params = new URLSearchParams({
+          query: searchQuery,
+          limit: itemsPerPage.toString(),
+          offset: ((page - 1) * itemsPerPage).toString()
+        });
+        apiUrl = `/api/semantic-scholar/search?${params}`;
       } else {
         params = new URLSearchParams({
           query: searchQuery,
@@ -313,6 +491,132 @@ const SourceManagement: React.FC<SourceManagementProps> = ({ projectId, onSource
           notes: result.abstract || '',
           addedDate: new Date(),
           citationCount: 0,
+          isBookmarked: false,
+          projectId: selectedProjectId !== 'all' ? selectedProjectId : undefined
+        }));
+
+        setTotalResults(data.total_results);
+      } else if (selectedSource === 'arXiv') {
+        const data: ArxivSearchResponse = await response.json();
+        
+        convertedResults = data.results.map((result, index) => ({
+          id: `arxiv-${result.id}`,
+          title: result.title,
+          authors: result.authors,
+          year: new Date(result.published).getFullYear(),
+          type: 'article' as const,
+          journal: result.journal_ref || 'arXiv preprint',
+          doi: result.doi,
+          url: result.abs_url,
+          tags: ['arXiv', ...result.categories],
+          notes: result.abstract || '',
+          addedDate: new Date(),
+          citationCount: 0,
+          isBookmarked: false,
+          projectId: selectedProjectId !== 'all' ? selectedProjectId : undefined
+        }));
+
+        setTotalResults(data.total_results);
+      } else if (selectedSource === 'Web of Science') {
+        const data: WebOfScienceSearchResponse = await response.json();
+        
+        convertedResults = data.results.map((result, index) => ({
+          id: `wos-${result.id}`,
+          title: result.title,
+          authors: result.authors,
+          year: result.publication_year,
+          type: 'article' as const,
+          journal: result.journal,
+          doi: result.doi,
+          url: result.url,
+          tags: ['Web of Science', ...(result.keywords || [])],
+          notes: result.abstract || '',
+          addedDate: new Date(),
+          citationCount: result.citation_count || 0,
+          isBookmarked: false,
+          projectId: selectedProjectId !== 'all' ? selectedProjectId : undefined
+        }));
+
+        setTotalResults(data.total_results);
+      } else if (selectedSource === 'Scopus') {
+        const data: ScopusSearchResponse = await response.json();
+        
+        convertedResults = data.results.map((result, index) => ({
+          id: `scopus-${result.id}`,
+          title: result.title,
+          authors: result.author ? [result.author] : [],
+          year: parseInt(result.year) || new Date().getFullYear(),
+          type: 'article' as const,
+          journal: result.publication,
+          doi: result.doi,
+          url: result.url,
+          tags: ['Scopus', result.source_type || ''].filter(Boolean),
+          notes: result.abstract || '',
+          addedDate: new Date(),
+          citationCount: result.citation_count || 0,
+          isBookmarked: false,
+          projectId: selectedProjectId !== 'all' ? selectedProjectId : undefined
+        }));
+
+        setTotalResults(data.total_results);
+      } else if (selectedSource === 'DOAJ') {
+        const data: DOAJSearchResponse = await response.json();
+        
+        convertedResults = data.results.map((result, index) => ({
+          id: `doaj-${result.id}`,
+          title: result.title,
+          authors: result.authors,
+          year: new Date(result.publication_date).getFullYear(),
+          type: 'article' as const,
+          journal: result.journal,
+          doi: result.doi,
+          url: result.url,
+          tags: ['DOAJ', ...(result.keywords || []), result.language || ''].filter(Boolean),
+          notes: result.abstract || '',
+          addedDate: new Date(),
+          citationCount: 0,
+          isBookmarked: false,
+          projectId: selectedProjectId !== 'all' ? selectedProjectId : undefined
+        }));
+
+        setTotalResults(data.total_results);
+      } else if (selectedSource === 'CORE') {
+        const data: CORESearchResponse = await response.json();
+        
+        convertedResults = data.results.map((result, index) => ({
+          id: `core-${result.id}`,
+          title: result.title,
+          authors: result.authors,
+          year: new Date(result.publication_date).getFullYear(),
+          type: 'article' as const,
+          journal: result.journal || result.repository || '',
+          doi: result.doi,
+          url: result.url,
+          tags: ['CORE', result.repository || ''].filter(Boolean),
+          notes: result.abstract || '',
+          addedDate: new Date(),
+          citationCount: 0,
+          isBookmarked: false,
+          projectId: selectedProjectId !== 'all' ? selectedProjectId : undefined
+        }));
+
+        setTotalResults(data.total_results);
+      } else if (selectedSource === 'Semantic Scholar') {
+        const data: SemanticScholarSearchResponse = await response.json();
+        
+        convertedResults = data.results.map((result, index) => ({
+          id: `semantic-${result.id}`,
+          title: result.title,
+          authors: result.authors,
+          year: result.year || (result.publication_date ? new Date(result.publication_date).getFullYear() : new Date().getFullYear()),
+          type: 'article' as const,
+          journal: result.venue || '',
+          doi: result.doi,
+          url: result.url || '',
+          tags: ['Semantic Scholar', ...(result.fields_of_study || [])],
+          notes: result.abstract || '',
+          addedDate: new Date(),
+          citationCount: result.citation_count || 0,
           isBookmarked: false,
           projectId: selectedProjectId !== 'all' ? selectedProjectId : undefined
         }));
@@ -447,10 +751,9 @@ const SourceManagement: React.FC<SourceManagementProps> = ({ projectId, onSource
 
           <div className="mb-4 space-y-3">
             <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-              <input
+              <input 
                 type="text"
-                placeholder="국회도서관, 한국학술정보(KCI), Google Scholar, PubMed, IEEE Xplore 등에서 검색..."
-                className="flex-1 p-1.5 border border-gray-300 rounded"
+                placeholder="국회도서관, 한국학술정보(KCI), Google Scholar, PubMed, IEEE Xplore, ACM Digital Library, arXiv에서 검색할 키워드를 입력하세요"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -459,12 +762,19 @@ const SourceManagement: React.FC<SourceManagementProps> = ({ projectId, onSource
                 value={selectedSource}
                 onChange={(e) => setSelectedSource(e.target.value)}
               >
-                <option>국회도서관</option>
-                <option>한국학술정보(KCI)</option>
-                <option>Google Scholar</option>
-                <option>PubMed</option>
-                <option>IEEE Xplore</option>
-                <option>ACM Digital Library</option>
+                <option value="국회도서관">국회도서관</option>
+                <option value="한국학술정보(KCI)">한국학술정보(KCI)</option>
+                <option value="Google Scholar">Google Scholar</option>
+                <option value="PubMed">PubMed</option>
+                <option value="IEEE Xplore">IEEE Xplore</option>
+                <option value="ACM Digital Library">ACM Digital Library</option>
+                <option value="arXiv">arXiv</option>
+                {/* API 키가 준비되면 활성화 예정 */}
+                {/* <option value="Web of Science">Web of Science</option> */}
+                {/* <option value="Scopus">Scopus</option> */}
+                {/* <option value="DOAJ">DOAJ</option> */}
+                {/* <option value="CORE">CORE</option> */}
+                {/* <option value="Semantic Scholar">Semantic Scholar</option> */}
               </select>
               <button 
                 type="button"

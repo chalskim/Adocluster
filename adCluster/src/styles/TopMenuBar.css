@@ -1,93 +1,139 @@
-/* Top Menu Bar - Ribbon Style */
+/* SVG 아이콘 사용으로 Material Icons 폰트 import 제거 */
+
+/* SVG 아이콘 스타일 */
+.svg-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: middle;
+  transition: all 0.3s ease;
+}
+
+/* Top Menu Bar - Simple Ribbon Style (editer 스타일 적용) */
 
 .editor-ribbon {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-bottom: 1px solid #e0e0e0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   position: relative;
-  z-index: 1000;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  z-index: 20;
+}
+
+.editor-ribbon.dark {
+  background: #1f2937;
+  border-bottom-color: #374151;
 }
 
 /* Tab Navigation */
 .ribbon-tabs {
   display: flex;
-  background: rgba(255, 255, 255, 0.1);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
+  padding: 0 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.ribbon-tabs.dark {
+  border-bottom-color: #374151;
 }
 
 .ribbon-tab {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: -1px;
   background: transparent;
   border: none;
-  color: white;
-  padding: 12px 24px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  border-bottom: 3px solid transparent;
-  position: relative;
 }
 
 .ribbon-tab:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-1px);
+  color: #374151;
 }
 
 .ribbon-tab.active {
-  background: rgba(255, 255, 255, 0.2);
-  border-bottom-color: #fff;
-  color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: #2563eb;
+  border-bottom-color: #2563eb;
 }
 
-.ribbon-tab.active::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-top: 6px solid #fff;
+.ribbon-tab.dark {
+  color: #9ca3af;
+}
+
+.ribbon-tab.dark:hover {
+  color: #d1d5db;
+}
+
+.ribbon-tab.dark.active {
+  color: #60a5fa;
+  border-bottom-color: #60a5fa;
 }
 
 /* Tab Content */
 .ribbon-content {
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
+  padding: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+  overflow: visible;
 }
 
 .ribbon-pane {
+  display: none;
+  width: 100%;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+  overflow: visible;
+}
+
+.ribbon-pane.active {
   display: flex;
-  gap: 24px;
+}
+
+.ribbon-groups {
+  display: flex;
+  gap: 8px;
   align-items: flex-start;
   flex-wrap: wrap;
 }
 
 .ribbon-group {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 80px;
+  justify-content: flex-start;
+  padding: 8px;
+  border-right: 1px solid #e5e7eb;
+  padding-bottom: 20px;
+  overflow: visible;
 }
 
-.ribbon-group h3 {
-  font-size: 12px;
-  font-weight: 600;
-  color: #4a5568;
-  margin: 0 0 8px 0;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.ribbon-group.dark {
+  border-right-color: #4b5563;
 }
 
-.ribbon-buttons {
+.ribbon-group:last-child {
+  border-right: none;
+}
+
+.ribbon-group-title {
+  position: absolute;
+  bottom: 4px;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.ribbon-group-title.dark {
+  color: #9ca3af;
+}
+
+.ribbon-controls-row {
   display: flex;
+  align-items: center;
   gap: 4px;
-  flex-wrap: wrap;
 }
 
 .ribbon-button {
@@ -95,157 +141,246 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 8px 12px;
+  gap: 4px;
+  border-radius: 4px;
+  padding: 4px;
+  min-width: 32px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 60px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s ease;
+  background: transparent;
+  border: none;
+  color: #374151;
 }
 
 .ribbon-button:hover {
-  background: #f7fafc;
-  border-color: #cbd5e0;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-}
-
-.ribbon-button.active {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
-  border-color: #667eea;
-}
-
-.ribbon-button.partial-active {
-  background: linear-gradient(135deg, #a5b4fc, #c4b5fd);
-  color: white;
-  border-color: #a5b4fc;
+  background: #e5e7eb;
 }
 
 .ribbon-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+}
+
+.ribbon-button:disabled:hover {
+  background: transparent;
+}
+
+.ribbon-button.is-active {
+  background: #e5e7eb;
+}
+
+.ribbon-button.dark {
+  color: #d1d5db;
+}
+
+.ribbon-button.dark:hover {
+  background: #374151;
+}
+
+.ribbon-button.dark:disabled:hover {
+  background: transparent;
+}
+
+.ribbon-button.dark.is-active {
+  background: #4b5563;
 }
 
 .ribbon-icon {
-  font-size: 16px;
-  margin-bottom: 4px;
-  font-weight: bold;
+  font-size: 20px;
 }
 
 .ribbon-label {
-  font-size: 10px;
-  color: #4a5568;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* 클립보드 그룹 특별 스타일 */
+.group-clipboard {
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.paste-button {
+  padding: 8px;
   text-align: center;
-  line-height: 1.2;
 }
 
-.ribbon-button.active .ribbon-label {
-  color: white;
+.clipboard-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-/* Responsive Design */
+/* 입력 요소 스타일 */
+.font-dropdown, .style-dropdown {
+  position: relative;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 14px;
+  height: 32px;
+  width: 150px;
+  z-index: 30;
+}
+
+.font-dropdown.dark, .style-dropdown.dark {
+  background: #374151;
+  border-color: #4b5563;
+  color: #d1d5db;
+}
+
+.font-size-input {
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 14px;
+  height: 32px;
+  width: 150px;
+}
+
+.font-size-input.dark {
+  background: #374151;
+  border-color: #4b5563;
+  color: #d1d5db;
+}
+
+/* 새로 추가된 폰트 및 색상 선택 요소 스타일 */
+.ribbon-dropdown {
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.ribbon-select {
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  height: 28px;
+  width: 120px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.ribbon-select:hover {
+  border-color: #9ca3af;
+}
+
+.ribbon-select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.ribbon-select.dark {
+  background: #374151;
+  border-color: #4b5563;
+  color: #d1d5db;
+}
+
+.ribbon-select.dark:hover {
+  border-color: #6b7280;
+}
+
+.ribbon-select.dark:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.1);
+}
+
+.ribbon-color-picker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.ribbon-color-input {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+  background: transparent;
+  padding: 0;
+}
+
+.ribbon-color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+  border: none;
+}
+
+.ribbon-color-input::-webkit-color-swatch {
+  border: none;
+  border-radius: 3px;
+}
+
+.color-icon {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+}
+
+.ribbon-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+/* 각 컨트롤의 최소 크기 보장 */
+.ribbon-controls-row .ribbon-button,
+.ribbon-controls-row .font-dropdown,
+.ribbon-controls-row .font-size-input,
+.ribbon-controls-row .style-dropdown {
+  min-height: 32px;
+}
+
+.ribbon-controls-row .ribbon-button {
+  min-width: 32px;
+}
+
+/* 삽입 탭의 버튼 크기 */
+.insert-button {
+  width: 60px;
+  height: 50px;
+  justify-content: center;
+}
+
+/* 반응형 디자인 */
 @media (max-width: 768px) {
-  .editor-ribbon {
-    overflow-x: auto;
-  }
-  
   .ribbon-tabs {
-    justify-content: center;
+    flex-wrap: wrap;
   }
   
   .ribbon-tab {
-    padding: 10px 16px;
-    font-size: 13px;
-  }
-  
-  .ribbon-pane {
-    flex-direction: column;
-    gap: 16px;
-  }
-  
-  .ribbon-group {
-    min-width: 100%;
-    align-items: stretch;
-  }
-  
-  .ribbon-buttons {
-    justify-content: center;
-  }
-  
-  .ribbon-button {
-    min-width: 70px;
-    padding: 12px 8px;
-  }
-}
-
-/* Loading State */
-.editor-ribbon.loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 60px;
-  color: white;
-  font-size: 14px;
-}
-
-/* Animation for tab transitions */
-.ribbon-pane {
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Special styling for important buttons */
-.ribbon-button[data-action="pdf"] {
-  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-  color: white;
-  border-color: #ff6b6b;
-}
-
-.ribbon-button[data-action="pdf"]:hover {
-  background: linear-gradient(135deg, #ff5252, #e53935);
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .editor-ribbon {
-    background: linear-gradient(135deg, #2d3748, #4a5568);
+    padding: 6px 12px;
+    font-size: 12px;
   }
   
   .ribbon-content {
-    background: rgba(45, 55, 72, 0.95);
+    padding: 6px;
   }
   
-  .ribbon-group h3 {
-    color: #cbd5e0;
+  .ribbon-groups {
+    gap: 6px;
   }
   
   .ribbon-button {
-    background: #4a5568;
-    border-color: #718096;
-    color: #e2e8f0;
+    padding: 3px;
+    min-width: 28px;
   }
   
-  .ribbon-button:hover {
-    background: #2d3748;
-    border-color: #4a5568;
+  .ribbon-icon {
+    font-size: 18px;
   }
   
   .ribbon-label {
-    color: #cbd5e0;
+    font-size: 10px;
   }
 }

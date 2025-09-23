@@ -39,7 +39,7 @@ interface ProjectData {
 }
 
 const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ projectId: propProjectId }) => {
-  const { projectId: paramProjectId } = useParams<{ projectId: string }>();
+  const { projectId: paramProjectId = '' } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const projectId = propProjectId || paramProjectId;
   
