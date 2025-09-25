@@ -1,9 +1,9 @@
 [
   {
     "ip_address": "127.0.0.1",
-    "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Trae/1.100.3 Chrome/132.0.6834.210 Electron/34.5.1 Safari/537.36",
+    "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
     "first_seen": "2025-09-15T16:05:00.646491",
-    "last_seen": "2025-09-23T18:55:18.699639",
-    "access_count": 127
+    "last_seen": "2025-09-25T16:31:28.806276",
+    "access_count": 132
   }
 ]

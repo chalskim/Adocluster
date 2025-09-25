@@ -1,0 +1,308 @@
+.tree-node {
+  margin: 2px 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  cursor: move;
+  font-size: 13px;
+}
+
+.tree-node.dragging {
+  opacity: 0.3;
+  transform: rotate(2deg) scale(0.95);
+  z-index: 1000;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.tree-node.drop-target {
+  background-color: #e8f5e8 !important;
+  border: 2px solid #4caf50 !important;
+  border-radius: 6px;
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.tree-node.drop-target .node-content {
+  background-color: rgba(76, 175, 80, 0.1);
+  border-color: #4caf50;
+}
+
+.node-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  min-height: 28px;
+}
+
+.node-content:hover {
+  background: #e9ecef;
+  border-color: #dee2e6;
+}
+
+.node-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.expand-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  margin-right: 4px;
+  font-size: 10px;
+  color: #6c757d;
+  transition: color 0.2s ease;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.expand-button:hover {
+  color: #495057;
+}
+
+.node-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #212529;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.node-name:hover {
+  background-color: #dee2e6;
+}
+
+.edit-input {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border: 2px solid #007bff;
+  border-radius: 3px;
+  background: white;
+  outline: none;
+  min-width: 120px;
+}
+
+.node-actions {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.node-content:hover .node-actions {
+  opacity: 1;
+}
+
+.action-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 3px 5px;
+  border-radius: 3px;
+  font-size: 10px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.action-button.add {
+  color: #28a745;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.action-button.add:hover {
+  background: #d4edda;
+  color: #155724;
+}
+
+.action-button.edit {
+  color: #ffc107;
+  font-size: 10px;
+}
+
+.action-button.edit:hover {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.action-button.delete {
+  color: #dc3545;
+  font-size: 10px;
+}
+
+.action-button.delete:hover {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.action-button.move-up,
+.action-button.move-down {
+  color: #17a2b8;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.action-button.move-up:hover,
+.action-button.move-down:hover {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.action-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.action-button:disabled:hover {
+  background: none;
+  color: inherit;
+}
+
+.add-form {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  margin-top: 4px;
+}
+
+.add-input {
+  flex: 1;
+  padding: 4px 6px;
+  border: 2px solid #28a745;
+  border-radius: 3px;
+  font-size: 12px;
+  outline: none;
+  max-width: 150px;
+}
+
+.confirm-button {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.confirm-button:hover {
+  background: #218838;
+}
+
+.cancel-button {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.cancel-button:hover {
+  background: #5a6268;
+}
+
+.children {
+  margin-top: 2px;
+}
+
+.drop-between {
+  height: 4px;
+  background-color: transparent;
+  margin: 2px 0;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+/* 루트 레벨 노드 스타일 */
+.tree-node[style*="margin-left: 0px"] .node-content {
+  background: #e3f2fd;
+  border-color: #bbdefb;
+  font-weight: 600;
+}
+
+.tree-node[style*="margin-left: 0px"] .node-content:hover {
+  background: #bbdefb;
+  border-color: #90caf9;
+}
+
+/* 폴더 형식 스타일링 */
+.tree-node.folder-view {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  margin: 2px 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tree-node.folder-view .node-content {
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 4px;
+}
+
+.tree-node.folder-view.folder {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border-color: #ffc107;
+}
+
+.tree-node.folder-view.file {
+  background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+  border-color: #17a2b8;
+}
+
+.tree-node.folder-view .node-name {
+  font-weight: 500;
+  color: #495057;
+}
+
+.tree-node.folder-view.folder .node-name {
+  color: #856404;
+  font-weight: 600;
+}
+
+.tree-node.folder-view.file .node-name {
+  color: #0c5460;
+}
+
+.tree-node.folder-view .node-actions {
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.tree-node.folder-view:hover .node-actions {
+  opacity: 1;
+}
+
+.tree-node.folder-view .action-button {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.tree-node.folder-view .action-button:hover {
+  background: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}

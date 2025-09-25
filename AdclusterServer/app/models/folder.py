@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Boolean
 from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
 from sqlalchemy.orm import relationship
 from app.core.database import Base
@@ -16,6 +16,7 @@ class Folder(Base):
     foldercreated = Column('foldercreated', TIMESTAMP(timezone=True), default=datetime.utcnow)
     folderupdated = Column('folderupdated', TIMESTAMP(timezone=True), default=datetime.utcnow)
     folderorder = Column('folderorder', Integer, default=0)
+    is_active = Column('is_active', Boolean, default=True)
     
     # Relationships
     project = relationship("Project", back_populates="folders")
