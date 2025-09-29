@@ -202,14 +202,42 @@ export const fetchProjectById = async (projectId: string): Promise<ProjectData |
   }
 };
 
+// 프로젝트 업데이트
+export const updateProject = async (projectId: string, projectData: Partial<ProjectData>): Promise<ProjectData | null> => {
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/api/projects/${projectId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(projectData),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.log('API - 401 Unauthorized 응답을 받았습니다. 토큰을 제거합니다.');
+        localStorage.removeItem('authToken');
+        return null;
+      }
+      const errorData = await response.json();
+      throw new Error(errorData.detail || '프로젝트 업데이트에 실패했습니다.');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('프로젝트 업데이트 오류:', error);
+    alert(`프로젝트 업데이트 중 오류 발생: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+    return null;
+  }
+};
+
 // 폴더 관련 API 함수들
 
 // 폴더 인터페이스 정의
 export interface FolderData {
-  id: string;
+  id: number;
   name: string;
   project_id: string;
-  parent_id?: string;
+  parent_id?: number;
   creator_id: string;
   created_at: string;
   updated_at: string;

@@ -13,20 +13,24 @@ class ProjectBase(BaseModel):
 class ProjectCreate(ProjectBase):
     pass
 
-class ProjectUpdate(ProjectBase):
+class ProjectUpdate(BaseModel):
     title: Optional[str] = None
+    description: Optional[str] = None
+    visibility: Optional[str] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
 
 class ProjectResponse(ProjectBase):
-    prjID: uuid.UUID
-    crtID: uuid.UUID
+    prjid: uuid.UUID
+    crtid: uuid.UUID
     created_at: datetime
     update_at: datetime
 
     class Config:
         orm_mode = True
         fields = {
-            "prjID": "prjid",
-            "crtID": "crtid",
+            "prjid": "prjid",
+            "crtid": "crtid",
             "created_at": "created_at",
             "update_at": "update_at"
         }

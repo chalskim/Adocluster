@@ -86,34 +86,27 @@ async def get_project_folders(
         
         # Get all folders for the project
         folders = db.query(FolderModel).filter(
-            and_(
-                FolderModel.project_id == project_id,
-                FolderModel.is_active == True
-            )
-        ).order_by(FolderModel.name).all()
+            FolderModel.projectid == project_id
+        ).order_by(FolderModel.foldername).all()
         
-        # Build tree structure
-        folder_dict = {folder.id: folder for folder in folders}
-        root_folders = []
-        
+        # Convert to response format
+        folder_responses = []
         for folder in folders:
-            folder_response = FolderTreeResponse.model_validate(folder)
-            folder_response.children = []
-            
-            if folder.parent_id is None:
-                root_folders.append(folder_response)
-            else:
-                parent = folder_dict.get(folder.parent_id)
-                if parent:
-                    # Find parent in the response structure
-                    parent_response = next(
-                        (f for f in root_folders if f.id == parent.id), 
-                        None
-                    )
-                    if parent_response:
-                        parent_response.children.append(folder_response)
+            folder_response = {
+                "id": folder.folderid,  # Keep as integer since that's what the DB uses
+                "name": folder.foldername,
+                "description": folder.folderdescription,
+                "project_id": folder.projectid,
+                "parent_id": folder.parentfolderid,
+                "created_by": folder.creatorid,
+                "is_active": True,  # Default value since not in model
+                "created_at": folder.foldercreated,
+                "updated_at": folder.folderupdated,
+                "children": []
+            }
+            folder_responses.append(FolderTreeResponse(**folder_response))
         
-        return root_folders
+        return folder_responses
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -2,14 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchProjects, fetchFoldersByProject, createFolder, deleteFolder, updateFolder, FolderData } from '../services/api';
 import { Project, ProjectData, mapProjectDataToProject } from '../types/ProjectTypes';
-import '../styles/tabs.css';
+import EditProjectModal from './EditProjectModal';
 
 interface TreeNode {
   id: number;
   name: string;
   type: 'folder' | 'file';
   children?: TreeNode[];
-  lastModified?: string;
   documentCount?: number;
   folderId?: string; // 실제 폴더 ID 추가
   isEditing?: boolean; // 편집 모드 상태 추가
@@ -49,6 +48,7 @@ const Projects: React.FC = () => {
   const [treeData, setTreeData] = useState<TreeNode[]>([]);
   const [editingNodeId, setEditingNodeId] = useState<number | null>(null);
   const [editingName, setEditingName] = useState('');
+  const [editingProject, setEditingProject] = useState<ProjectData | null>(null);
 
   // Fetch projects from the database
   useEffect(() => {
@@ -117,16 +117,15 @@ const Projects: React.FC = () => {
     }
     
     // 폴더를 계층 구조로 변환
-    const buildFolderTree = (parentId: string | null = null, nodeId: number = 2): TreeNode[] => {
+    const buildFolderTree = (parentId: number | null = null, nodeId: number = 2): TreeNode[] => {
       return folderList
         .filter(folder => folder.parent_id === parentId)
         .map((folder, index) => ({
           id: nodeId + index,
           name: folder.name,
           type: 'folder' as const,
-          folderId: folder.id,
-          children: buildFolderTree(folder.id, nodeId + folderList.length + index * 10),
-          lastModified: folder.updated_at
+          folderId: folder.id.toString(), // Convert number to string
+          children: buildFolderTree(folder.id, nodeId + folderList.length + index * 10)
         }));
     };
 
@@ -141,8 +140,7 @@ const Projects: React.FC = () => {
           {
             id: 1000,
             name: '기본 문서',
-            type: 'file',
-            lastModified: project.lastUpdate
+            type: 'file'
           }
         ]
       }
@@ -171,16 +169,14 @@ const Projects: React.FC = () => {
               {
                 id: 3,
                 name: '기본 문서',
-                type: 'file',
-                lastModified: selectedProject.lastUpdate
+                type: 'file'
               }
             ]
           },
           {
             id: 4,
             name: '요구사항',
-            type: 'file',
-            lastModified: selectedProject.lastUpdate
+            type: 'file'
           }
         ]
       }
@@ -421,7 +417,7 @@ const Projects: React.FC = () => {
             </div>
             <div className="flex items-center gap-1">
               <div className="tree-meta text-xs text-gray-500 mr-2">
-                {node.type === 'folder' && node.documentCount ? `${node.documentCount} 문서` : `수정: ${node.lastModified}`}
+                {node.type === 'folder' && node.documentCount ? `${node.documentCount} 문서` : ``}
               </div>
               {/* 폴더 관리 버튼들 (폴더이고 루트가 아닐 때만 표시) */}
               {node.type === 'folder' && node.folderId && (
@@ -493,6 +489,31 @@ const Projects: React.FC = () => {
     }
   };
 
+  // Add this function to handle project updates
+  const handleProjectUpdate = (updatedProject: ProjectData) => {
+    // Transform the updated project to UI format
+    const transformedProject = {
+      ...mapProjectDataToProject(updatedProject),
+      status: 'in-progress' as const,
+      startDate: updatedProject.start_date ? new Date(updatedProject.start_date).toLocaleDateString('ko-KR') : '날짜 정보 없음',
+      documents: 0,
+      members: 1,
+      lastUpdate: updatedProject.update_at ? new Date(updatedProject.update_at).toLocaleDateString('ko-KR') : '업데이트 정보 없음'
+    };
+
+    // Update the projects list
+    setProjects(prevProjects => 
+      prevProjects.map(project => 
+        project.id === transformedProject.id ? transformedProject : project
+      )
+    );
+
+    // If the updated project is the selected project, update it too
+    if (selectedProject && selectedProject.id === transformedProject.id) {
+      setSelectedProject(transformedProject);
+    }
+  };
+
   return (
     <div className="projects-page bg-gray-100 px-1 py-1.5 sm:p-3">
       {/* 페이지 제목과 프로젝트 생성 버튼 */}
@@ -529,7 +550,6 @@ const Projects: React.FC = () => {
         <div className="projects-left-panel w-full md:flex-1 bg-white rounded-lg shadow-md p-1.5 sm:p-3 lg:h-[700px] overflow-y-auto">
           <div className="panel-header flex justify-between items-center mb-2 sm:mb-3">
             <h2 className="text-base sm:text-lg font-semibold text-gray-800">연구 프로젝트 목록</h2>
-            <a href="#" className="view-all text-blue-500 text-xs hover:text-blue-600">전체 보기</a>
           </div>
           
           {loading ? (
@@ -653,8 +673,20 @@ const Projects: React.FC = () => {
                           className="edit-btn text-gray-500 hover:text-gray-700 p-1"
                           onClick={(e) => {
                             e.stopPropagation();
-                            // Add edit logic here when needed
-                            console.log(`Edit clicked for project ${project.id}`);
+                            // Open edit modal with the project data
+                            // Convert Project to ProjectData format for the modal
+                            const projectData: ProjectData = {
+                              prjid: project.id,
+                              crtID: project.creatorId,
+                              title: project.title,
+                              description: project.description,
+                              visibility: project.visibility,
+                              start_date: project.startDate,
+                              end_date: project.endDate || null,
+                              created_at: project.createdAt,
+                              update_at: project.updatedAt
+                            };
+                            setEditingProject(projectData);
                           }}
                         >
                           <i className="fas fa-edit text-xs"></i>
@@ -967,6 +999,15 @@ const Projects: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Add the EditProjectModal component */}
+      {editingProject && (
+        <EditProjectModal
+          project={editingProject}
+          onClose={() => setEditingProject(null)}
+          onUpdate={handleProjectUpdate}
+        />
+      )}
     </div>
   );
 };
