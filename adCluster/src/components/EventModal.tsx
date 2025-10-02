@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { CalendarEvent, CATEGORY_COLORS } from '../hooks/useCalendar';
+import { ScheduleCategory } from '../types/UserScheduleTypes';
+import { formatDateToLocal } from '../utils/dateUtils';
 
 interface EventModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (eventData: Omit<CalendarEvent, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  onUpdate: (eventId: string, updates: Partial<CalendarEvent>) => void;
-  onDelete: (eventId: string) => void;
+  onSave: (eventData: Omit<CalendarEvent, 'us_id' | 'us_createdat' | 'us_updatedat' | 'us_deletedat' | 'us_isdeleted'>) => void;
+  onUpdate?: (eventId: number, updates: Partial<CalendarEvent>) => void;
+  onDelete?: (eventId: number) => void;
   event?: CalendarEvent | null;
-  selectedDate?: Date;
+  selectedDate?: Date | null;
 }
 
 const EventModal: React.FC<EventModalProps> = ({
@@ -28,7 +30,7 @@ const EventModal: React.FC<EventModalProps> = ({
     startTime: '',
     endTime: '',
     isAllDay: false,
-    category: 'work' as CalendarEvent['category'],
+    category: ScheduleCategory.WORK as CalendarEvent['us_category'],
     priority: 'medium' as CalendarEvent['priority'],
     location: '',
     attendees: [] as string[],
@@ -46,23 +48,23 @@ const EventModal: React.FC<EventModalProps> = ({
       if (event) {
         // 기존 이벤트 수정
         setFormData({
-          title: event.title,
-          description: event.description || '',
-          startDate: event.startDate.toISOString().split('T')[0],
-          endDate: event.endDate.toISOString().split('T')[0],
-          startTime: event.startTime || '',
-          endTime: event.endTime || '',
-          isAllDay: event.isAllDay,
-          category: event.category,
-          priority: event.priority,
-          location: event.location || '',
-          attendees: event.attendees || [],
-          reminders: event.reminders || []
+          title: event.us_title,
+          description: event.us_description || '',
+          startDate: event.us_startday,
+          endDate: event.us_endday,
+          startTime: event.us_starttime || '',
+          endTime: event.us_endtime || '',
+          isAllDay: event.isAllDay || false,
+          category: event.us_category,
+          priority: event.priority || 'medium',
+          location: event.us_location || '',
+          attendees: event.us_attendees ? [event.us_attendees] : [],
+          reminders: [] // UserSchedule에는 reminders가 없음
         });
       } else {
         // 새 이벤트 생성
         const defaultDate = selectedDate || new Date();
-        const dateString = defaultDate.toISOString().split('T')[0];
+        const dateString = formatDateToLocal(defaultDate);
         setFormData({
           title: '',
           description: '',
@@ -71,7 +73,7 @@ const EventModal: React.FC<EventModalProps> = ({
           startTime: '',
           endTime: '',
           isAllDay: false,
-          category: 'work',
+          category: ScheduleCategory.WORK,
           priority: 'medium',
           location: '',
           attendees: [],
@@ -179,23 +181,27 @@ const EventModal: React.FC<EventModalProps> = ({
     if (!validateForm()) return;
 
     const eventData = {
-      title: formData.title.trim(),
-      description: formData.description.trim(),
-      startDate: new Date(formData.startDate),
-      endDate: new Date(formData.endDate),
-      startTime: formData.isAllDay ? undefined : formData.startTime,
-      endTime: formData.isAllDay ? undefined : formData.endTime,
+      us_userid: 1, // 임시 사용자 ID
+      us_title: formData.title.trim(),
+      us_description: formData.description.trim() || undefined,
+      us_startday: formData.startDate,
+      us_endday: formData.endDate,
+      us_starttime: formData.isAllDay ? undefined : formData.startTime,
+      us_endtime: formData.isAllDay ? undefined : formData.endTime,
       isAllDay: formData.isAllDay,
-      category: formData.category,
+      us_category: formData.category,
       priority: formData.priority,
-      color: CATEGORY_COLORS[formData.category],
-      location: formData.location.trim(),
-      attendees: formData.attendees,
-      reminders: formData.reminders
+      us_color: CATEGORY_COLORS[formData.category as keyof typeof CATEGORY_COLORS],
+      us_location: formData.location.trim() || undefined,
+      us_attendees: formData.attendees.length > 0 ? formData.attendees.join(',') : undefined,
+      us_remindersettings: undefined,
+      us_isrecurring: false,
+      us_recurrencepattern: undefined,
+      us_recurrenceenddate: undefined
     };
 
     if (event) {
-      onUpdate(event.id, eventData);
+      onUpdate?.(event.us_id, eventData);
     } else {
       onSave(eventData);
     }
@@ -205,7 +211,7 @@ const EventModal: React.FC<EventModalProps> = ({
   // 삭제 핸들러
   const handleDelete = () => {
     if (event && window.confirm('정말로 이 일정을 삭제하시겠습니까?')) {
-      onDelete(event.id);
+      onDelete?.(event.us_id);
       onClose();
     }
   };
@@ -218,7 +224,7 @@ const EventModal: React.FC<EventModalProps> = ({
         {/* 모달 헤더 */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-800">
-            {event ? '연구 일정 수정' : '새 연구 일정 추가'}
+            {event ? '일정 수정' : '새 일정 추가'}
           </h2>
           <button
             onClick={onClose}
@@ -242,7 +248,7 @@ const EventModal: React.FC<EventModalProps> = ({
               className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${
                 errors.title ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="연구 일정 제목을 입력하세요"
+              placeholder="일정 제목을 입력하세요"
             />
             {errors.title && (
               <p className="mt-1 text-sm text-red-600">{errors.title}</p>
@@ -259,7 +265,7 @@ const EventModal: React.FC<EventModalProps> = ({
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              placeholder="연구 일정에 대한 설명을 입력하세요"
+              placeholder="일정에 대한 설명을 입력하세요"
             />
           </div>
 

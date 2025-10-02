@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { CalendarEvent, CATEGORY_COLORS, PRIORITY_OPACITY } from '../hooks/useCalendar';
+import { isDateInRange, isToday as isDateToday, isCurrentMonth as isDateCurrentMonth } from '../utils/dateUtils';
 
 interface CalendarProps {
   currentDate: Date;
@@ -54,34 +55,22 @@ const Calendar: React.FC<CalendarProps> = ({
   }, [currentDate]);
 
   // 특정 날짜의 이벤트 가져오기
-  const getEventsForDate = (date: Date) => {
+  const getEventsForDate = (date: Date): CalendarEvent[] => {
     return events.filter(event => {
-      const eventStart = new Date(event.startDate);
-      const eventEnd = new Date(event.endDate);
-      const targetDate = new Date(date);
-      
-      // 날짜만 비교 (시간 제외)
-      eventStart.setHours(0, 0, 0, 0);
-      eventEnd.setHours(23, 59, 59, 999);
-      targetDate.setHours(0, 0, 0, 0);
-      
-      return targetDate >= eventStart && targetDate <= eventEnd;
+      const eventStart = new Date(event.us_startday);
+      const eventEnd = event.us_endday ? new Date(event.us_endday) : eventStart;
+      return isDateInRange(date, eventStart, eventEnd);
     });
   };
 
   // 날짜가 현재 월에 속하는지 확인
   const isCurrentMonth = (date: Date) => {
-    return date.getMonth() === calendarData.month;
+    return isDateCurrentMonth(date, currentDate);
   };
 
   // 오늘 날짜인지 확인
   const isToday = (date: Date) => {
-    const today = new Date();
-    return (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
-    );
+    return isDateToday(date);
   };
 
   // 선택된 날짜인지 확인
@@ -165,17 +154,17 @@ const Calendar: React.FC<CalendarProps> = ({
               <div className="events flex-1 space-y-0.5 md:space-y-1 overflow-hidden">
                 {dayEvents.slice(0, 3).map((event, eventIndex) => (
                   <div
-                    key={event.id}
+                    key={event.us_id}
                     className="event-line h-1 md:h-1.5 rounded-full cursor-pointer hover:opacity-80 transition-opacity"
                     style={{
-                      backgroundColor: CATEGORY_COLORS[event.category],
-                      opacity: PRIORITY_OPACITY[event.priority]
+                      backgroundColor: CATEGORY_COLORS[event.us_category],
+                      opacity: PRIORITY_OPACITY[event.priority || 'medium']
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
                       onEventClick(event);
                     }}
-                    title={event.title}
+                    title={event.us_title}
                   >
                   </div>
                 ))}

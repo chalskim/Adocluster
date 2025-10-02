@@ -20,10 +20,10 @@ import { ProjectData } from '../types/ProjectTypes';
 // API 기본 URL 가져오기
 export const getApiBaseUrl = () => {
   try {
-    return import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+    return import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001';
   } catch (err) {
     console.error('Error accessing VITE_API_BASE_URL:', err);
-    return 'http://localhost:8000';
+    return 'http://localhost:8001';
   }
 };
 
@@ -275,10 +275,17 @@ export const createFolder = async (folderData: {
   parent_id?: string;
 }): Promise<FolderData | null> => {
   try {
+    // Convert project_id to UUID format if it's not already
+    const formattedFolderData = {
+      ...folderData,
+      project_id: folderData.project_id, // Keep as string for the API call
+      // parent_id will remain as string or undefined
+    };
+
     const response = await fetch(`${getApiBaseUrl()}/api/folders/`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify(folderData),
+      body: JSON.stringify(formattedFolderData),
     });
 
     if (!response.ok) {
@@ -287,14 +294,16 @@ export const createFolder = async (folderData: {
         localStorage.removeItem('authToken');
         return null;
       }
-      throw new Error('폴더 생성에 실패했습니다.');
+      const errorText = await response.text();
+      console.error('폴더 생성 API 오류 응답:', errorText);
+      throw new Error(`폴더 생성에 실패했습니다. 상태 코드: ${response.status}`);
     }
 
     const data = await response.json();
     return data;
   } catch (error) {
     console.error('폴더 생성 오류:', error);
-    return null;
+    throw new Error(`폴더 생성 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
   }
 };
 

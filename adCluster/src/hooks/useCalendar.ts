@@ -1,28 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
+import * as userScheduleService from '../services/userScheduleService';
+import { UserSchedule, ScheduleCategory, RecurrencePattern, UserScheduleCreate, UserScheduleUpdate } from '../types/UserScheduleTypes';
+import { useToastContext } from '../contexts/ToastContext';
+import { formatDateToLocal, getWeekRange, isSameDate, isDateInRange } from '../utils/dateUtils';
 
-// 연구 일정 이벤트 타입 정의
-export interface CalendarEvent {
-  id: string;
-  title: string;
-  description?: string;
-  startDate: Date;
-  endDate: Date;
-  startTime?: string;
-  endTime?: string;
-  isAllDay: boolean;
-  category: 'work' | 'personal' | 'meeting' | 'deadline' | 'other';
-  priority: 'low' | 'medium' | 'high';
-  color: string;
-  location?: string;
-  attendees?: string[];
-  reminders?: number[]; // 분 단위로 알림 시간
-  recurring?: {
-    type: 'daily' | 'weekly' | 'monthly' | 'yearly';
-    interval: number;
-    endDate?: Date;
-  };
-  createdAt: Date;
-  updatedAt: Date;
+// 일정 이벤트 타입 정의 (UserSchedule을 기반으로 한 CalendarEvent)
+export interface CalendarEvent extends UserSchedule {
+  // 캘린더 표시용 추가 속성
+  isAllDay?: boolean;
+  priority?: 'low' | 'medium' | 'high';
 }
 
 // 달력 뷰 타입
@@ -30,11 +16,11 @@ export type CalendarView = 'month' | 'week' | 'day';
 
 // 카테고리별 색상 매핑
 export const CATEGORY_COLORS = {
-  work: '#3B82F6',      // 파란색
-  personal: '#10B981',  // 초록색
-  meeting: '#F59E0B',   // 주황색
-  deadline: '#EF4444',  // 빨간색
-  other: '#8B5CF6'      // 보라색
+  WORK: '#3B82F6',      // 파란색
+  PERSONAL: '#10B981',  // 초록색
+  MEETING: '#F59E0B',   // 주황색
+  DEADLINE: '#EF4444',  // 빨간색
+  OTHER: '#8B5CF6'      // 보라색
 };
 
 // 우선순위별 색상 강도
@@ -44,7 +30,7 @@ export const PRIORITY_OPACITY = {
   high: '1.0'
 };
 
-export const useCalendar = () => {
+export const useCalendar = (userId?: number) => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [view, setView] = useState<CalendarView>('month');
@@ -52,276 +38,223 @@ export const useCalendar = () => {
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  const { showSuccess, showError } = useToastContext();
 
-  // 샘플 데이터 생성
-  const createSampleEvents = (): CalendarEvent[] => {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-    const nextWeek = new Date(today);
-    nextWeek.setDate(today.getDate() + 7);
-    const nextMonth = new Date(today);
-    nextMonth.setMonth(today.getMonth() + 1);
+  // UserSchedule을 CalendarEvent로 변환하는 헬퍼 함수
+  const convertToCalendarEvent = (schedule: UserSchedule): CalendarEvent => ({
+    ...schedule,
+    isAllDay: !schedule.us_starttime || !schedule.us_endtime,
+    priority: 'medium' // 기본값
+  });
 
-    return [
-      {
-        id: 'sample-1',
-        title: '팀 미팅',
-        description: '주간 팀 미팅 - 프로젝트 진행 상황 공유',
-        startDate: today,
-        endDate: today,
-        startTime: '10:00',
-        endTime: '11:00',
-        isAllDay: false,
-        category: 'meeting',
-        priority: 'high',
-        color: CATEGORY_COLORS.meeting,
-        location: '회의실 A',
-        attendees: ['김철수', '이영희', '박민수'],
-        reminders: [15, 5],
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: 'sample-2',
-        title: '프로젝트 마감',
-        description: 'ADO 클러스터 프로젝트 최종 제출',
-        startDate: tomorrow,
-        endDate: tomorrow,
-        isAllDay: true,
-        category: 'deadline',
-        priority: 'high',
-        color: CATEGORY_COLORS.deadline,
-        reminders: [60, 30, 10],
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: 'sample-3',
-        title: '개인 운동',
-        description: '헬스장에서 운동하기',
-        startDate: today,
-        endDate: today,
-        startTime: '19:00',
-        endTime: '20:30',
-        isAllDay: false,
-        category: 'personal',
-        priority: 'medium',
-        color: CATEGORY_COLORS.personal,
-        location: '피트니스 센터',
-        reminders: [30],
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: 'sample-4',
-        title: '클라이언트 미팅',
-        description: '새로운 프로젝트 제안서 발표',
-        startDate: nextWeek,
-        endDate: nextWeek,
-        startTime: '14:00',
-        endTime: '16:00',
-        isAllDay: false,
-        category: 'work',
-        priority: 'high',
-        color: CATEGORY_COLORS.work,
-        location: '클라이언트 사무실',
-        attendees: ['홍길동', '김대리'],
-        reminders: [120, 30],
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: 'sample-5',
-        title: '생일 파티',
-        description: '친구 생일 축하 파티',
-        startDate: nextMonth,
-        endDate: nextMonth,
-        startTime: '18:00',
-        endTime: '22:00',
-        isAllDay: false,
-        category: 'personal',
-        priority: 'medium',
-        color: CATEGORY_COLORS.personal,
-        location: '레스토랑',
-        reminders: [1440, 60], // 1일 전, 1시간 전
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: 'sample-6',
-        title: '코드 리뷰',
-        description: '신규 기능 코드 리뷰 및 피드백',
-        startDate: new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000), // 2일 후
-        endDate: new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000),
-        startTime: '15:00',
-        endTime: '16:30',
-        isAllDay: false,
-        category: 'work',
-        priority: 'medium',
-        color: CATEGORY_COLORS.work,
-        attendees: ['개발팀'],
-        reminders: [30],
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    ];
-  };
-
-  // 로컬 스토리지에서 이벤트 로드
-  useEffect(() => {
-    const loadEvents = () => {
-      try {
-        const savedEvents = localStorage.getItem('calendar-events');
-        if (savedEvents) {
-          const parsedEvents = JSON.parse(savedEvents).map((event: any) => ({
-            ...event,
-            startDate: new Date(event.startDate),
-            endDate: new Date(event.endDate),
-            createdAt: new Date(event.createdAt),
-            updatedAt: new Date(event.updatedAt),
-            recurring: event.recurring ? {
-              ...event.recurring,
-              endDate: event.recurring.endDate ? new Date(event.recurring.endDate) : undefined
-            } : undefined
-          }));
-          setEvents(parsedEvents);
-        } else {
-          // 저장된 이벤트가 없으면 샘플 데이터 사용
-          const sampleEvents = createSampleEvents();
-          setEvents(sampleEvents);
-          localStorage.setItem('calendar-events', JSON.stringify(sampleEvents));
-        }
-      } catch (error) {
-        console.error('Failed to load events from localStorage:', error);
-        setError('이벤트를 불러오는데 실패했습니다.');
-        // 오류 발생 시에도 샘플 데이터 사용
-        const sampleEvents = createSampleEvents();
-        setEvents(sampleEvents);
-      }
-    };
-
-    loadEvents();
-  }, []);
-
-  // 이벤트 저장
-  const saveEvents = useCallback((newEvents: CalendarEvent[]) => {
+  // 이벤트 로드 함수
+  const loadEvents = useCallback(async () => {
+    if (!userId) return;
+    
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      localStorage.setItem('calendar-events', JSON.stringify(newEvents));
-    } catch (error) {
-      console.error('Failed to save events to localStorage:', error);
-      setError('이벤트를 저장하는데 실패했습니다.');
+      let schedules: UserSchedule[] = [];
+      
+      if (view === 'month') {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth() + 1;
+        schedules = await userScheduleService.getMonthlySchedules(userId, year, month);
+      } else if (view === 'week') {
+        const { startDate, endDate } = getWeekRange(currentDate);
+        
+        schedules = await userScheduleService.getWeeklySchedules(
+          userId,
+          formatDateToLocal(startDate),
+          formatDateToLocal(endDate)
+        );
+      } else {
+        // day view - 해당 날짜의 일정만 조회
+        const startDate = new Date(currentDate);
+        startDate.setHours(0, 0, 0, 0);
+        const endDate = new Date(currentDate);
+        endDate.setHours(23, 59, 59, 999);
+        
+        schedules = await userScheduleService.getUserSchedules({
+          user_id: userId,
+          start_date: formatDateToLocal(startDate),
+          end_date: formatDateToLocal(endDate)
+        });
+      }
+      
+      const calendarEvents = schedules.map(convertToCalendarEvent);
+      setEvents(calendarEvents);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '일정을 불러오는데 실패했습니다.');
+    } finally {
+      setIsLoading(false);
     }
-  }, []);
+  }, [userId, currentDate, view]);
+
+  // 이벤트 로드
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
 
   // 새 이벤트 추가
-  const addEvent = useCallback((eventData: Omit<CalendarEvent, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newEvent: CalendarEvent = {
-      ...eventData,
-      id: `event-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-
-    const updatedEvents = [...events, newEvent];
-    setEvents(updatedEvents);
-    saveEvents(updatedEvents);
-    return newEvent;
-  }, [events, saveEvents]);
+  const addEvent = async (eventData: any): Promise<void> => {
+    try {
+      setIsLoading(true);
+      setError(null); // 이전 오류 클리어
+      
+      // EventModal에서 전달된 데이터를 백엔드 API 스키마에 맞게 변환
+      const transformedData: UserScheduleCreate = {
+        us_userid: userId || 1, // 기본값 또는 현재 사용자 ID
+        us_title: eventData.us_title || eventData.title || '제목 없음', // 필수 필드 보장
+        us_description: eventData.us_description || eventData.description || null,
+        us_startday: eventData.us_startday || eventData.startDate || formatDateToLocal(new Date()), // 필수 필드
+      us_endday: eventData.us_endday || eventData.endDate || eventData.us_startday || eventData.startDate || formatDateToLocal(new Date()), // 필수 필드
+        us_starttime: eventData.isAllDay ? null : (eventData.us_starttime || eventData.startTime),
+        us_endtime: eventData.isAllDay ? null : (eventData.us_endtime || eventData.endTime),
+        us_category: eventData.us_category || eventData.category || 'OTHER', // 기본값 설정
+        us_location: eventData.us_location || eventData.location || null,
+        us_attendees: eventData.us_attendees || eventData.attendees || null,
+        us_remindersettings: eventData.us_remindersettings || eventData.reminders || null,
+        us_color: eventData.us_color || eventData.color || null,
+        us_isrecurring: eventData.us_isrecurring || false, // 필수 필드, 기본값 false
+        us_recurrencepattern: eventData.us_recurrencepattern || undefined,
+        us_recurrenceenddate: eventData.us_recurrenceenddate || undefined
+      };
+      
+      console.log('Sending data to backend:', transformedData);
+      
+      const newSchedule = await userScheduleService.createUserSchedule(transformedData);
+      const newEvent = convertToCalendarEvent(newSchedule);
+      setEvents(prevEvents => [...prevEvents, newEvent]);
+      
+      // 성공 메시지 표시
+      showSuccess('일정 추가 완료', '새로운 일정이 성공적으로 추가되었습니다.');
+    } catch (error) {
+      console.error('Error adding event:', error);
+      const errorMessage = error instanceof Error ? error.message : '일정 추가에 실패했습니다.';
+      setError(errorMessage);
+      
+      // 오류 메시지 표시
+      showError('일정 추가 실패', errorMessage);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // 이벤트 수정
-  const updateEvent = useCallback((eventId: string, updates: Partial<CalendarEvent>) => {
-    const updatedEvents = events.map(event => 
-      event.id === eventId 
-        ? { ...event, ...updates, updatedAt: new Date() }
-        : event
-    );
-    setEvents(updatedEvents);
-    saveEvents(updatedEvents);
-  }, [events, saveEvents]);
+  const updateEvent = async (eventId: number, updates: UserScheduleUpdate): Promise<void> => {
+    try {
+      setIsLoading(true);
+      const updatedSchedule = await userScheduleService.updateUserSchedule(eventId, updates);
+      const updatedEvent = convertToCalendarEvent(updatedSchedule);
+      setEvents(prevEvents => 
+        prevEvents.map(event => 
+          event.us_id === eventId ? updatedEvent : event
+        )
+      );
+      
+      // 성공 메시지 표시
+      showSuccess('일정 수정 완료', '일정이 성공적으로 수정되었습니다.');
+    } catch (error) {
+      console.error('Error updating event:', error);
+      const errorMessage = '일정 수정에 실패했습니다.';
+      setError(errorMessage);
+      
+      // 오류 메시지 표시
+      showError('일정 수정 실패', errorMessage);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // 이벤트 삭제
-  const deleteEvent = useCallback((eventId: string) => {
-    const updatedEvents = events.filter(event => event.id !== eventId);
-    setEvents(updatedEvents);
-    saveEvents(updatedEvents);
-  }, [events, saveEvents]);
+  const deleteEvent = async (eventId: number): Promise<void> => {
+    try {
+      setIsLoading(true);
+      await userScheduleService.deleteUserSchedule(eventId);
+      setEvents(prevEvents => prevEvents.filter(event => event.us_id !== eventId));
+      
+      // 성공 메시지 표시
+      showSuccess('일정 삭제 완료', '일정이 성공적으로 삭제되었습니다.');
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      const errorMessage = '일정 삭제에 실패했습니다.';
+      setError(errorMessage);
+      
+      // 오류 메시지 표시
+      showError('일정 삭제 실패', errorMessage);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  // 특정 날짜의 이벤트 가져오기
-  const getEventsForDate = useCallback((date: Date) => {
+  // 특정 날짜의 이벤트 조회
+  const getEventsForDate = (date: Date): CalendarEvent[] => {
     return events.filter(event => {
-      const eventStart = new Date(event.startDate);
-      const eventEnd = new Date(event.endDate);
-      const targetDate = new Date(date);
+      const eventStartDate = new Date(event.us_startday);
+      const eventEndDate = event.us_endday ? new Date(event.us_endday) : eventStartDate;
       
-      // 날짜만 비교 (시간 제외)
-      eventStart.setHours(0, 0, 0, 0);
-      eventEnd.setHours(23, 59, 59, 999);
-      targetDate.setHours(0, 0, 0, 0);
-      
-      return targetDate >= eventStart && targetDate <= eventEnd;
+      return isDateInRange(date, eventStartDate, eventEndDate);
     });
-  }, [events]);
+  };
 
-  // 특정 월의 이벤트 가져오기
-  const getEventsForMonth = useCallback((year: number, month: number) => {
+  // 특정 월의 이벤트 조회
+  const getEventsForMonth = (year: number, month: number): CalendarEvent[] => {
     return events.filter(event => {
-      const eventStart = new Date(event.startDate);
-      const eventEnd = new Date(event.endDate);
-      
-      return (
-        (eventStart.getFullYear() === year && eventStart.getMonth() === month) ||
-        (eventEnd.getFullYear() === year && eventEnd.getMonth() === month) ||
-        (eventStart.getFullYear() <= year && eventStart.getMonth() <= month &&
-         eventEnd.getFullYear() >= year && eventEnd.getMonth() >= month)
-      );
+      const eventDate = new Date(event.us_startday);
+      return eventDate.getFullYear() === year && eventDate.getMonth() + 1 === month;
     });
-  }, [events]);
+  };
 
   // 달력 네비게이션
-  const navigateToToday = useCallback(() => {
+  const navigateToToday = () => {
     setCurrentDate(new Date());
-  }, []);
+  };
 
-  const navigateToPrevious = useCallback(() => {
+  const navigateToPrevious = () => {
     const newDate = new Date(currentDate);
     if (view === 'month') {
       newDate.setMonth(newDate.getMonth() - 1);
     } else if (view === 'week') {
       newDate.setDate(newDate.getDate() - 7);
-    } else if (view === 'day') {
+    } else {
       newDate.setDate(newDate.getDate() - 1);
     }
     setCurrentDate(newDate);
-  }, [currentDate, view]);
+  };
 
-  const navigateToNext = useCallback(() => {
+  const navigateToNext = () => {
     const newDate = new Date(currentDate);
     if (view === 'month') {
       newDate.setMonth(newDate.getMonth() + 1);
     } else if (view === 'week') {
       newDate.setDate(newDate.getDate() + 7);
-    } else if (view === 'day') {
+    } else {
       newDate.setDate(newDate.getDate() + 1);
     }
     setCurrentDate(newDate);
-  }, [currentDate, view]);
+  };
 
   // 이벤트 모달 관리
-  const openEventModal = useCallback((event?: CalendarEvent) => {
+  const openEventModal = (event?: CalendarEvent) => {
     setSelectedEvent(event || null);
     setIsEventModalOpen(true);
-  }, []);
+  };
 
-  const closeEventModal = useCallback(() => {
+  const closeEventModal = () => {
     setSelectedEvent(null);
     setIsEventModalOpen(false);
-  }, []);
+  };
 
   // 에러 클리어
-  const clearError = useCallback(() => {
+  const clearError = () => {
     setError(null);
-  }, []);
+  };
 
   return {
     // 상태
@@ -334,25 +267,20 @@ export const useCalendar = () => {
     error,
     
     // 액션
-    setCurrentDate,
     setView,
+    setCurrentDate,
     addEvent,
     updateEvent,
     deleteEvent,
-    
-    // 유틸리티
     getEventsForDate,
     getEventsForMonth,
     navigateToToday,
     navigateToPrevious,
     navigateToNext,
-    
-    // 모달 관리
     openEventModal,
     closeEventModal,
-    
-    // 에러 관리
-    clearError
+    clearError,
+    loadEvents
   };
 };
 

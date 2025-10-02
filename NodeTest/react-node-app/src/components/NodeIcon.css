@@ -1,0 +1,56 @@
+.node-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  font-size: 14px;
+  transition: transform 0.2s ease;
+}
+
+.node-icon.default {
+  opacity: 0.7;
+}
+
+.node-icon.folder-view {
+  font-size: 16px;
+  width: 18px;
+  height: 18px;
+}
+
+.node-icon.folder-view.folder {
+  cursor: pointer;
+}
+
+.node-icon.folder-view.folder:hover {
+  transform: scale(1.1);
+}
+
+.node-icon.folder-view.file {
+  opacity: 0.8;
+}
+
+/* 폴더 형식에서 특별한 애니메이션 */
+.node-icon.folder-view.folder {
+  animation: folderPulse 2s ease-in-out infinite;
+}
+
+@keyframes folderPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* 파일 타입별 색상 힌트 */
+.node-icon.folder-view.file {
+  filter: brightness(0.9);
+}
+
+.node-icon.folder-view.file:hover {
+  filter: brightness(1.1);
+  transform: scale(1.05);
+}
