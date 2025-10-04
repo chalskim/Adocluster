@@ -192,10 +192,10 @@ const Calendar: React.FC<CalendarProps> = ({
                 style={{ backgroundColor: color }}
               ></div>
               <span className="text-xs text-gray-600">
-                {category === 'work' ? '업무' :
-                 category === 'personal' ? '개인' :
-                 category === 'meeting' ? '회의' :
-                 category === 'deadline' ? '마감일' : '기타'}
+                {category === 'WORK' ? '업무' :
+                 category === 'PERSONAL' ? '개인' :
+                 category === 'MEETING' ? '회의' :
+                 category === 'DEADLINE' ? '마감일' : '기타'}
               </span>
             </div>
           ))}

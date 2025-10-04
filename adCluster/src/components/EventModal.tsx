@@ -181,7 +181,7 @@ const EventModal: React.FC<EventModalProps> = ({
     if (!validateForm()) return;
 
     const eventData = {
-      us_userid: 1, // 임시 사용자 ID
+      us_userid: 'temp-user-id', // 임시 사용자 ID (실제로는 인증된 사용자 ID가 사용됨)
       us_title: formData.title.trim(),
       us_description: formData.description.trim() || undefined,
       us_startday: formData.startDate,
@@ -368,11 +368,11 @@ const EventModal: React.FC<EventModalProps> = ({
                 onChange={(e) => handleInputChange('category', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               >
-                <option value="work">업무</option>
-                <option value="personal">개인</option>
-                <option value="meeting">회의</option>
-                <option value="deadline">마감일</option>
-                <option value="other">기타</option>
+                <option value="WORK">업무</option>
+                <option value="PERSONAL">개인</option>
+                <option value="MEETING">회의</option>
+                <option value="DEADLINE">마감일</option>
+                <option value="OTHER">기타</option>
               </select>
             </div>
             <div>

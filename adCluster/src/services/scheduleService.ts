@@ -59,7 +59,7 @@ interface ApiSchedule {
 const apiScheduleToCalendarEvent = (schedule: ApiSchedule): CalendarEvent => {
   return {
     us_id: parseInt(schedule.id),
-    us_userid: parseInt(schedule.user_id),
+    us_userid: schedule.user_id,
     us_title: schedule.title,
     us_description: schedule.description || undefined,
     us_startday: schedule.start_date,
